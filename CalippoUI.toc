@@ -1,0 +1,20 @@
+## Title: CalippoUI
+## Version: 1.0.0
+## SavedVariables: CalippoDB
+## IconTexture: Interface\AddOns\CalippoUI\Media\Icon.tga
+
+Database.lua
+Menu.lua
+
+Frames.xml
+Menu.xml
+
+HideBlizzard.lua
+Util.lua
+UnitFrames.lua
+GroupFrames.lua
+Bars.lua
+Chat.lua
+TradeAutoWhisper.lua
+
+OnLoad.lua
