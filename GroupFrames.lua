@@ -12,7 +12,7 @@ local function IterateAuras(frame, auras, maxAuras, template)
     local index = 0
     local maxBuffRow = 3
     local maxDebuffRow = 6
-    local frameSize = 18
+    local frameSize = 17
     local pool = frame.pools:GetPool(template)
     pool:ReleaseAll()
 
@@ -67,13 +67,17 @@ local function AddAura(frame, aura)
     if not aura then return false end
 
     if aura.isHelpful then
-        if Const.RaidBuffWhitelist[aura.spellId] then
+        if aura.sourceUnit == "player" and Const.BuffWhitelist[aura.spellId] then
             frame.buffs[aura.auraInstanceID] = aura
             return true
         end
     elseif aura.isHarmful then
-        frame.debuffs[aura.auraInstanceID] = aura
-        return true
+        if not Const.DebuffBlacklist[aura.spellId] then
+            frame.debuffs[aura.auraInstanceID] = aura
+            return true
+        else
+            return false
+        end
     end
 
     return false
@@ -178,21 +182,31 @@ local function HideBlizzard()
 end
 
 local function UpdateHealth(frame)
-    frame.HealthBar:SetValue(UnitHealth(frame.unit))
+    local health = UnitHealth(frame.unit)
+
+    frame.HealthBar:SetValue(health)
 end
 
 local function UpdateMaxHealth(frame)
-    frame.HealthBar:SetMinMaxValues(0, UnitHealthMax(frame.unit))
-    frame.HealthBar:SetValue(UnitHealth(frame.unit))
+    local maxHealth = UnitHealthMax(frame.unit)
+    local health = UnitHealth(frame.unit)
+
+    frame.HealthBar:SetMinMaxValues(0, maxHealth)
+    frame.HealthBar:SetValue(health)
 end
 
 local function UpdateShield(frame)
-    frame.ShieldBar:SetValue(UnitGetTotalAbsorbs(frame.unit))
+    local totalAbsorb = UnitGetTotalAbsorbs(frame.unit)
+
+    frame.ShieldBar:SetValue(totalAbsorb)
 end
 
 local function UpdateMaxShield(frame)
-    frame.ShieldBar:SetMinMaxValues(0, UnitHealthMax(frame.unit))
-    frame.ShieldBar:SetValue(UnitGetTotalAbsorbs(frame.unit))
+    local maxHealth = UnitHealthMax(frame.unit)
+    local totalAbsorb = UnitGetTotalAbsorbs(frame.unit)
+
+    frame.ShieldBar:SetMinMaxValues(0, maxHealth)
+    frame.ShieldBar:SetValue(totalAbsorb)
 end
 
 local function UpdateAbsorb(frame)
@@ -207,10 +221,11 @@ local function UpdateAbsorb(frame)
 end
 
 local function UpdateMaxAbsorb(frame)
+    local maxHealth = UnitHealthMax(frame.unit)
     local absorb = UnitGetTotalHealAbsorbs(frame.unit)
     local health = UnitHealth(frame.unit)
 
-    frame.AbsorbBar:SetMinMaxValues(0, UnitHealthMax(frame.unit))
+    frame.AbsorbBar:SetMinMaxValues(0, maxHealth)
     if absorb > health then
         frame.AbsorbBar:SetValue(health)
     else
@@ -221,15 +236,16 @@ end
 local function UpdateInRange(frame)
     if UnitInRange(frame.unit) then
         frame.HealthBar:SetAlpha(1)
-        frame.HealthBar.Background:SetAlpha(1)
+        frame.Background:SetAlpha(1)
     else
         frame.HealthBar:SetAlpha(0.5)
-        frame.HealthBar.Background:SetAlpha(0.3)
+        frame.Background:SetAlpha(0.5)
     end
 end
 
 local function UpdateInPhase(frame)
     local phaseReason = UnitPhaseReason(frame.unit)
+
     if phaseReason then
         frame.Overlay.Phase:Show()
     else
@@ -239,16 +255,17 @@ end
 
 local function UpdateIsDead(frame)
     if UnitIsDeadOrGhost(frame.unit) then
-        frame.HealthBar.Background:SetColorTexture(0.5, 0, 0, 1)
+        frame.Background:SetColorTexture(0.3, 0, 0, 1)
         frame.dead = true
     elseif frame.dead == true then
-        frame.HealthBar.Background:SetColorTexture(1, 1, 1, 1)
+        frame.Background:SetColorTexture(0.9, 0.9, 0.9, 1)
         frame.dead = false
     end
 end
 
 local function UpdateConnection(frame)
     local isOnline = UnitIsConnected(frame.unit)
+
     if isOnline then
         frame.Overlay.Connection:Hide()
     else
@@ -258,6 +275,7 @@ end
 
 local function UpdateReadyCheck(frame)
     local status = GetReadyCheckStatus(frame.unit)
+    
     if status == "ready" then
         frame.Overlay.Readycheck:SetTexture("Interface/AddOns/CalippoUI/Media/readycheck-ready.tga")
         frame.Overlay.Readycheck:Show()
@@ -296,12 +314,15 @@ end
 
 local function UpdateName(frame)
     local r, g, b = Util.GetUnitColor(frame.unit)
+    local name = UnitName(frame.unit)
+
     frame.Overlay.UnitName:SetTextColor(r, g, b, 1)
-    frame.Overlay.UnitName:SetText(UnitName(frame.unit))
+    frame.Overlay.UnitName:SetText(name)
 end
 
 local function UpdateSummon(frame)
     local status = C_IncomingSummon.IncomingSummonStatus(frame.unit)
+
     if status == Enum.SummonStatus.Pending then
         frame.Overlay.Summon:SetTexture("Interface/AddOns/CalippoUI/Media/Raid-Icon-SummonPending.tga")
         frame.Overlay.Summon:Show()
@@ -318,6 +339,7 @@ end
 
 local function UpdateDispel(frame)
     local foundDispel = false
+    
     AuraUtil.ForEachAura(frame.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Harmful), nil, function(aura)
         local dispelName = aura.dispelName
         if dispelName then
@@ -334,6 +356,21 @@ local function UpdateDispel(frame)
     end
 end
 
+local function UpdateHealPrediction(frame)
+    local heal = UnitGetIncomingHeals(frame.unit, "player")
+
+    if heal and heal ~= 0 then
+        local maxHealth = UnitHealthMax(frame.unit)
+        local health = UnitHealth(frame.unit)
+
+        frame.HealPrediction:SetMinMaxValues(0, maxHealth)
+        frame.HealPrediction:SetValue(health + heal)
+    else
+        frame.HealPrediction:SetMinMaxValues(0, 1)
+        frame.HealPrediction:SetValue(0)
+    end
+end
+
 local function UpdateAll(frame)
     UpdateMaxHealth(frame)
     UpdateMaxShield(frame)
@@ -346,6 +383,7 @@ local function UpdateAll(frame)
     UpdateRole(frame)
     UpdateName(frame)
     UpdateSummon(frame)
+    UpdateHealPrediction(frame)
 end
 
 local rolePriority = {
@@ -418,7 +456,7 @@ local function UpdateGroupFrames(groupFrame)
 
         UpdateAll(frame)
 
-        --UpdateAuras(frame, unit)
+        UpdateAuras(frame, unit)
     end
     
     if lastNumMem == numMem then return end
@@ -456,30 +494,36 @@ local function SetupGroupFrame(unit, groupType, parent, offsetX, offsetY, sizeX,
     frame.unit = unit
     frame.groupType = groupType
 
-    local healthBar = CreateFrame("StatusBar", nil, frame)
+    local backgroundTexture = frame:CreateTexture(nil, "BACKGROUND")
+    backgroundTexture:SetParentKey("Background")
+    backgroundTexture:SetAllPoints(frame)
+    backgroundTexture:SetColorTexture(0.9, 0.9, 0.9, 1)
+
+    local healPrediction = CreateFrame("StatusBar", nil, frame)
+    healPrediction:SetParentKey("HealPrediction")
+    healPrediction:SetAllPoints(frame)
+    healPrediction:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
+    healPrediction:SetStatusBarColor(0, 0, 0, 0.5)
+
+    local healthBar = CreateFrame("StatusBar", nil, healPrediction)
     healthBar:SetParentKey("HealthBar")
     healthBar:SetAllPoints(frame)
+    healthBar:SetFrameLevel(healPrediction:GetFrameLevel()+1)
     healthBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
     healthBar:SetStatusBarColor(0, 0, 0, 1)
 
-    Util.AddBackdrop(healthBar, 0, CUI_BACKDROP_W_06)
-    healthBar.Backdrop:SetBackdropBorderColor(0, 0, 0, 1)
+    -- Util.AddBackdrop(healthBar, 0, CUI_BACKDROP_W_06)
+    -- healthBar.Backdrop:SetBackdropBorderColor(0, 0, 0, 1)
 
-    local healthBarBg = healthBar:CreateTexture(nil, "BACKGROUND")
-    healthBarBg:SetParentKey("Background")
-    healthBarBg:SetAllPoints(healthBar)
-    healthBarBg:SetColorTexture(1, 1, 1, 1)
-
-    local absorbBar = CreateFrame("StatusBar", nil, frame)
+    local absorbBar = CreateFrame("StatusBar", nil, healthBar)
     absorbBar:SetParentKey("AbsorbBar")
     absorbBar:SetFrameLevel(healthBar:GetFrameLevel()+1)
-    absorbBar:SetPoint("TOPRIGHT", healthBar, "TOPRIGHT")
-    absorbBar:SetPoint("BOTTOMLEFT", healthBar, "BOTTOMLEFT")
+    absorbBar:SetAllPoints(frame)
     absorbBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
-    absorbBar:SetStatusBarColor(1, 0, 0, 0.8)
+    absorbBar:SetStatusBarColor(0.8, 0, 0, 1)
     absorbBar:SetReverseFill(false)
 
-    local shieldBar = CreateFrame("StatusBar", nil, frame)
+    local shieldBar = CreateFrame("StatusBar", nil, absorbBar)
     shieldBar:SetParentKey("ShieldBar")
     shieldBar:SetAllPoints(frame)
     shieldBar:SetFrameLevel(healthBar:GetFrameLevel()+2)
@@ -491,14 +535,14 @@ local function SetupGroupFrame(unit, groupType, parent, offsetX, offsetY, sizeX,
     overlayFrame:SetAllPoints(frame)
     overlayFrame:SetFrameLevel(10)
 
+    Util.AddBackdrop(overlayFrame, 0.6, CUI_BACKDROP_W_06)
+    overlayFrame.Backdrop:Hide()
+
     local unitName = overlayFrame:CreateFontString(nil, "OVERLAY")
     unitName:SetParentKey("UnitName")
     unitName:SetPoint("TOPLEFT", overlayFrame, "TOPLEFT", 3, -3)
     unitName:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 10, "")
     unitName:SetText(UnitName(unit))
-
-    Util.AddBackdrop(overlayFrame, 0, CUI_BACKDROP_W_06)
-    overlayFrame.Backdrop:Hide()
 
     local readyCheck = overlayFrame:CreateTexture(nil, "OVERLAY")
     readyCheck:SetParentKey("Readycheck")
@@ -530,13 +574,13 @@ local function SetupGroupFrame(unit, groupType, parent, offsetX, offsetY, sizeX,
     local unitSummon = overlayFrame:CreateTexture(nil, "OVERLAY")
     unitSummon:SetParentKey("Summon")
     unitSummon:SetPoint("CENTER")
-    unitSummon:SetSize(50, 50)
+    unitSummon:SetSize(30, 30)
     unitSummon:Hide()
 
     local unitDispel = overlayFrame:CreateTexture(nil, "OVERLAY")
     unitDispel:SetParentKey("Dispel")
     unitDispel:SetPoint("BOTTOMRIGHT", overlayFrame, "BOTTOMRIGHT", -3, 3)
-    unitDispel:SetSize(15, 15)
+    unitDispel:SetSize(12, 12)
     unitDispel:Hide()
 
     local unitRole = overlayFrame:CreateTexture(nil, "OVERLAY")
@@ -572,6 +616,8 @@ local function SetupGroupFrame(unit, groupType, parent, offsetX, offsetY, sizeX,
             UpdateShield(self)
         elseif event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED" then
             UpdateAbsorb(self)
+        elseif event == "UNIT_HEAL_PREDICTION" then
+            UpdateHealPrediction(self)
         elseif event == "UNIT_IN_RANGE_UPDATE" then
             UpdateInRange(self)
         elseif event == "UNIT_DISTANCE_CHECK_UPDATE" then
@@ -611,6 +657,7 @@ local function SetupGroupFrame(unit, groupType, parent, offsetX, offsetY, sizeX,
         frame:RegisterUnitEvent("UNIT_HEAL_ABSORB_AMOUNT_CHANGED", unit)
         frame:RegisterUnitEvent("UNIT_PHASE", unit)
         frame:RegisterUnitEvent("UNIT_CONNECTION", unit)
+        frame:RegisterUnitEvent("UNIT_HEAL_PREDICTION", unit)
         frame:RegisterEvent("READY_CHECK")
         frame:RegisterEvent("READY_CHECK_CONFIRM")
         frame:RegisterEvent("READY_CHECK_FINISHED")
@@ -629,6 +676,7 @@ local function SetupGroupFrame(unit, groupType, parent, offsetX, offsetY, sizeX,
         frame:UnregisterEvent("UNIT_HEAL_ABSORB_AMOUNT_CHANGED", unit)
         frame:UnregisterEvent("UNIT_PHASE", unit)
         frame:UnregisterEvent("UNIT_CONNECTION", unit)
+        frame:UnregisterEvent("UNIT_HEAL_PREDICTION", unit)
         frame:UnregisterEvent("READY_CHECK")
         frame:UnregisterEvent("READY_CHECK_CONFIRM")
         frame:UnregisterEvent("READY_CHECK_FINISHED")

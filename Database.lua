@@ -66,7 +66,7 @@ function DB.OnLoad()
         ["raid"] = "Raid",
     }
 
-    Const.RaidBuffWhitelist = {
+    Const.BuffWhitelist = {
         -- Paladin
         [53563] = "Beacon of Light",
         [156910] = "Beacon of Faith",
@@ -76,6 +76,15 @@ function DB.OnLoad()
         [61295] = "Riptide",
         [974] = "Earth Shield (Player)",
         [383648] = "Earth Shield (Other)",
+    }
+
+    Const.DebuffBlacklist = {
+        [57723] = "Exhaustion",
+        [57724] = "Sated",
+        [80354] = "Temporal Displacement",
+        [264689] = "Fatigued",
+        [390435] = "Exhaustion",
+        [206151] = "Challenger's Burden",
     }
 
     CUI_BACKDROP_DS_3 = {

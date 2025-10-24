@@ -70,9 +70,13 @@ function Util.UnitHealthText(unit)
         local temp = health / 100
         local h = math.floor(temp)
         return (h / 10).."K"
-    else
+    elseif health < 1000000000 then
         local temp = health / 100000
         local h = math.floor(temp)
         return (h / 10).."M"
+    else
+        local temp = health / 100000000
+        local h = math.floor(temp)
+        return (h / 10).."B"
     end
 end
