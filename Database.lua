@@ -76,6 +76,9 @@ function DB.OnLoad()
         [61295] = "Riptide",
         [974] = "Earth Shield (Player)",
         [383648] = "Earth Shield (Other)",
+
+        -- Monk
+        [119611] = "Renewing Mist",
     }
 
     Const.DebuffBlacklist = {

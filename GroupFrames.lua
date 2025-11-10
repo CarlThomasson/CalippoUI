@@ -12,7 +12,14 @@ local function IterateAuras(frame, auras, maxAuras, template)
     local index = 0
     local maxBuffRow = 3
     local maxDebuffRow = 6
-    local frameSize = 17
+    local frameSize
+
+    if frame.groupType == "party" then
+        frameSize = 17
+    else
+        frameSize = 15
+    end
+
     local pool = frame.pools:GetPool(template)
     pool:ReleaseAll()
 
@@ -183,8 +190,10 @@ end
 
 local function UpdateHealth(frame)
     local health = UnitHealth(frame.unit)
+    local maxHealth = UnitHealthMax(frame.unit)
 
     frame.HealthBar:SetValue(health)
+    frame.Background:SetValue(maxHealth-health)
 end
 
 local function UpdateMaxHealth(frame)
@@ -193,6 +202,9 @@ local function UpdateMaxHealth(frame)
 
     frame.HealthBar:SetMinMaxValues(0, maxHealth)
     frame.HealthBar:SetValue(health)
+
+    frame.Background:SetMinMaxValues(0, maxHealth)
+    frame.Background:SetValue(maxHealth-health)
 end
 
 local function UpdateShield(frame)
@@ -237,9 +249,13 @@ local function UpdateInRange(frame)
     if UnitInRange(frame.unit) then
         frame.HealthBar:SetAlpha(1)
         frame.Background:SetAlpha(1)
+        frame.ShieldBar:SetAlpha(1)
+        frame.AbsorbBar:SetAlpha(1)
     else
-        frame.HealthBar:SetAlpha(0.5)
-        frame.Background:SetAlpha(0.5)
+        frame.HealthBar:SetAlpha(0.3)
+        frame.Background:SetAlpha(0.3)
+        frame.ShieldBar:SetAlpha(0.3)
+        frame.AbsorbBar:SetAlpha(0.3)
     end
 end
 
@@ -247,18 +263,20 @@ local function UpdateInPhase(frame)
     local phaseReason = UnitPhaseReason(frame.unit)
 
     if phaseReason then
-        frame.Overlay.Phase:Show()
+        frame.phase = true
     else
-        frame.Overlay.Phase:Hide()
+        frame.phase = false
     end
 end
 
 local function UpdateIsDead(frame)
     if UnitIsDeadOrGhost(frame.unit) then
-        frame.Background:SetColorTexture(0.3, 0, 0, 1)
+        local min, max = frame.HealthBar:GetMinMaxValues()
+        frame.HealthBar:SetValue(max)
+        frame.HealthBar:SetStatusBarColor(0.3, 0, 0, 1)
         frame.dead = true
     elseif frame.dead == true then
-        frame.Background:SetColorTexture(0.9, 0.9, 0.9, 1)
+        frame.HealthBar:SetStatusBarColor(0, 0, 0, 1)
         frame.dead = false
     end
 end
@@ -267,9 +285,9 @@ local function UpdateConnection(frame)
     local isOnline = UnitIsConnected(frame.unit)
 
     if isOnline then
-        frame.Overlay.Connection:Hide()
+        frame.disconnected = false
     else
-        frame.Overlay.Connection:Show()
+        frame.disconnected = true
     end
 end
 
@@ -277,16 +295,13 @@ local function UpdateReadyCheck(frame)
     local status = GetReadyCheckStatus(frame.unit)
     
     if status == "ready" then
-        frame.Overlay.Readycheck:SetTexture("Interface/AddOns/CalippoUI/Media/readycheck-ready.tga")
-        frame.Overlay.Readycheck:Show()
+        frame.readyCheck = "ready"
     elseif status == "waiting" then
-        frame.Overlay.Readycheck:SetTexture("Interface/AddOns/CalippoUI/Media/readycheck-waiting.tga")           
-        frame.Overlay.Readycheck:Show()
+        frame.readyCheck = "waiting"
     elseif status == "notready" then
-        frame.Overlay.Readycheck:SetTexture("Interface/AddOns/CalippoUI/Media/readycheck-notready.tga")
-        frame.Overlay.Readycheck:Show()
+        frame.readyCheck = "notready"
     else
-        frame.Overlay.Readycheck:Hide()
+        frame.readyCheck = nil
     end
 end
 
@@ -306,9 +321,9 @@ end
 
 local function UpdateRess(frame)
     if UnitHasIncomingResurrection(frame.unit) then
-        frame.Overlay.Ress:Show()
+        frame.ress = true
     else
-        frame.Overlay.Ress:Hide()
+        frame.ress = false
     end
 end
 
@@ -324,16 +339,13 @@ local function UpdateSummon(frame)
     local status = C_IncomingSummon.IncomingSummonStatus(frame.unit)
 
     if status == Enum.SummonStatus.Pending then
-        frame.Overlay.Summon:SetTexture("Interface/AddOns/CalippoUI/Media/Raid-Icon-SummonPending.tga")
-        frame.Overlay.Summon:Show()
+        frame.summon = "pending"
     elseif status == Enum.SummonStatus.Accepted then
-        frame.Overlay.Summon:SetTexture("Interface/AddOns/CalippoUI/Media/Raid-Icon-SummonAccepted.tga")
-        frame.Overlay.Summon:Show()
+        frame.summon = "accepted"
     elseif status == Enum.SummonStatus.Declined then
-        frame.Overlay.Summon:SetTexture("Interface/AddOns/CalippoUI/Media/Raid-Icon-SummonDeclined.tga")
-        frame.Overlay.Summon:Show()
+        frame.summon = "declined"
     else
-        frame.Overlay.Summon:Hide()
+        frame.summon = nil
     end
 end
 
@@ -371,6 +383,44 @@ local function UpdateHealPrediction(frame)
     end
 end
 
+local function UpdateCenterIcon(frame)
+    local centerTexture = frame.Overlay.CenterTexture
+
+    if frame.disconnected then
+        centerTexture:SetSize(50, 50)
+        centerTexture:SetTexture("Interface/AddOns/CalippoUI/Media/Disconnect-Icon.blp")
+    elseif frame.readyCheck then
+        centerTexture:SetSize(20, 20)
+        if frame.readyCheck == "ready" then
+            centerTexture:SetTexture("Interface/AddOns/CalippoUI/Media/readycheck-ready.tga")
+        elseif frame.readyCheck == "waiting" then
+            centerTexture:SetTexture("Interface/AddOns/CalippoUI/Media/readycheck-waiting.tga")
+        elseif frame.readyCheck == "notready" then
+            centerTexture:SetTexture("Interface/AddOns/CalippoUI/Media/readycheck-notready.tga")
+        end
+    elseif frame.summon then
+        centerTexture:SetSize(30, 30)
+        if frame.summon == "pending" then
+            centerTexture:SetTexture("Interface/AddOns/CalippoUI/Media/Raid-Icon-SummonPending.tga")
+        elseif frame.summon == "accepted" then
+            centerTexture:SetTexture("Interface/AddOns/CalippoUI/Media/Raid-Icon-SummonAccepted.tga")
+        elseif frame.summon == "declined" then
+            centerTexture:SetTexture("Interface/AddOns/CalippoUI/Media/Raid-Icon-SummonDeclined.tga")
+        end
+    elseif frame.ress then
+        centerTexture:SetSize(20, 20)
+        centerTexture:SetTexture("Interface/AddOns/CalippoUI/Media/Raid-Icon-Rez.blp")
+    elseif frame.phase then
+        centerTexture:SetSize(30, 30)
+        centerTexture:SetTexture("Interface/AddOns/CalippoUI/Media/UI-PhasingIcon.blp")
+    else
+        centerTexture:Hide()
+        return
+    end
+
+    centerTexture:Show()
+end
+
 local function UpdateAll(frame)
     UpdateMaxHealth(frame)
     UpdateMaxShield(frame)
@@ -384,6 +434,8 @@ local function UpdateAll(frame)
     UpdateName(frame)
     UpdateSummon(frame)
     UpdateHealPrediction(frame)
+
+    UpdateCenterIcon(frame)
 end
 
 local rolePriority = {
@@ -494,28 +546,34 @@ local function SetupGroupFrame(unit, groupType, parent, offsetX, offsetY, sizeX,
     frame.unit = unit
     frame.groupType = groupType
 
-    local backgroundTexture = frame:CreateTexture(nil, "BACKGROUND")
-    backgroundTexture:SetParentKey("Background")
-    backgroundTexture:SetAllPoints(frame)
-    backgroundTexture:SetColorTexture(0.9, 0.9, 0.9, 1)
+    frame.disconnected = nil
+    frame.summon = nil
+    frame.ress = nil
+    frame.readyCheck = nil
+    frame.phase = nil
+
+    local background = CreateFrame("StatusBar", nil, frame)
+    background:SetParentKey("Background")
+    background:SetAllPoints(frame)
+    background:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
+    background:SetStatusBarColor(0.9, 0.9, 0.9, 1)
+    background:SetReverseFill(true)
 
     local healPrediction = CreateFrame("StatusBar", nil, frame)
     healPrediction:SetParentKey("HealPrediction")
     healPrediction:SetAllPoints(frame)
+    healPrediction:SetFrameLevel(background:GetFrameLevel()+1)
     healPrediction:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
     healPrediction:SetStatusBarColor(0, 0, 0, 0.5)
 
-    local healthBar = CreateFrame("StatusBar", nil, healPrediction)
+    local healthBar = CreateFrame("StatusBar", nil, frame)
     healthBar:SetParentKey("HealthBar")
     healthBar:SetAllPoints(frame)
     healthBar:SetFrameLevel(healPrediction:GetFrameLevel()+1)
     healthBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
     healthBar:SetStatusBarColor(0, 0, 0, 1)
 
-    -- Util.AddBackdrop(healthBar, 0, CUI_BACKDROP_W_06)
-    -- healthBar.Backdrop:SetBackdropBorderColor(0, 0, 0, 1)
-
-    local absorbBar = CreateFrame("StatusBar", nil, healthBar)
+    local absorbBar = CreateFrame("StatusBar", nil, frame)
     absorbBar:SetParentKey("AbsorbBar")
     absorbBar:SetFrameLevel(healthBar:GetFrameLevel()+1)
     absorbBar:SetAllPoints(frame)
@@ -523,10 +581,10 @@ local function SetupGroupFrame(unit, groupType, parent, offsetX, offsetY, sizeX,
     absorbBar:SetStatusBarColor(0.8, 0, 0, 1)
     absorbBar:SetReverseFill(false)
 
-    local shieldBar = CreateFrame("StatusBar", nil, absorbBar)
+    local shieldBar = CreateFrame("StatusBar", nil, frame)
     shieldBar:SetParentKey("ShieldBar")
     shieldBar:SetAllPoints(frame)
-    shieldBar:SetFrameLevel(healthBar:GetFrameLevel()+2)
+    shieldBar:SetFrameLevel(absorbBar:GetFrameLevel()+1)
     shieldBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
     shieldBar:SetStatusBarColor(0, 1, 1, 0.5)
 
@@ -544,38 +602,10 @@ local function SetupGroupFrame(unit, groupType, parent, offsetX, offsetY, sizeX,
     unitName:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 10, "")
     unitName:SetText(UnitName(unit))
 
-    local readyCheck = overlayFrame:CreateTexture(nil, "OVERLAY")
-    readyCheck:SetParentKey("Readycheck")
-    readyCheck:SetPoint("CENTER")
-    readyCheck:SetSize(20, 20)
-    readyCheck:Hide()
-
-    local unitPhase = overlayFrame:CreateTexture(nil, "OVERLAY")
-    unitPhase:SetParentKey("Phase")
-    unitPhase:SetPoint("CENTER")
-    unitPhase:SetSize(30, 30)
-    unitPhase:SetTexture("Interface/AddOns/CalippoUI/Media/UI-PhasingIcon.blp")
-    unitPhase:Hide()
-
-    local unitConnection = overlayFrame:CreateTexture(nil, "OVERLAY")
-    unitConnection:SetParentKey("Connection")
-    unitConnection:SetPoint("CENTER")
-    unitConnection:SetSize(50, 50)
-    unitConnection:SetTexture("Interface/AddOns/CalippoUI/Media/Disconnect-Icon.blp")
-    unitConnection:Hide()
-
-    local unitRess = overlayFrame:CreateTexture(nil, "OVERLAY")
-    unitRess:SetParentKey("Ress")
-    unitRess:SetPoint("CENTER")
-    unitRess:SetSize(20, 20)
-    unitRess:SetTexture("Interface/AddOns/CalippoUI/Media/Raid-Icon-Rez.blp")
-    unitRess:Hide()
-
-    local unitSummon = overlayFrame:CreateTexture(nil, "OVERLAY")
-    unitSummon:SetParentKey("Summon")
-    unitSummon:SetPoint("CENTER")
-    unitSummon:SetSize(30, 30)
-    unitSummon:Hide()
+    local centerTexture = overlayFrame:CreateTexture(nil, "OVERLAY")
+    centerTexture:SetParentKey("CenterTexture")
+    centerTexture:SetPoint("CENTER")
+    centerTexture:Hide()
 
     local unitDispel = overlayFrame:CreateTexture(nil, "OVERLAY")
     unitDispel:SetParentKey("Dispel")
@@ -607,6 +637,7 @@ local function SetupGroupFrame(unit, groupType, parent, offsetX, offsetY, sizeX,
             UpdateDispel(self)
         elseif event == "UNIT_HEALTH" then
             UpdateHealth(self)
+            UpdateHealPrediction(self)
             UpdateIsDead(self)
         elseif event == "UNIT_MAXHEALTH" then
             UpdateMaxHealth(self)
@@ -624,20 +655,21 @@ local function SetupGroupFrame(unit, groupType, parent, offsetX, offsetY, sizeX,
             -- TODO ?
         elseif event == "UNIT_PHASE" then
             UpdateInPhase(self)
+            UpdateCenterIcon(self)
         elseif event == "UNIT_CONNECTION" then
             UpdateConnection(self)
-        elseif event == "READY_CHECK" then
+            UpdateCenterIcon(self)
+        elseif event == "READY_CHECK" or event == "READY_CHECK_CONFIRM" or event == "READY_CHECK_FINISHED" then
             UpdateReadyCheck(self)
-        elseif event == "READY_CHECK_CONFIRM" then
-            UpdateReadyCheck(self)
-        elseif event == "READY_CHECK_FINISHED" then
-            UpdateReadyCheck(self)
+            UpdateCenterIcon(self)
         elseif event == "PLAYER_ROLES_ASSIGNED" then
             UpdateRole(self)
         elseif event == "INCOMING_RESURRECT_CHANGED" then
             UpdateRess(self)
+            UpdateCenterIcon(self)
         elseif event == "INCOMING_SUMMON_CHANGED" then
             UpdateSummon(self)
+            UpdateCenterIcon(self)
         end
     end)
 
@@ -710,7 +742,10 @@ function GF.OnLoad()
     partyFrame:RegisterEvent("GROUP_JOINED")
     partyFrame:RegisterEvent("GROUP_LEFT")
     partyFrame:RegisterEvent("GROUP_FORMED")
+    partyFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
     partyFrame:SetScript("OnEvent", function(self, event)
+        if not self:IsShown() then return end
+
         if event == "GROUP_ROSTER_UPDATE" then
             UpdateGroupFrames(self)
         elseif event == "PLAYER_ROLES_ASSIGNED" then
@@ -718,6 +753,10 @@ function GF.OnLoad()
             SortGroupFrames(self)
         elseif event == "GROUP_JOINED" or event == "GROUP_LEFT" or event == "GROUP_FORMED" then
             lastNumMem = 0
+        elseif event == "PLAYER_REGEN_DISABLED" then
+            if GetNumGroupMembers() ~= lastNumMem then
+                UpdateGroupFrames(self)
+            end
         end
     end)
 
@@ -746,7 +785,10 @@ function GF.OnLoad()
     raidFrame:RegisterEvent("GROUP_JOINED")
     raidFrame:RegisterEvent("GROUP_LEFT")
     raidFrame:RegisterEvent("GROUP_FORMED")
+    raidFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
     raidFrame:SetScript("OnEvent", function(self, event)
+        if not self:IsShown() then return end
+
         if event == "GROUP_ROSTER_UPDATE" then
             UpdateGroupFrames(self)
         elseif event == "PLAYER_ROLES_ASSIGNED" then
@@ -754,6 +796,10 @@ function GF.OnLoad()
             SortGroupFrames(self)
         elseif event == "GROUP_JOINED" or event == "GROUP_LEFT" or event == "GROUP_FORMED" then
             lastNumMem = 0
+        elseif event == "PLAYER_REGEN_DISABLED" then
+            if GetNumGroupMembers() ~= lastNumMem then
+                UpdateGroupFrames(self)
+            end
         end
     end)
 
