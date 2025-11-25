@@ -50,33 +50,11 @@ function Util.GetUnitColor(unit)
 end
 
 function Util.UnitHealthPercent(unit)
-    local max = UnitHealthMax(unit)
-    local current = UnitHealth(unit)
-
-    local deci = current / max
-    local perc = deci * 1000
-    local temp = math.floor(perc)
-    local rounded = temp / 10
-
-    return rounded
+    return UnitHealthPercent(unit)
 end
 
 function Util.UnitHealthText(unit)
     local health = UnitHealth(unit)
-
-    if health < 1000 then
-        return health
-    elseif health < 1000000 then
-        local temp = health / 100
-        local h = math.floor(temp)
-        return (h / 10).."K"
-    elseif health < 1000000000 then
-        local temp = health / 100000
-        local h = math.floor(temp)
-        return (h / 10).."M"
-    else
-        local temp = health / 100000000
-        local h = math.floor(temp)
-        return (h / 10).."B"
-    end
+    local rounded = AbbreviateLargeNumbers(health)
+    return rounded
 end

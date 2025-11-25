@@ -4,7 +4,7 @@ CUI.Hide = {}
 local Hide = CUI.Hide
 
 -- stolen from elvui
-local hiddenParent = CreateFrame("Frame", nil, _G.UIParent)
+local hiddenParent = CreateFrame("Frame", nil, UIParent)
 hiddenParent:SetAllPoints()
 hiddenParent:Hide()
 
@@ -15,35 +15,39 @@ function Hide.HideFrame(frame)
     frame:Hide()
     frame:SetParent(hiddenParent)
 
-    local health = frame.healthBar or frame.healthbar
-    if health then
-        health:UnregisterAllEvents()
-    end
+    -- local health = frame.healthBar or frame.healthbar
+    -- if health then
+    --     health:UnregisterAllEvents()
+    -- end
 
-    local power = frame.manabar
-    if power then
-        power:UnregisterAllEvents()
-    end
+    -- local power = frame.manabar
+    -- if power then
+    --     power:Hide()
+    --     power:UnregisterAllEvents()
+    -- end
 
-    local spell = frame.castBar or frame.spellbar
-    if spell then
-        spell:UnregisterAllEvents()
-    end
+    -- local spell = frame.castBar or frame.spellbar
+    -- if spell then
+    --     spell:Hide()
+    --     spell:UnregisterAllEvents()
+    -- end
 
-    local altpowerbar = frame.powerBarAlt
-    if altpowerbar then
-        altpowerbar:UnregisterAllEvents()
-    end
+    -- local altpowerbar = frame.powerBarAlt
+    -- if altpowerbar then
+    --     altpowerbar:Hide()
+    --     altpowerbar:UnregisterAllEvents()
+    -- end
 
-    local buffFrame = frame.BuffFrame
-    if buffFrame then
-        buffFrame:UnregisterAllEvents()
-    end
+    -- local buffFrame = frame.BuffFrame
+    -- if buffFrame then
+    --     --buffFrame:UnregisterAllEvents()
+    -- end
 
-    local petFrame = frame.PetFrame
-    if petFrame then
-        petFrame:UnregisterAllEvents()
-    end
+    -- local petFrame = frame.PetFrame
+    -- if petFrame then
+    --     petFrame:Hide()
+    --     petFrame:UnregisterAllEvents()
+    -- end
 end
 
 function Hide.HideBlizzardParty()

@@ -19,7 +19,7 @@ local microMenuButtons = {
 }
 
 local actionBars = {
-    MainMenuBar,
+    MainActionBar,
     MultiBarBottomLeft,
     MultiBarBottomRight,
     MultiBarLeft,

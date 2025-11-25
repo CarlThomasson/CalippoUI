@@ -5,192 +5,20 @@ local UF = CUI.UF
 local Util = CUI.Util
 local Hide = CUI.Hide
 
----------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
-local function GetIndexTable(frame, auras)
-    local indexTable = {}
-    local i = 1
+function HideBlizzard()
+    PlayerFrame.PlayerFrameContent:Hide()
+    PlayerFrame.PlayerFrameContainer:Hide()
 
-    while true do
-        local a = C_UnitAuras.GetBuffDataByIndex(frame.unit, i)
-        if not a then break end
-        indexTable[a.auraInstanceID] = i
-        i = i + 1
-    end
-
-    i = 1
-    while true do
-        local a = C_UnitAuras.GetDebuffDataByIndex(frame.unit, i)
-        if not a then break end
-        indexTable[a.auraInstanceID] = i
-        i = i + 1
-    end
-    
-    return indexTable
-end
-
-local function IterateAuras(frame, auras, maxAuras, template)
-    local index = 0
-    local maxRow = 9
-    local frameSize = 21
-    local indexTable = GetIndexTable(frame, auras)
-    local pool = frame.pools:GetPool(template)
-    pool:ReleaseAll()
-
-    auras:Iterate(function(id, aura)
-        if index >= maxAuras then return true end
-
-        local auraFrame = pool:Acquire()
-        auraFrame:Show()
-
-        auraFrame.unit = frame.unit
-        auraFrame.index = indexTable[id]
-
-        auraFrame.Icon:SetTexture(aura.icon)
-        auraFrame.Icon:SetTexCoord(.08, .92, .08, .92)
-
-        local frameCount = auraFrame.Overlay.Count
-        if aura.applications > 1 then
-            frameCount:SetText(aura.applications)
-            frameCount:Show()
-        else
-            frameCount:Hide()
-        end
-
-        if aura.isHarmful then
-			local color
-			if aura.dispelName then
-				color = DebuffTypeColor[aura.dispelName]
-			else
-				color = DebuffTypeColor["none"]
-			end
-            auraFrame.Overlay.Backdrop:ApplyBackdrop(CUI_BACKDROP_W_1)
-			auraFrame.Overlay.Backdrop:SetBackdropBorderColor(color.r, color.g, color.b, 1)
-		else
-            auraFrame.Overlay.Backdrop:ApplyBackdrop(CUI_BACKDROP_B_06)
-        end
-
-        CooldownFrame_Set(auraFrame.Cooldown, aura.expirationTime - aura.duration, aura.duration, aura.duration > 0, true)
-
-        local level = math.floor(index/maxRow)
-
-        auraFrame:ClearAllPoints()
-        if aura.isHelpful then
-            auraFrame:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", (index*frameSize)-(level*maxRow*frameSize), -(level*frameSize)-2)
-        else
-            auraFrame:SetPoint("BOTTOMRIGHT", frame, "TOPRIGHT", -(index*frameSize)+(level*maxRow*frameSize), 2+(level*frameSize))
-        end
-
-        index = index + 1
+    TargetFrame.TargetFrameContent:Hide()
+    TargetFrame.TargetFrameContainer:Hide()
+    TargetFrameSpellBar:SetScript("OnShow", function()
+        TargetFrameSpellBar:Hide()
     end)
 end
 
-local function AddAura(frame, aura)
-    if not aura then return false end
-
-    if aura.isHelpful then
-        frame.buffs[aura.auraInstanceID] = aura
-        return true
-    elseif aura.isHarmful then
-        if not UnitIsPlayer(frame.unit) then
-            if aura.sourceUnit ~= "player" and aura.isFromPlayerOrPlayerPet then return false end
-        end
-
-        frame.debuffs[aura.auraInstanceID] = aura
-        return true
-    end
-
-    return false
-end
-
-local function AddAllAuras(frame)
-    frame.buffs:Clear()
-    frame.debuffs:Clear()
-
-	local function HandleAura(aura)
-		AddAura(frame, aura)
-		return false
-	end
-
-	AuraUtil.ForEachAura(frame.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Helpful), nil, HandleAura, true)
-    AuraUtil.ForEachAura(frame.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Harmful), nil, HandleAura, true)
-end
-
-local function UpdateAuras(frame, unit, updateInfo)
-	local buffsChanged = false
-    local debuffsChanged = false
-
-    if updateInfo == nil or updateInfo.isFullUpdate then
-        AddAllAuras(frame)
-        buffsChanged = true
-        debuffsChanged = true
-    else
-        if updateInfo.addedAuras then
-            for _, aura in ipairs(updateInfo.addedAuras) do
-                local added = AddAura(frame, aura)
-                if added then
-                    if aura.isHelpful then
-                        buffsChanged = true
-                    elseif aura.isHarmful then
-                        debuffsChanged = true
-                    end
-                end
-            end
-        end
-
-        if updateInfo.updatedAuraInstanceIDs then
-            for _, id in ipairs(updateInfo.updatedAuraInstanceIDs) do
-				local wasInDebuff = frame.debuffs[id] ~= nil
-				local wasInBuff = frame.buffs[id] ~= nil
-				if wasInDebuff or wasInBuff then
-					local newAura = C_UnitAuras.GetAuraDataByAuraInstanceID(frame.unit, id)
-					frame.debuffs[id] = nil
-					frame.buffs[id] = nil
-					local added = AddAura(frame, newAura)
-                    if added then
-                        if newAura and (newAura.isHelpful or wasInBuff) then
-                            buffsChanged = true
-                        end
-                        if newAura and (newAura.isHarmful or wasInDebuff) then
-                            debuffsChanged = true
-                        end
-                    end
-				end 
-            end
-        end
-
-        if updateInfo.removedAuraInstanceIDs then
-            for _, id in ipairs(updateInfo.removedAuraInstanceIDs) do
-                if frame.buffs[id] then
-                    frame.buffs[id] = nil
-                    buffsChanged = true
-                elseif frame.debuffs[id] then
-                    frame.debuffs[id] = nil
-                    debuffsChanged = true
-                end
-            end
-        end
-    end
-
-    if not (buffsChanged or debuffsChanged) then return end
-
-    if buffsChanged then
-        local numBuffs = math.min(18, frame.buffs:Size());
-        IterateAuras(frame, frame.buffs, numBuffs, "CUI_UnitFrameBuff")
-    end
-
-    if debuffsChanged then
-        local numDebuffs = math.min(18, frame.debuffs:Size());
-        IterateAuras(frame, frame.debuffs, numDebuffs, "CUI_UnitFrameDebuff")
-    end
-end
-
----------------------------------------------------------------------------------------------------------------------------------
-
-local function HideBlizzard()
-    Hide.HideFrame(PlayerFrame)
-    Hide.HideFrame(TargetFrame)
-end
+---------------------------------------------------------------------------------------------------
 
 local function UpdateHealth(frame)
     local unit = frame.unit
@@ -272,77 +100,29 @@ local function UpdateNameText(frame)
 end
 
 local function UpdateAll(frame)
-    if frame.showAuras then UpdateAuras(frame, frame.unit, nil) end
     if frame.showPower then UpdatePowerFull(frame) end
     UpdateHealthFull(frame)
     UpdateLeaderAssist(frame)
     UpdateNameText(frame)
 end
 
-function UF.SetFramePosition(frame, unit, value, axis)
-    if axis == "X" then
-        frame:ClearAllPoints()
-        frame:SetPoint("CENTER", frame:GetParent(), "CENTER", value, CalippoDB[unit.."Frame"].posY)
-        CalippoDB[unit.."Frame"]["pos"..axis] = value
-    elseif axis == "Y" then
-        frame:ClearAllPoints()
-        frame:SetPoint("CENTER", frame:GetParent(), "CENTER", CalippoDB[unit.."Frame"].posX, value)
-        CalippoDB[unit.."Frame"]["pos"..axis] = value
-    end
-end
+---------------------------------------------------------------------------------------------------
 
----------------------------------------------------------------------------------------------------------------------------------
-
-local function SetupUnitFrame(unit, posX, posY, sizeX, sizeY, showAuras, showPower, powerHeight)
-    local frame = CreateFrame("Button", "CUI_"..unit.."Frame", UIParent, "CUI_UnitFrameTemplate")
-    frame:SetPoint("CENTER", UIParent, "CENTER", posX, posY)
-    frame:SetSize(sizeX, sizeY)
-
-    frame:SetAttribute("unit", unit)
-    frame:RegisterForClicks("AnyDown")
-    frame:SetAttribute("*type1", "target")
-    frame:SetAttribute("*type2", "togglemenu")
-    frame:SetAttribute("ping-receiver", true)
-
-    frame.unit = unit
-    frame.showAuras = showAuras
-    frame.showPower = showPower
-
-    frame:SetAlpha(0.5)
+function SetupUnitFrame(frame)
+    local unit = frame.unit
+    frame.showPower = false
 
     local healthBar = CreateFrame("StatusBar", nil, frame)
     healthBar:SetParentKey("HealthBar")
-    healthBar:SetPoint("TOPLEFT", frame, "TOPLEFT")
-    healthBar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, powerHeight or 0)
+    healthBar:SetPoint("TOPLEFT", frame, "TOPLEFT", 25, -20)
+    healthBar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -25, 20)
     healthBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
     Util.AddStatusBarBackground(healthBar)
     Util.AddBackdrop(healthBar, 1, CUI_BACKDROP_DS_3)
 
-    if showPower then
-        frame:RegisterUnitEvent("UNIT_POWER_UPDATE", unit)
-        frame:RegisterUnitEvent("UNIT_MAXPOWER", unit)
-
-        local powerBar = CreateFrame("StatusBar", nil, frame)
-        powerBar:SetParentKey("PowerBar")
-        powerBar:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", 0, powerHeight)
-        powerBar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT")
-        powerBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
-
-        if unit == "player" then
-            local _, powerType = UnitPowerType("player")
-            if powerType == nil or powerType == "MANA" then powerType = "MAELSTROM" end
-            local color = PowerBarColor[powerType]
-            powerBar:SetStatusBarColor(color.r, color.g, color.b, 1)
-        end
-
-        Util.AddStatusBarBackground(powerBar)
-        Util.AddBackdrop(powerBar, 1, CUI_BACKDROP_DS_3)
-    end
-
     local overlayFrame = CreateFrame("Frame", nil, frame)
     overlayFrame:SetParentKey("Overlay")
-    overlayFrame:SetAllPoints(frame)
-    overlayFrame:SetFrameLevel(10)
+    overlayFrame:SetAllPoints(healthBar)
 
     local unitName = overlayFrame:CreateFontString(nil, "OVERLAY")
     unitName:SetParentKey("UnitName")
@@ -362,15 +142,8 @@ local function SetupUnitFrame(unit, posX, posY, sizeX, sizeY, showAuras, showPow
     leaderFrame:SetSize(15, 15)
     leaderFrame:Hide()
 
-    if showAuras then
+    if unit == "target" then
         frame:RegisterEvent("PLAYER_TARGET_CHANGED")
-        frame:RegisterUnitEvent("UNIT_AURA", unit)
-        frame.pools = CreateFramePoolCollection()
-        frame.pools:CreatePool("Frame", frame, "CUI_UnitFrameBuff")
-        frame.pools:CreatePool("Frame", frame, "CUI_UnitFrameDebuff")
-        frame.buffs = TableUtil.CreatePriorityTable(AuraUtil.DefaultAuraCompare, TableUtil.Constants.AssociativePriorityTable)
-        frame.debuffs = TableUtil.CreatePriorityTable(AuraUtil.DefaultAuraCompare, TableUtil.Constants.AssociativePriorityTable)
-        UpdateAuras(frame, unit, nil)
     end
 
     frame:RegisterUnitEvent("UNIT_HEALTH", unit)
@@ -380,11 +153,8 @@ local function SetupUnitFrame(unit, posX, posY, sizeX, sizeY, showAuras, showPow
     frame:RegisterEvent("PARTY_LEADER_CHANGED")
     frame:RegisterEvent("GROUP_FORMED")
     frame:RegisterEvent("GROUP_LEFT")
-    frame:SetScript("OnEvent", function(self, event, ...)
-        if event == "UNIT_AURA" then
-            local unit, updateInfo = ...
-            UpdateAuras(self, unit, updateInfo)
-        elseif event == "UNIT_HEALTH" then
+    frame:HookScript("OnEvent", function(self, event, ...)
+        if event == "UNIT_HEALTH" then
             UpdateHealth(self)
         elseif event == "UNIT_MAXHEALTH" then
             UpdateMaxHealth(self)
@@ -405,15 +175,57 @@ local function SetupUnitFrame(unit, posX, posY, sizeX, sizeY, showAuras, showPow
     end)
 
     UpdateAll(frame)
-
-    RegisterUnitWatch(frame, false)
 end
 
----------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function UF.OnLoad()
     HideBlizzard()
 
-    SetupUnitFrame("player", CalippoDB.playerFrame.posX, CalippoDB.playerFrame.posY, CalippoDB.playerFrame.sizeX, CalippoDB.playerFrame.sizeY, false, false)
-    SetupUnitFrame("target", CalippoDB.targetFrame.posX, CalippoDB.targetFrame.posY, CalippoDB.targetFrame.sizeX, CalippoDB.targetFrame.sizeY, true, true, 5)
+    SetupUnitFrame(PlayerFrame)
+    SetupUnitFrame(TargetFrame)
+
+    hooksecurefunc(TargetFrame, "UpdateAuras", function(self)
+        local auraFrames = {}
+        local maxRow = 8
+        local frameSize = 20
+        local offset = 1
+        local index = 0
+
+        for frame in self.auraPools:EnumerateActive() do
+            auraFrames[frame.auraInstanceID] = frame
+        end        
+
+        self.activeBuffs:Iterate(function(id, aura)
+            local frame = auraFrames[id]
+            frame:ClearAllPoints()
+            frame:SetSize(frameSize, frameSize)
+            frame.Icon:SetTexCoord(.08, .92, .08, .92)
+            frame.Count:SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", 12, "")
+
+            local level = math.floor(index/maxRow)
+
+            frame:ClearAllPoints()
+            frame:SetPoint("BOTTOMRIGHT", TargetFrame.HealthBar, "TOPRIGHT", -(index*(frameSize+offset))+(level*maxRow*(frameSize+offset)), 2+(level*frameSize))
+
+            index = index + 1
+        end)
+
+        index = 0
+
+        self.activeDebuffs:Iterate(function(id, aura)
+            local frame = auraFrames[id]
+            frame:SetSize(frameSize, frameSize)
+            frame:SetPoint("TOPLEFT", TargetFrame.HealthBar, "BOTTOMLEFT")
+            frame.Icon:SetTexCoord(.08, .92, .08, .92)
+            frame.Count:SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", 12, "")
+
+            local level = math.floor(index/maxRow)
+
+            frame:ClearAllPoints()
+            frame:SetPoint("TOPLEFT", TargetFrame.HealthBar, "BOTTOMLEFT", (index*(frameSize+offset))-(level*maxRow*(frameSize+offset)), -(level*frameSize)-2)
+
+            index = index + 1
+        end)
+    end)
 end
