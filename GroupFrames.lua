@@ -6,6 +6,6 @@ local Util = CUI.Util
 local Hide = CUI.Hide
 local Const = CUI.Const
 
-function GF.OnLoad()
+function GF.Load()
 
 end

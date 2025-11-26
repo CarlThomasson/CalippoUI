@@ -4,25 +4,29 @@ local f = CreateFrame("Frame")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
 f:SetScript("OnEvent", function(self, event, isLogin, isReload)
     if isLogin or isReload then
-        CUI.DB.OnLoad()
+        CUI.DB.Load()
 
         if CalippoDB.IsEnabled.Chat then
-            CUI.Chat.OnLoad()
+            CUI.Chat.Load()
         end
 
         if CalippoDB.IsEnabled.UnitFrame then
-            CUI.UF.OnLoad()
+            CUI.UF.Load()
         end
 
         if CalippoDB.IsEnabled.GroupFrame then
-            CUI.GF.OnLoad()
+            CUI.GF.Load()
         end
 
         if CalippoDB.IsEnabled.Bars then
-            CUI.Bars.OnLoad()
+            CUI.Bars.Load()
         end
 
-        CUI.Menu.OnLoad()
+        CUI.CDM.Load()
+
+        CUI.RES.Load()
+
+        CUI.Menu.Load()
     end
 end)
 

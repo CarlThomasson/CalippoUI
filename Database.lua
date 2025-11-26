@@ -5,7 +5,7 @@ CUI.Const = {}
 local DB = CUI.DB
 local Const = CUI.Const
 
-function DB.OnLoad()
+function DB.Load()
     if not CalippoDB then
         CalippoDB = {}
     end
@@ -93,6 +93,18 @@ function DB.OnLoad()
     CUI_BACKDROP_DS_3 = {
         edgeFile = "Interface/AddOns/CalippoUI/Media/DropShadowBorder.blp", 
         edgeSize = 3, 
+        bgFile = nil
+    }
+
+    CUI_BACKDROP_DS_2 = {
+        edgeFile = "Interface/AddOns/CalippoUI/Media/DropShadowBorder.blp", 
+        edgeSize = 2, 
+        bgFile = nil
+    }
+
+    CUI_BACKDROP_DS_1 = {
+        edgeFile = "Interface/AddOns/CalippoUI/Media/DropShadowBorder.blp", 
+        edgeSize = 1, 
         bgFile = nil
     }
 

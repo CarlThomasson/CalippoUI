@@ -3,7 +3,7 @@ local addonName, CUI = ...
 CUI.Chat = {}
 local Chat = CUI.Chat
 
-function Chat.OnLoad()
+function Chat.Load()
     QuickJoinToastButton:Hide()
 
 	CHAT_TAB_SHOW_DELAY = 0

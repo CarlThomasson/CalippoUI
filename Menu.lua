@@ -61,7 +61,7 @@ local function HideAllOptions(mainFrame)
     mainFrame.GroupFrameOptions:Hide()
 end
 
-local function OnLoadTopButtons(mainFrame)
+local function LoadTopButtons(mainFrame)
     mainFrame.GeneralButton:SetScript("OnClick", function(self)
         HideAllOptions(mainFrame)
         mainFrame.GeneralOptions:Show()
@@ -78,13 +78,13 @@ local function OnLoadTopButtons(mainFrame)
     end)
 end
 
-local function OnLoadGeneralOptions(mainFrame)
+local function LoadGeneralOptions(mainFrame)
     local frame = mainFrame.GeneralOptions
 
     BarAlphaSlider(frame.BarAlphaSlider)
 end
 
-local function OnLoadUnitFrameOptions(mainFrame)
+local function LoadUnitFrameOptions(mainFrame)
     local frame = mainFrame.UnitFrameOptions
 
     UnitFramePositionSlider(frame.PlayerFramePosXSlider, "player", "X")
@@ -94,7 +94,7 @@ local function OnLoadUnitFrameOptions(mainFrame)
     UnitFramePositionSlider(frame.TargetFramePosYSlider, "target", "Y")
 end
 
-local function OnLoadGroupFrameOptions(mainFrame)
+local function LoadGroupFrameOptions(mainFrame)
     local frame = mainFrame.GroupFrameOptions
 
     UnitFramePositionSlider(frame.PartyFramePosXSlider, "party", "X")
@@ -104,14 +104,14 @@ local function OnLoadGroupFrameOptions(mainFrame)
     UnitFramePositionSlider(frame.RaidFramePosYSlider, "raid", "Y")
 end
 
-function Menu.OnLoad()
+function Menu.Load()
     local frame = CreateFrame("Frame", "CUI_OptionsFrame", UIParent, "CUI_OptionsTemplate")
 
-    OnLoadTopButtons(frame)
+    LoadTopButtons(frame)
 
-    OnLoadGeneralOptions(frame)
-    OnLoadUnitFrameOptions(frame)
-    OnLoadGroupFrameOptions(frame)
+    LoadGeneralOptions(frame)
+    LoadUnitFrameOptions(frame)
+    LoadGroupFrameOptions(frame)
 
     frame.GeneralOptions:Show()
     frame:Show()

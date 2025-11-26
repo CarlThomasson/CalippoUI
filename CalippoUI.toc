@@ -17,5 +17,7 @@ GroupFrames.lua
 Bars.lua
 Chat.lua
 TradeAutoWhisper.lua
+CooldownManager.lua
+Resources.lua
 
 OnLoad.lua

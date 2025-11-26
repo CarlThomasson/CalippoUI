@@ -99,11 +99,20 @@ local function UpdateNameText(frame)
     frame.Overlay.UnitName:SetText(UnitName(frame.unit))
 end
 
+local function UpdateAlpha(frame)
+    if InCombatLockdown() then 
+        frame:SetAlpha(1)
+    else
+        frame:SetAlpha(0.5)
+    end
+end
+
 local function UpdateAll(frame)
     if frame.showPower then UpdatePowerFull(frame) end
     UpdateHealthFull(frame)
     UpdateLeaderAssist(frame)
     UpdateNameText(frame)
+    UpdateAlpha(frame)
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -114,8 +123,8 @@ function SetupUnitFrame(frame)
 
     local healthBar = CreateFrame("StatusBar", nil, frame)
     healthBar:SetParentKey("HealthBar")
-    healthBar:SetPoint("TOPLEFT", frame, "TOPLEFT", 25, -20)
-    healthBar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -25, 20)
+    healthBar:SetPoint("TOPLEFT", frame, "TOPLEFT", 25, -16)
+    healthBar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -25, 30)
     healthBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
     Util.AddStatusBarBackground(healthBar)
     Util.AddBackdrop(healthBar, 1, CUI_BACKDROP_DS_3)
@@ -127,8 +136,11 @@ function SetupUnitFrame(frame)
     local unitName = overlayFrame:CreateFontString(nil, "OVERLAY")
     unitName:SetParentKey("UnitName")
     unitName:SetPoint("LEFT", overlayFrame, "LEFT", 5, 0)
+    unitName:SetWidth(overlayFrame:GetWidth() - 60)
+    unitName:SetJustifyH("LEFT")
     unitName:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 12, "")
     unitName:SetText(UnitName(unit))
+    unitName:SetWordWrap(false)
     
     local unitHealth = overlayFrame:CreateFontString(nil, "OVERLAY")
     unitHealth:SetParentKey("UnitHealth")
@@ -168,7 +180,7 @@ function SetupUnitFrame(frame)
         elseif event == "PLAYER_REGEN_ENABLED" then
             UIFrameFadeOut(self, 0.6, 1, 0.5)
         elseif event == "PLAYER_REGEN_DISABLED" then
-            UIFrameFadeIn(self, 0.5, 0.5, 1)
+            UIFrameFadeIn(self, 0.6, 0.5, 1)
         elseif event == "PARTY_LEADER_CHANGED" or event == "GROUP_FORMED" or event == "GROUP_LEFT" then
             UpdateLeaderAssist(self)
         end
@@ -179,7 +191,7 @@ end
 
 ---------------------------------------------------------------------------------------------------
 
-function UF.OnLoad()
+function UF.Load()
     HideBlizzard()
 
     SetupUnitFrame(PlayerFrame)
@@ -189,7 +201,7 @@ function UF.OnLoad()
         local auraFrames = {}
         local maxRow = 8
         local frameSize = 20
-        local offset = 1
+        local offset = 2
         local index = 0
 
         for frame in self.auraPools:EnumerateActive() do
@@ -203,6 +215,10 @@ function UF.OnLoad()
             frame.Icon:SetTexCoord(.08, .92, .08, .92)
             frame.Count:SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", 12, "")
 
+            if not frame.Backdrop then
+                Util.AddBackdrop(frame, 1, CUI_BACKDROP_DS_2)
+            end
+            
             local level = math.floor(index/maxRow)
 
             frame:ClearAllPoints()
@@ -219,6 +235,10 @@ function UF.OnLoad()
             frame:SetPoint("TOPLEFT", TargetFrame.HealthBar, "BOTTOMLEFT")
             frame.Icon:SetTexCoord(.08, .92, .08, .92)
             frame.Count:SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", 12, "")
+
+            if not frame.Backdrop then
+                Util.AddBackdrop(frame, 1, CUI_BACKDROP_DS_2)
+            end
 
             local level = math.floor(index/maxRow)
 

@@ -90,7 +90,7 @@ local function AddHookSecure()
     end)
 end
 
-function Bars.OnLoad()
+function Bars.Load()
     HideBlizzard()
 
     Bars.SetAlphas(CalippoDB.BarAlpha)
