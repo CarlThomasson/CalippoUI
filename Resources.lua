@@ -41,7 +41,7 @@ function RES.Load()
     --     Warrior()
     -- end
 
-    local powerBar = CreateFrame("Statusbar", "CUI_PoweBar", UIParent)
+    local powerBar = CreateFrame("Statusbar", "CUI_PowerBar", UIParent)
     powerBar:SetHeight(18)
     powerBar:SetPoint("BOTTOMLEFT", EssentialCooldownViewer, "TOPLEFT", 0, 2)
     powerBar:SetPoint("BOTTOMRIGHT", EssentialCooldownViewer, "TOPRIGHT", 0, 2)

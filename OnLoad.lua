@@ -26,6 +26,10 @@ f:SetScript("OnEvent", function(self, event, isLogin, isReload)
 
         CUI.RES.Load()
 
+        CUI.CB.Load()
+
+        CUI.MM.Load()
+
         CUI.Menu.Load()
     end
 end)

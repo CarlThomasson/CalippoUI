@@ -19,5 +19,7 @@ Chat.lua
 TradeAutoWhisper.lua
 CooldownManager.lua
 Resources.lua
+Castbar.lua
+Minimap.lua
 
 OnLoad.lua

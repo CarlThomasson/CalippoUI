@@ -114,5 +114,5 @@ function Menu.Load()
     LoadGroupFrameOptions(frame)
 
     frame.GeneralOptions:Show()
-    frame:Show()
+    --frame:Show()
 end

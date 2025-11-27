@@ -123,8 +123,13 @@ function SetupUnitFrame(frame)
 
     local healthBar = CreateFrame("StatusBar", nil, frame)
     healthBar:SetParentKey("HealthBar")
-    healthBar:SetPoint("TOPLEFT", frame, "TOPLEFT", 25, -16)
-    healthBar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -25, 30)
+    if unit == "player" then
+        healthBar:SetPoint("TOPLEFT", frame, "TOPLEFT", 40, 4)
+        healthBar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -18, 52)
+    elseif unit == "target" then
+        healthBar:SetPoint("TOPLEFT", frame, "TOPLEFT", 18, 4)
+        healthBar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -40, 52)
+    end
     healthBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
     Util.AddStatusBarBackground(healthBar)
     Util.AddBackdrop(healthBar, 1, CUI_BACKDROP_DS_3)
