@@ -20,32 +20,39 @@ local function UpdateStyle(viewer)
         end
 
         if frame.Applications then
-            frame.Applications.Applications:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 18, "OUTLINE")
+            frame.Applications.Applications:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 16, "OUTLINE")
+            frame.Applications.Applications:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
         end
 
         if frame.ChargeCount then
+            local fontSize
             if viewer:GetName() == "EssentialCooldownViewer" then
-                frame.ChargeCount.Current:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 18, "OUTLINE")
+                fontSize = 18
             elseif viewer:GetName() == "UtilityCooldownViewer" then
-                frame.ChargeCount.Current:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 12, "OUTLINE")
+                fontSize = 12
             elseif viewer:GetName() == "BuffIconCooldownViewer" then
-                frame.ChargeCount.Current:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 16, "OUTLINE")
+                fontSize = 16 
             end
+
+            frame.ChargeCount.Current:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", fontSize, "OUTLINE")
+            frame.ChargeCount.Current:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
         end
 
         if frame.Cooldown then
             frame.Cooldown:SetSwipeTexture("", 0, 0, 0, 1)
             --frame.Cooldown:SetEdgeTexture()
+            
+            local fontSize
+            if viewer:GetName() == "EssentialCooldownViewer" then
+                fontSize = 18
+            elseif viewer:GetName() == "UtilityCooldownViewer" then
+                fontSize = 12
+            elseif viewer:GetName() == "BuffIconCooldownViewer" then
+                fontSize = 16 
+            end
 
             local text = frame.Cooldown:GetRegions()
-
-            if viewer:GetName() == "EssentialCooldownViewer" then
-                text:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 18, "OUTLINE")
-            elseif viewer:GetName() == "UtilityCooldownViewer" then
-                text:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 12, "OUTLINE")
-            elseif viewer:GetName() == "BuffIconCooldownViewer" then
-                text:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 16, "OUTLINE")
-            end
+            text:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", fontSize, "OUTLINE")
         end
 
         if frame.OutOfRange then
@@ -65,7 +72,7 @@ end
 local function UpdatePositions(viewer)
     local iconScale = viewer.iconScale
     local padding = viewer.iconPadding
-    local rowLength = viewer.iconLimit
+    local rowSize = viewer.iconLimit
 
     local frameSize
     if viewer:GetName() == "EssentialCooldownViewer" then
@@ -89,7 +96,6 @@ local function UpdatePositions(viewer)
         return a2 < b2 
     end)
 
-    local index = 0
     local lastRow
     local lastRowSize
     local lastRowOffest
@@ -97,27 +103,27 @@ local function UpdatePositions(viewer)
     if viewer:GetName() == "BuffIconCooldownViewer" then
         lastRowOffest = ((frameSize + padding) * (#frames - 1)) / 2 + padding
     else
-        lastRow = math.ceil(#frames / rowLength)
-        lastRowSize = #frames % rowLength
-        lastRowOffest = (frameSize + padding) * ((rowLength - lastRowSize) / 2)
+        lastRow = math.ceil(#frames / rowSize) - 1
+        lastRowSize = #frames % rowSize
+        if lastRowSize == 0 then lastRowSize = rowSize end
+        lastRowOffest = (frameSize + padding) * ((rowSize - lastRowSize) / 2)
     end
 
-    for _, frame in ipairs(frames) do
-        local row = math.floor(index/rowLength)
+    for index, frame in ipairs(frames) do
+        index = index - 1
+        local row = math.floor(index/rowSize)
 
         frame:ClearAllPoints()
 
         if viewer:GetName() == "BuffIconCooldownViewer" then
             frame:SetPoint("CENTER", viewer, "CENTER", (index*(frameSize+padding))-lastRowOffest, 0)
-        elseif row == (lastRow - 1) then
-            frame:SetPoint("TOPLEFT", viewer, "TOPLEFT", (index*(frameSize+padding))-(row*rowLength*(frameSize+padding))+lastRowOffest, -(row*(frameSize+padding)))
+        elseif row == lastRow and row ~= 0 and lastRowSize ~= rowSize then
+            frame:SetPoint("TOPLEFT", viewer, "TOPLEFT", (index*(frameSize+padding))-(row*rowSize*(frameSize+padding))+lastRowOffest, -(row*(frameSize+padding)))
         else
-            frame:SetPoint("TOPLEFT", viewer, "TOPLEFT", (index*(frameSize+padding))-(row*rowLength*(frameSize+padding)), -(row*(frameSize+padding)))
+            frame:SetPoint("TOPLEFT", viewer, "TOPLEFT", (index*(frameSize+padding))-(row*rowSize*(frameSize+padding)), -(row*(frameSize+padding)))
         end
         
         frame:SetSize(frameSize, frameSize)
-
-        index = index + 1
     end
 end
 
@@ -127,34 +133,26 @@ local cooldownViewers = {
     BuffIconCooldownViewer,
 }
 
-local function HookScripts(frame)
-    frame.CUI_LastUpdate = GetTime() - 123
-    local updateInterval = 1
-
-    if frame:GetName() == "BuffIconCooldownViewer" then
-        updateInterval = 0.05
-    end
-
-    frame:HookScript("OnShow", function(self)
+local function HookScripts(viewer)
+    viewer:HookScript("OnShow", function(self)
         UpdateStyle(self)
     end)
 
-    frame:HookScript("OnSizeChanged", function(self)
+    viewer:HookScript("OnSizeChanged", function(self)
         UpdateStyle(self)
         UpdatePositions(self)
     end)
 
-    frame:HookScript("OnUpdate", function(self)
-        local time = GetTime()
-        if self.CUI_LastUpdate + updateInterval < time then
-            self.CUI_LastUpdate = time
+    if viewer:GetName() == "BuffIconCooldownViewer" then
+        viewer:HookScript("OnUpdate", function(self)
             UpdatePositions(self)
-        end
-    end)
+        end)
+    end
 end
 
 function CDM.Load()
     for _, viewer in pairs(cooldownViewers) do
         HookScripts(viewer)
+        Util.AddCombatFading(viewer)
     end
 end

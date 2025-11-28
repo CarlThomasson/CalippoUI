@@ -21,5 +21,6 @@ CooldownManager.lua
 Resources.lua
 Castbar.lua
 Minimap.lua
+PlayerAuras.lua
 
 OnLoad.lua

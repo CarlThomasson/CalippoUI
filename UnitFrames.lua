@@ -16,6 +16,12 @@ function HideBlizzard()
     TargetFrameSpellBar:SetScript("OnShow", function()
         TargetFrameSpellBar:Hide()
     end)
+
+    FocusFrame.TargetFrameContent:Hide()
+    FocusFrame.TargetFrameContainer:Hide()
+
+    Hide.HideFrame(PaladinPowerBarFrame)
+    Hide.HideFrame(RuneFrame)
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -108,7 +114,7 @@ local function UpdateAlpha(frame)
 end
 
 local function UpdateAll(frame)
-    if frame.showPower then UpdatePowerFull(frame) end
+    if frame.PowerBar then UpdatePowerFull(frame) end
     UpdateHealthFull(frame)
     UpdateLeaderAssist(frame)
     UpdateNameText(frame)
@@ -119,16 +125,30 @@ end
 
 function SetupUnitFrame(frame)
     local unit = frame.unit
-    frame.showPower = false
 
     local healthBar = CreateFrame("StatusBar", nil, frame)
     healthBar:SetParentKey("HealthBar")
     if unit == "player" then
         healthBar:SetPoint("TOPLEFT", frame, "TOPLEFT", 40, 4)
         healthBar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -18, 52)
-    elseif unit == "target" then
+    elseif unit ~= "player" then
         healthBar:SetPoint("TOPLEFT", frame, "TOPLEFT", 18, 4)
-        healthBar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -40, 52)
+        healthBar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -40, 57)
+
+        frame:RegisterEvent("PLAYER_TARGET_CHANGED")
+        frame:RegisterUnitEvent("UNIT_POWER_UPDATE", unit)
+        frame:RegisterUnitEvent("UNIT_MAXPOWER", unit)
+        if unit == "focus" then
+            frame:RegisterEvent("PLAYER_FOCUS_CHANGED")
+        end
+
+        local powerBar = CreateFrame("StatusBar", nil, frame)
+        powerBar:SetParentKey("PowerBar")
+        powerBar:SetPoint("TOPLEFT", healthBar, "BOTTOMLEFT")
+        powerBar:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT", 0, -5)
+        powerBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
+        Util.AddStatusBarBackground(powerBar)
+        Util.AddBackdrop(powerBar, 1, CUI_BACKDROP_DS_3)
     end
     healthBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
     Util.AddStatusBarBackground(healthBar)
@@ -159,10 +179,6 @@ function SetupUnitFrame(frame)
     leaderFrame:SetSize(15, 15)
     leaderFrame:Hide()
 
-    if unit == "target" then
-        frame:RegisterEvent("PLAYER_TARGET_CHANGED")
-    end
-
     frame:RegisterUnitEvent("UNIT_HEALTH", unit)
     frame:RegisterUnitEvent("UNIT_MAXHEALTH", unit)
     frame:RegisterEvent("PLAYER_REGEN_ENABLED")
@@ -176,10 +192,12 @@ function SetupUnitFrame(frame)
         elseif event == "UNIT_MAXHEALTH" then
             UpdateMaxHealth(self)
         elseif event == "UNIT_POWER_UPDATE" then
+            if self.unit == "player" then return end
             UpdatePower(self)
         elseif event == "UNIT_MAXPOWER" then
+            if self.unit == "player" then return end
             UpdateMaxPower(self)
-        elseif event == "PLAYER_TARGET_CHANGED" then
+        elseif event == "PLAYER_TARGET_CHANGED" or event == "PLAYER_FOCUS_CHANGED" then
             if not UnitExists(self.unit) then return end
             UpdateAll(frame)
         elseif event == "PLAYER_REGEN_ENABLED" then
@@ -201,6 +219,7 @@ function UF.Load()
 
     SetupUnitFrame(PlayerFrame)
     SetupUnitFrame(TargetFrame)
+    SetupUnitFrame(FocusFrame)
 
     hooksecurefunc(TargetFrame, "UpdateAuras", function(self)
         local auraFrames = {}
@@ -248,7 +267,7 @@ function UF.Load()
             local level = math.floor(index/maxRow)
 
             frame:ClearAllPoints()
-            frame:SetPoint("TOPLEFT", TargetFrame.HealthBar, "BOTTOMLEFT", (index*(frameSize+offset))-(level*maxRow*(frameSize+offset)), -(level*frameSize)-2)
+            frame:SetPoint("TOPLEFT", TargetFrame.PowerBar, "BOTTOMLEFT", (index*(frameSize+offset))-(level*maxRow*(frameSize+offset)), -(level*frameSize)-2)
 
             index = index + 1
         end)

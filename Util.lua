@@ -58,3 +58,27 @@ function Util.UnitHealthText(unit)
     local rounded = AbbreviateLargeNumbers(health)
     return rounded
 end
+
+function Util.UnitPowerText(unit)
+    local power = UnitPower(unit)
+    local rounded = AbbreviateLargeNumbers(power)
+    return rounded
+end
+
+function Util.AddCombatFading(frame)
+    if InCombatLockdown() then 
+        frame:SetAlpha(1) 
+    else
+        frame:SetAlpha(0.5)
+    end
+
+    frame:RegisterEvent("PLAYER_REGEN_ENABLED")
+    frame:RegisterEvent("PLAYER_REGEN_DISABLED")
+    frame:HookScript("OnEvent", function(self, event)
+        if event == "PLAYER_REGEN_ENABLED" then
+            self:SetAlpha(0.5)
+        elseif event == "PLAYER_REGEN_DISABLED" then
+            self:SetAlpha(1)
+        end
+    end)
+end

@@ -10,7 +10,9 @@ hiddenParent:Hide()
 function Hide.HideFrame(frame)
     if not frame then return end
 
-    frame:UnregisterAllEvents()
+    if frame.UnregisterAllEvents then
+        frame:UnregisterAllEvents()
+    end
     frame:Hide()
     frame:SetParent(hiddenParent)
 end

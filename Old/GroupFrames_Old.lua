@@ -8,177 +8,177 @@ local Const = CUI.Const
 
 ---------------------------------------------------------------------------------------------------------------------------------
 
--- local function IterateAuras(frame, auras, maxAuras, template)
---     local index = 0
---     local maxBuffRow = 3
---     local maxDebuffRow = 6
---     local frameSize
+local function IterateAuras(frame, auras, maxAuras, template)
+    local index = 0
+    local maxBuffRow = 3
+    local maxDebuffRow = 6
+    local frameSize
 
---     if frame.groupType == "party" then
---         frameSize = 17
---     else
---         frameSize = 15
---     end
+    if frame.groupType == "party" then
+        frameSize = 17
+    else
+        frameSize = 15
+    end
 
---     local pool = frame.pools:GetPool(template)
---     pool:ReleaseAll()
+    local pool = frame.pools:GetPool(template)
+    pool:ReleaseAll()
 
---     auras:Iterate(function(id, aura)
---         if index >= maxAuras then return true end
+    auras:Iterate(function(id, aura)
+        if index >= maxAuras then return true end
 
---         local auraFrame = pool:Acquire()
---         auraFrame:Show()
+        local auraFrame = pool:Acquire()
+        auraFrame:Show()
 
---         auraFrame.unit = frame.unit
+        auraFrame.unit = frame.unit
 
---         auraFrame.Icon:SetTexture(aura.icon)
---         auraFrame.Icon:SetTexCoord(.08, .92, .08, .92)
+        auraFrame.Icon:SetTexture(aura.icon)
+        auraFrame.Icon:SetTexCoord(.08, .92, .08, .92)
 
---         local frameCount = auraFrame.Overlay.Count
---         if aura.applications > 1 then
---             frameCount:SetText(aura.applications)
---             frameCount:Show()
---         else
---             frameCount:Hide()
---         end
+        local frameCount = auraFrame.Overlay.Count
+        if aura.applications > 1 then
+            frameCount:SetText(aura.applications)
+            frameCount:Show()
+        else
+            frameCount:Hide()
+        end
 
---         if aura.isHarmful then
--- 			local color
--- 			if aura.dispelName then
--- 				color = DebuffTypeColor[aura.dispelName]
--- 			else
--- 				color = DebuffTypeColor["none"]
--- 			end
---             auraFrame.Overlay.Backdrop:ApplyBackdrop(CUI_BACKDROP_W_1)
--- 			auraFrame.Overlay.Backdrop:SetBackdropBorderColor(color.r, color.g, color.b, 1)
--- 		else
---             auraFrame.Overlay.Backdrop:ApplyBackdrop(CUI_BACKDROP_B_06)
---         end
+        if aura.isHarmful then
+			local color
+			if aura.dispelName then
+				color = DebuffTypeColor[aura.dispelName]
+			else
+				color = DebuffTypeColor["none"]
+			end
+            auraFrame.Overlay.Backdrop:ApplyBackdrop(CUI_BACKDROP_W_1)
+			auraFrame.Overlay.Backdrop:SetBackdropBorderColor(color.r, color.g, color.b, 1)
+		else
+            auraFrame.Overlay.Backdrop:ApplyBackdrop(CUI_BACKDROP_B_06)
+        end
 
---         CooldownFrame_Set(auraFrame.Cooldown, aura.expirationTime - aura.duration, aura.duration, aura.duration > 0, true)
+        CooldownFrame_Set(auraFrame.Cooldown, aura.expirationTime - aura.duration, aura.duration, aura.duration > 0, true)
 
---         auraFrame:ClearAllPoints()
---         if aura.isHelpful then
---             local level = math.floor(index/maxBuffRow)
---             auraFrame:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -(index*frameSize)+(level*maxBuffRow*frameSize), -(level*frameSize))
---         else
---             local level = math.floor(index/maxDebuffRow)
---             auraFrame:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", (index*frameSize)+(level*maxDebuffRow*frameSize), (level*frameSize))
---         end
+        auraFrame:ClearAllPoints()
+        if aura.isHelpful then
+            local level = math.floor(index/maxBuffRow)
+            auraFrame:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -(index*frameSize)+(level*maxBuffRow*frameSize), -(level*frameSize))
+        else
+            local level = math.floor(index/maxDebuffRow)
+            auraFrame:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", (index*frameSize)+(level*maxDebuffRow*frameSize), (level*frameSize))
+        end
         
---         index = index + 1
---     end)
--- end
+        index = index + 1
+    end)
+end
 
--- local function AddAura(frame, aura)
---     if not aura then return false end
+local function AddAura(frame, aura)
+    if not aura then return false end
 
---     if aura.isHelpful then
---         if aura.sourceUnit == "player" and Const.BuffWhitelist[aura.spellId] then
---             frame.buffs[aura.auraInstanceID] = aura
---             return true
---         end
---     elseif aura.isHarmful then
---         if not Const.DebuffBlacklist[aura.spellId] then
---             frame.debuffs[aura.auraInstanceID] = aura
---             return true
---         else
---             return false
---         end
---     end
+    if aura.isHelpful then
+        if aura.sourceUnit == "player" and Const.BuffWhitelist[aura.spellId] then
+            frame.buffs[aura.auraInstanceID] = aura
+            return true
+        end
+    elseif aura.isHarmful then
+        if not Const.DebuffBlacklist[aura.spellId] then
+            frame.debuffs[aura.auraInstanceID] = aura
+            return true
+        else
+            return false
+        end
+    end
 
---     return false
--- end
+    return false
+end
 
--- local function AddAllAuras(frame)
---     frame.buffs:Clear()
---     frame.debuffs:Clear()
+local function AddAllAuras(frame)
+    frame.buffs:Clear()
+    frame.debuffs:Clear()
 
--- 	local function HandleAura(aura)
--- 		AddAura(frame, aura)
--- 		return false
--- 	end
+	local function HandleAura(aura)
+		AddAura(frame, aura)
+		return false
+	end
 
--- 	AuraUtil.ForEachAura(frame.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Helpful), nil, HandleAura, true)
---     AuraUtil.ForEachAura(frame.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Harmful), nil, HandleAura, true)
--- end
+	AuraUtil.ForEachAura(frame.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Helpful), nil, HandleAura, true)
+    AuraUtil.ForEachAura(frame.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Harmful), nil, HandleAura, true)
+end
 
--- local function UpdateAuras(frame, unit, updateInfo)
--- 	local buffsChanged = false
---     local debuffsChanged = false
+local function UpdateAuras(frame, unit, updateInfo)
+	local buffsChanged = false
+    local debuffsChanged = false
 
---     if updateInfo == nil or updateInfo.isFullUpdate then
---         AddAllAuras(frame)
---         buffsChanged = true
---         debuffsChanged = true
---     else
---         if updateInfo.addedAuras then
---             for _, aura in ipairs(updateInfo.addedAuras) do
---                 local added = AddAura(frame, aura)
---                 if added then
---                     if aura.isHelpful then
---                         buffsChanged = true
---                     elseif aura.isHarmful then
---                         debuffsChanged = true
---                     end
---                 end
---             end
---         end
+    if updateInfo == nil or updateInfo.isFullUpdate then
+        AddAllAuras(frame)
+        buffsChanged = true
+        debuffsChanged = true
+    else
+        if updateInfo.addedAuras then
+            for _, aura in ipairs(updateInfo.addedAuras) do
+                local added = AddAura(frame, aura)
+                if added then
+                    if aura.isHelpful then
+                        buffsChanged = true
+                    elseif aura.isHarmful then
+                        debuffsChanged = true
+                    end
+                end
+            end
+        end
 
---         if updateInfo.updatedAuraInstanceIDs then
---             for _, id in ipairs(updateInfo.updatedAuraInstanceIDs) do
--- 				local wasInDebuff = frame.debuffs[id] ~= nil
--- 				local wasInBuff = frame.buffs[id] ~= nil
--- 				if wasInDebuff or wasInBuff then
--- 					local newAura = C_UnitAuras.GetAuraDataByAuraInstanceID(frame.unit, id)
--- 					frame.debuffs[id] = nil
--- 					frame.buffs[id] = nil
--- 					local added = AddAura(frame, newAura)
---                     if added then
---                         if newAura and (newAura.isHelpful or wasInBuff) then
---                             buffsChanged = true
---                         end
---                         if newAura and (newAura.isHarmful or wasInDebuff) then
---                             debuffsChanged = true
---                         end
---                     end
--- 				end 
---             end
---         end
+        if updateInfo.updatedAuraInstanceIDs then
+            for _, id in ipairs(updateInfo.updatedAuraInstanceIDs) do
+				local wasInDebuff = frame.debuffs[id] ~= nil
+				local wasInBuff = frame.buffs[id] ~= nil
+				if wasInDebuff or wasInBuff then
+					local newAura = C_UnitAuras.GetAuraDataByAuraInstanceID(frame.unit, id)
+					frame.debuffs[id] = nil
+					frame.buffs[id] = nil
+					local added = AddAura(frame, newAura)
+                    if added then
+                        if newAura and (newAura.isHelpful or wasInBuff) then
+                            buffsChanged = true
+                        end
+                        if newAura and (newAura.isHarmful or wasInDebuff) then
+                            debuffsChanged = true
+                        end
+                    end
+				end 
+            end
+        end
 
---         if updateInfo.removedAuraInstanceIDs then
---             for _, id in ipairs(updateInfo.removedAuraInstanceIDs) do
---                 if frame.buffs[id] then
---                     frame.buffs[id] = nil
---                     buffsChanged = true
---                 elseif frame.debuffs[id] then
---                     frame.debuffs[id] = nil
---                     debuffsChanged = true
---                 end
---             end
---         end
---     end
+        if updateInfo.removedAuraInstanceIDs then
+            for _, id in ipairs(updateInfo.removedAuraInstanceIDs) do
+                if frame.buffs[id] then
+                    frame.buffs[id] = nil
+                    buffsChanged = true
+                elseif frame.debuffs[id] then
+                    frame.debuffs[id] = nil
+                    debuffsChanged = true
+                end
+            end
+        end
+    end
 
---     if not (buffsChanged or debuffsChanged) then return end
+    if not (buffsChanged or debuffsChanged) then return end
 
---     if buffsChanged then
---         local numBuffs = math.min(6, frame.buffs:Size());
---         if frame.groupType == "party" then
---             IterateAuras(frame, frame.buffs, numBuffs, "CUI_PartyFrameBuff")
---         else
---             IterateAuras(frame, frame.buffs, numBuffs, "CUI_RaidFrameBuff")
---         end
---     end
+    if buffsChanged then
+        local numBuffs = math.min(6, frame.buffs:Size());
+        if frame.groupType == "party" then
+            IterateAuras(frame, frame.buffs, numBuffs, "CUI_PartyFrameBuff")
+        else
+            IterateAuras(frame, frame.buffs, numBuffs, "CUI_RaidFrameBuff")
+        end
+    end
 
---     if debuffsChanged then
---         local numDebuffs = math.min(6, frame.debuffs:Size());
---         if frame.groupType == "party" then
---             IterateAuras(frame, frame.debuffs, numDebuffs, "CUI_PartyFrameDebuff")
---         else
---             IterateAuras(frame, frame.debuffs, numDebuffs, "CUI_RaidFrameDebuff")
---         end
---     end
--- end
+    if debuffsChanged then
+        local numDebuffs = math.min(6, frame.debuffs:Size());
+        if frame.groupType == "party" then
+            IterateAuras(frame, frame.debuffs, numDebuffs, "CUI_PartyFrameDebuff")
+        else
+            IterateAuras(frame, frame.debuffs, numDebuffs, "CUI_RaidFrameDebuff")
+        end
+    end
+end
 
 ---------------------------------------------------------------------------------------------------------------------------------
 

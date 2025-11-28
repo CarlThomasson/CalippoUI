@@ -8,7 +8,7 @@ local function UpdatePower(frame)
     local value = UnitPower("player")
 
     frame:SetValue(value)
-    frame.Text:SetText(value)
+    frame.Text:SetText(Util.UnitPowerText("player"))
 end 
 
 local function UpdateMaxPower(frame)
@@ -16,7 +16,7 @@ local function UpdateMaxPower(frame)
 
     frame:SetMinMaxValues(0, UnitPowerMax("player"))
     frame:SetValue(value)
-    frame.Text:SetText(value)
+    frame.Text:SetText(Util.UnitPowerText("player"))
 end
 
 local function UpdatePowerColor(frame)
@@ -30,17 +30,7 @@ local function UpdatePowerColor(frame)
     frame:SetStatusBarColor(color.r, color.g, color.b, 1)
 end
 
--- local function Warrior()
-
--- end
-
 function RES.Load()
-    -- local _, class = UnitClass("player")
-
-    -- if class == "WARRIOR" then
-    --     Warrior()
-    -- end
-
     local powerBar = CreateFrame("Statusbar", "CUI_PowerBar", UIParent)
     powerBar:SetHeight(18)
     powerBar:SetPoint("BOTTOMLEFT", EssentialCooldownViewer, "TOPLEFT", 0, 2)
@@ -67,4 +57,7 @@ function RES.Load()
             UpdateMaxPower(self)
         end
     end)
+
+    Util.AddCombatFading(powerBar)
+    Util.AddCombatFading(prdClassFrame)
 end
