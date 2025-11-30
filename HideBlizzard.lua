@@ -13,12 +13,9 @@ function Hide.HideFrame(frame)
     if frame.UnregisterAllEvents then
         frame:UnregisterAllEvents()
     end
+    
     frame:Hide()
     frame:SetParent(hiddenParent)
-
-    frame:SetScript("OnShow", function(self)
-        self:Hide()
-    end)
 end
 
 function Hide.HideBlizzardParty()

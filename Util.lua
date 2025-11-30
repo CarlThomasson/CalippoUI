@@ -12,9 +12,9 @@ function Util.AddBackdrop(frame, offset, backdropInfo)
 
     frame.borders = {}
     for i=1, 4 do
-        frame.borders[i] = frame:CreateLine(nil, "BACKGROUND", nil, 0)
+        frame.borders[i] = frame:CreateLine(nil, "OVERLAY", nil, 0)
         local l = frame.borders[i]
-        l:SetThickness(1)
+        l:SetThickness(1.1)
         l:SetColorTexture(0, 0, 0, 1)
         if i==1 then
             l:SetStartPoint("TOPLEFT")

@@ -5,6 +5,85 @@ local NP = CUI.NP
 local Util = CUI.Util
 local Hide = CUI.Hide
 
+local function UpdateAuras(unitFrame)
+    for index, frame in ipairs({unitFrame.AurasFrame.DebuffListFrame:GetChildren()}) do
+        frame.CountFrame.Count:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 12, "OUTLINE")
+        frame.Cooldown:GetRegions():SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 12, "OUTLINE")
+
+        local _, mask = frame:GetRegions()
+        if mask then 
+            frame.Icon:RemoveMaskTexture(mask)
+        end
+
+        if not frame.Backdrop then
+            frame.Icon:SetTexCoord(.08, .92, .08, .92)
+            Util.AddBackdrop(frame, 1, CUI_BACKDROP_DS_2)
+        end
+    end
+end
+
+local function GetCastBarColor(castBar)
+    local color = {}
+    if castBar.barType == "uninterruptable" then
+        color.r = 0.9
+        color.g = 0.9
+        color.b = 0.9
+        color.a = 1
+        return color
+    else
+        color.r = 0.8
+        color.g = 0.8
+        color.b = 0
+        color.a = 1
+        return color
+    end
+end
+
+local function GetCastOrChannelInfo(unit)
+    local nameCast, _, _, startTimeMSCast, endTimeMSCast = UnitCastingInfo(unit)
+    local nameChannel, _, _, startTimeMSChannel, endTimeMSChannel = UnitChannelInfo(unit)
+
+    if startTimeMSCast then
+        return nameCast, false, startTimeMSCast, endTimeMSCast
+    elseif startTimeMSChannel then
+        return nameChannel, true, startTimeMSChannel, endTimeMSChannel
+    else
+        return nil, nil
+    end
+end
+
+local function UpdateCastBar(castBar)
+    local name, isChannel, startTime, endTime = GetCastOrChannelInfo(castBar.unit)
+
+    if not startTime then 
+        castBar.isCasting = false
+        castBar:Hide() 
+        return
+    end
+    
+    if isChannel then
+        castBar:SetReverseFill(true)
+    else
+        castBar:SetReverseFill(false)
+    end
+
+    castBar.Text:SetText(name)
+
+    local currentTime = GetTime()
+    castBar:SetMinMaxValues(startTime, endTime)
+    castBar:SetValue(currentTime)
+    
+    local castBarColor = GetCastBarColor(castBar:GetParent().castBar)
+    castBar:SetStatusBarColor(castBarColor.r, castBarColor.g, castBarColor.b, castBarColor.a)
+
+    local v = 0.2
+    castBar.Background:SetColorTexture(castBarColor.r*v, castBarColor.g*v, castBarColor.b*v, 1)
+
+    castBar.isCasting = true
+    castBar:Show()
+end
+
+
 function NP.Load()
     local frame = CreateFrame("Frame", "CUI_NamePlateTracker", UIParent)
     frame:RegisterEvent("NAME_PLATE_UNIT_ADDED")
@@ -67,29 +146,60 @@ function NP.Load()
             unitFrame.AurasFrame.DebuffListFrame:ClearAllPoints()
             unitFrame.AurasFrame.DebuffListFrame:SetPoint("BOTTOMLEFT", unitFrame.HealthBarsContainer, "TOPLEFT", 0, 2)
 
+            local blizzardCastBar = unitFrame.castBar
+            blizzardCastBar:Hide()
+            blizzardCastBar:HookScript("OnShow", function(self)
+                self:Hide()
+            end)
+
+            if not unitFrame.CUI_CastBar then
+                local castBar = CreateFrame("Statusbar", nil, unitFrame)
+                castBar:SetParentKey("CUI_CastBar")
+                castBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
+                castBar:SetStatusBarColor(0.8, 0.8, 0, 1)
+                castBar:SetPoint("TOPLEFT", unitFrame.healthBar, "BOTTOMLEFT", 0, -1)
+                castBar:SetPoint("TOPRIGHT", unitFrame.healthBar, "BOTTOMRIGHT", 0, -1)
+                castBar:SetHeight(10)
+
+                Util.AddStatusBarBackground(castBar)
+                Util.AddBackdrop(castBar, 1, CUI_BACKDROP_DS_3)
+
+                castBar.isCasting = false
+                castBar.unit = unitToken
+
+                local castBarText = castBar:CreateFontString(nil, "OVERLAY")
+                castBarText:SetParentKey("Text")
+                castBarText:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 8, "")
+                castBarText:SetPoint("LEFT", castBar, "LEFT", 3, 0)
+
+                castBar:SetScript("OnUpdate", function(self)
+                    if not self.isCasting then return end
+                    self:SetValue(GetTime() * 1000)
+                end)
+            end
+            unitFrame.CUI_CastBar.unit = unitToken
+            UpdateCastBar(unitFrame.CUI_CastBar)
+
             unitFrame:RegisterUnitEvent("UNIT_HEALTH", unitToken)
             unitFrame:RegisterUnitEvent("UNIT_AURA", unitToken)
+            unitFrame:RegisterUnitEvent("UNIT_SPELLCAST_START", unitToken)
+            unitFrame:RegisterUnitEvent("UNIT_SPELLCAST_STOP", unitToken)
+            unitFrame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_START", unitToken)
+            unitFrame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_UPDATE", unitToken)
+            unitFrame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP", unitToken)
             unitFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
             unitFrame:HookScript("OnEvent", function(self, event, unit)
+                -- TODO : Försök att inte använda UNIT_AURA
                 if event == "UNIT_AURA" then
-                    for index, frame in ipairs({self.AurasFrame.DebuffListFrame:GetChildren()}) do
-                        frame.CountFrame.Count:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 12, "OUTLINE")
-                        frame.Cooldown:GetRegions():SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 12, "OUTLINE")
-
-                        local _, mask = frame:GetRegions()
-                        if mask then 
-                            frame.Icon:RemoveMaskTexture(mask)
-                        end
-                
-                        if not frame.Backdrop then
-                            frame.Icon:SetTexCoord(.08, .92, .08, .92)
-                            Util.AddBackdrop(frame, 1, CUI_BACKDROP_DS_2)
-                        end
-                    end
+                    UpdateAuras(self)
                 elseif event == "UNIT_HEALTH" then
                     unitFrame.CUI_HealthText:SetText(Util.UnitHealthPercent(unit))
                 elseif event == "PLAYER_TARGET_CHANGED" then
                     self.healthBar.deselectedOverlay:Hide()
+                elseif event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START" then
+                    UpdateCastBar(self.CUI_CastBar)
+                elseif event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP" then                    
+                    UpdateCastBar(self.CUI_CastBar)
                 end
             end)
         elseif event == "NAME_PLATE_UNIT_REMOVED" then
