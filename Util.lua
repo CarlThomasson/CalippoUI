@@ -6,9 +6,30 @@ local Util = CUI.Util
 function Util.AddBackdrop(frame, offset, backdropInfo)
     local bd = CreateFrame("Frame", nil, frame, "BackdropTemplate")
     bd:SetParentKey("Backdrop")
-    bd:SetPoint("TOPLEFT", frame, "TOPLEFT", -offset, offset)
-    bd:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", offset, -offset)
-    bd:SetBackdrop(backdropInfo)
+    -- bd:SetPoint("TOPLEFT", frame, "TOPLEFT", -offset, offset)
+    -- bd:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", offset, -offset)
+    -- bd:SetBackdrop(backdropInfo)
+
+    frame.borders = {}
+    for i=1, 4 do
+        frame.borders[i] = frame:CreateLine(nil, "BACKGROUND", nil, 0)
+        local l = frame.borders[i]
+        l:SetThickness(1)
+        l:SetColorTexture(0, 0, 0, 1)
+        if i==1 then
+            l:SetStartPoint("TOPLEFT")
+            l:SetEndPoint("TOPRIGHT")
+        elseif i==2 then
+            l:SetStartPoint("TOPRIGHT")
+            l:SetEndPoint("BOTTOMRIGHT")
+        elseif i==3 then
+            l:SetStartPoint("BOTTOMRIGHT")
+            l:SetEndPoint("BOTTOMLEFT")
+        else
+            l:SetStartPoint("BOTTOMLEFT")
+            l:SetEndPoint("TOPLEFT")
+        end
+    end
 end
 
 function Util.AddStatusBarBackground(frame)
@@ -50,7 +71,7 @@ function Util.GetUnitColor(unit)
 end
 
 function Util.UnitHealthPercent(unit)
-    return UnitHealthPercent(unit)
+    return string.format("%0.0f", UnitHealthPercent(unit, true, true)).."%"
 end
 
 function Util.UnitHealthText(unit)
@@ -66,6 +87,8 @@ function Util.UnitPowerText(unit)
 end
 
 function Util.AddCombatFading(frame)
+    if not frame then return end
+
     if InCombatLockdown() then 
         frame:SetAlpha(1) 
     else

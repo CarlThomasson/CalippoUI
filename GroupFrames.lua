@@ -41,7 +41,38 @@ local function UpdateFrames()
             end
         end
     else
-        -- Raid
+        -- Raid...
+    end
+end
+
+local function SetupAuraFrame(parentFrame, frame, script, addBorder, index, frameSize, padding, anchorPoint, growDirection)
+    frame:HookScript(script, function(self)
+        self:ClearAllPoints()
+        local xPos
+        if growDirection == "LEFT" then
+            xPos = -((index - 1) * (frameSize + padding))
+        elseif growDirection == "RIGHT" then
+            xPos = ((index - 1) * (frameSize + padding))
+        end
+
+        self:SetPoint(anchorPoint, parentFrame.healthBar, anchorPoint, xPos, 0)
+        self:SetSize(frameSize, frameSize)
+    end)
+
+    frame:ClearAllPoints()
+    local xPos
+    if growDirection == "LEFT" then
+        xPos = -((index - 1) * (frameSize + padding))
+    elseif growDirection == "RIGHT" then
+        xPos = ((index - 1) * (frameSize + padding))
+    end
+
+    frame:SetPoint(anchorPoint, parentFrame.healthBar, anchorPoint, xPos, 0)
+    frame:SetSize(frameSize, frameSize)
+
+    if addBorder then
+        frame.icon:SetTexCoord(.08, .92, .08, .92)
+        Util.AddBackdrop(frame, 1, CUI_BACKDROP_DS_2)
     end
 end
 
@@ -49,10 +80,12 @@ local function SetupFrames()
     for i=1, 5 do
         local frame = _G["CompactPartyFrameMember"..i]
 
+        frame.healthBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
+
         local unitName = frame.healthBar:CreateFontString(nil, "OVERLAY")
         unitName:SetParentKey("UnitName")
         unitName:SetPoint("TOPLEFT", frame.healthBar, "TOPLEFT", 3, -3)
-        unitName:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 12, "")
+        unitName:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 11, "")
 
         local unitRole = frame.healthBar:CreateTexture(nil, "OVERLAY")
         unitRole:SetParentKey("Role")
@@ -60,44 +93,20 @@ local function SetupFrames()
         unitRole:SetSize(10, 10)
 
         for k=1, 6 do 
-            local buffFrame = _G["CompactPartyFrameMember"..i.."Buff"..k]
-            local frameSize = 18
-            local padding = 2
-            buffFrame:HookScript("OnUpdate", function(self)
-                buffFrame:ClearAllPoints()
-                buffFrame:SetPoint("TOPRIGHT", frame.healthBar, "TOPRIGHT", -((k - 1) * (frameSize + padding)), 0)
-                buffFrame:SetSize(frameSize, frameSize)
-            end)
-            buffFrame.icon:SetTexCoord(.08, .92, .08, .92)
-            Util.AddBackdrop(buffFrame, 1, CUI_BACKDROP_DS_2)
+            SetupAuraFrame(frame, _G["CompactPartyFrameMember"..i.."Buff"..k], "OnShow", true, k, 18, 2, "TOPRIGHT", "LEFT")
         end
 
         for k=1, 3 do 
-            local debuffFrame = _G["CompactPartyFrameMember"..i.."Debuff"..k]
-            local frameSize = 18
-            local padding = 2
-            debuffFrame:HookScript("OnUpdate", function(self)
-                debuffFrame:ClearAllPoints()
-                debuffFrame:SetPoint("BOTTOMLEFT", frame.healthBar, "BOTTOMLEFT", ((k - 1) * (frameSize + padding)), 0)
-                debuffFrame:SetSize(frameSize, frameSize)
-            end)
-            debuffFrame.icon:SetTexCoord(.08, .92, .08, .92)
-            Util.AddBackdrop(debuffFrame, 1, CUI_BACKDROP_DS_2)
+            -- TODO : Försök att inte använda OnUpdate
+            SetupAuraFrame(frame, _G["CompactPartyFrameMember"..i.."Debuff"..k], "OnUpdate", true, k, 18, 2, "BOTTOMLEFT", "RIGHT")
         end
 
         for k=1, 3 do 
-            local dispelDebuffFrame = _G["CompactPartyFrameMember"..i.."DispelDebuff"..k]
-            local frameSize = 18
-            local padding = 2
-            dispelDebuffFrame:HookScript("OnUpdate", function(self)
-                dispelDebuffFrame:ClearAllPoints()
-                dispelDebuffFrame:SetPoint("BOTTOMRIGHT", frame.healthBar, "BOTTOMRIGHT", -((k - 1) * (frameSize + padding)), 0)
-                dispelDebuffFrame:SetSize(frameSize, frameSize)
-            end)
-            dispelDebuffFrame.icon:SetTexCoord(.08, .92, .08, .92)
-            Util.AddBackdrop(dispelDebuffFrame, 1, CUI_BACKDROP_DS_2)
+            SetupAuraFrame(frame, _G["CompactPartyFrameMember"..i.."DispelDebuff"..k], "OnShow", false, k, 18, 2, "BOTTOMRIGHT", "LEFT")
         end
     end
+
+    -- Raid...
 end
 
 function GF.Load()

@@ -144,8 +144,14 @@ local function HookScripts(viewer)
     end)
 
     if viewer:GetName() == "BuffIconCooldownViewer" then
-        viewer:HookScript("OnUpdate", function(self)
-            UpdatePositions(self)
+        hooksecurefunc(viewer, "OnAcquireItemFrame", function(self, itemFrame)
+            itemFrame:SetScript("OnShow", function(self)
+                UpdatePositions(viewer)
+            end)
+
+            itemFrame:SetScript("OnHide", function(self)
+                UpdatePositions(viewer)
+            end)
         end)
     end
 end

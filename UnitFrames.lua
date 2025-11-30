@@ -140,6 +140,11 @@ function SetupUnitFrame(frame)
         frame:RegisterUnitEvent("UNIT_MAXPOWER", unit)
         if unit == "focus" then
             frame:RegisterEvent("PLAYER_FOCUS_CHANGED")
+            frame:HookScript("OnShow", function(self)
+                if not UnitExists("focus") then
+                    self:Hide()
+                end
+            end)
         end
 
         local powerBar = CreateFrame("StatusBar", nil, frame)

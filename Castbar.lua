@@ -38,18 +38,21 @@ local function SetupCastBar()
     castBarFrame:SetScript("OnEvent", function(self, event, ...)
         if event == "UNIT_SPELLCAST_START" then
             local name, text, texture, startTimeMS, endTimeMS = UnitCastingInfo("player")
+            self.isCasting = true
             self.startTime = (startTimeMS / 1000)
+            self.currentTime = self.startTime
             self.endTime = (endTimeMS / 1000)
             self.duration = (self.endTime - self.startTime)
             self:SetMinMaxValues(0, self.duration)
         elseif event == "UNIT_SPELLCAST_STOP" then
-            self.startTime = nil
+            self.isCasting = false
         end
     end)
 
-    castBarFrame:SetScript("OnUpdate", function(self)
-        if self.startTime then
-            self:SetValue(GetTime() - self.startTime)
+    castBarFrame:SetScript("OnUpdate", function(self, passedTime)
+        if self.isCasting then
+            self.currentTime = self.currentTime + passedTime
+            self:SetValue(self.currentTime - self.startTime)
         end
     end)
 end

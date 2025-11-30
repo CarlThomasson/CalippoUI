@@ -22,5 +22,6 @@ Resources.lua
 Castbar.lua
 Minimap.lua
 PlayerAuras.lua
+NamePlates.lua
 
 OnLoad.lua
