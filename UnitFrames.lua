@@ -26,6 +26,74 @@ end
 
 ---------------------------------------------------------------------------------------------------
 
+function UF.UpdateSizePos(frame)
+    frame.HealthBar:SetPoint("CENTER", frame, "CENTER", CalippoDB.UnitFrames[frame:GetName()].OffsetX, CalippoDB.UnitFrames[frame:GetName()].OffsetY)
+    frame.HealthBar:SetSize(CalippoDB.UnitFrames[frame:GetName()].SizeX, CalippoDB.UnitFrames[frame:GetName()].SizeY)
+    frame.Overlay.UnitName:SetWidth(frame.Overlay:GetWidth() - 60)
+end
+
+function UF.UpdateAlpha(frame, inCombat)
+    if InCombatLockdown() or inCombat then 
+        frame:SetAlpha(1)
+    else
+        UIFrameFadeOut(frame, 0.6, frame:GetAlpha(), CalippoDB.UnitFrames[frame:GetName()].Alpha)
+    end
+end
+
+function UF.UpdateAuras(unitFrame)
+    local auraFrames = {}
+    local maxRow = CalippoDB.UnitFrames.AuraRowLength
+    local frameSize = CalippoDB.UnitFrames.AuraSize
+    local padding = CalippoDB.UnitFrames.AuraPadding
+    local index = 0
+
+    for frame in unitFrame.auraPools:EnumerateActive() do
+        auraFrames[frame.auraInstanceID] = frame
+    end        
+
+    unitFrame.activeBuffs:Iterate(function(id, aura)
+        local frame = auraFrames[id]
+        frame:ClearAllPoints()
+        frame:SetSize(frameSize, frameSize)
+        frame.Icon:SetTexCoord(.08, .92, .08, .92)
+        frame.Count:SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", 12, "")
+
+        if not frame.Backdrop then
+            Util.AddBackdrop(frame, 1, CUI_BACKDROP_DS_2)
+        end
+        
+        local level = math.floor(index/maxRow)
+
+        frame:ClearAllPoints()
+        frame:SetPoint("BOTTOMRIGHT", TargetFrame.HealthBar, "TOPRIGHT", -(index*(frameSize+padding))+(level*maxRow*(frameSize+padding)), 2+(level*(frameSize+padding)))
+
+        index = index + 1
+    end)
+
+    index = 0
+
+    unitFrame.activeDebuffs:Iterate(function(id, aura)
+        local frame = auraFrames[id]
+        frame:SetSize(frameSize, frameSize)
+        frame:SetPoint("TOPLEFT", TargetFrame.HealthBar, "BOTTOMLEFT")
+        frame.Icon:SetTexCoord(.08, .92, .08, .92)
+        frame.Count:SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", 12, "")
+
+        if not frame.Backdrop then
+            Util.AddBackdrop(frame, 1, CUI_BACKDROP_DS_2)
+        end
+
+        local level = math.floor(index/maxRow)
+
+        frame:ClearAllPoints()
+        frame:SetPoint("TOPLEFT", TargetFrame.PowerBar, "BOTTOMLEFT", (index*(frameSize+padding))-(level*maxRow*(frameSize+padding)), -(level*(frameSize+padding))-2)
+
+        index = index + 1
+    end)
+end
+
+---------------------------------------------------------------------------------------------------
+
 local function UpdateHealth(frame)
     local unit = frame.unit
 
@@ -105,20 +173,12 @@ local function UpdateNameText(frame)
     frame.Overlay.UnitName:SetText(UnitName(frame.unit))
 end
 
-local function UpdateAlpha(frame)
-    if InCombatLockdown() then 
-        frame:SetAlpha(1)
-    else
-        frame:SetAlpha(0.5)
-    end
-end
-
 local function UpdateAll(frame)
     if frame.PowerBar then UpdatePowerFull(frame) end
     UpdateHealthFull(frame)
     UpdateLeaderAssist(frame)
     UpdateNameText(frame)
-    UpdateAlpha(frame)
+    UF.UpdateAlpha(frame)
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -128,30 +188,21 @@ function SetupUnitFrame(frame)
 
     local healthBar = CreateFrame("StatusBar", nil, frame)
     healthBar:SetParentKey("HealthBar")
-    if unit == "player" then
-        healthBar:SetPoint("TOPLEFT", frame, "TOPLEFT", 40, 4)
-        healthBar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -18, 52)
-    elseif unit ~= "player" then
-        healthBar:SetPoint("TOPLEFT", frame, "TOPLEFT", 18, 4)
-        healthBar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -40, 57)
-
+    healthBar:SetPoint("CENTER", frame, "CENTER", CalippoDB.UnitFrames[frame:GetName()].OffsetX, CalippoDB.UnitFrames[frame:GetName()].OffsetY)
+    healthBar:SetSize(CalippoDB.UnitFrames[frame:GetName()].SizeX, CalippoDB.UnitFrames[frame:GetName()].SizeY)
+    if unit ~= "player" then
         frame:RegisterEvent("PLAYER_TARGET_CHANGED")
         frame:RegisterUnitEvent("UNIT_POWER_UPDATE", unit)
         frame:RegisterUnitEvent("UNIT_MAXPOWER", unit)
         if unit == "focus" then
             frame:RegisterEvent("PLAYER_FOCUS_CHANGED")
-            frame:HookScript("OnShow", function(self)
-                if not UnitExists("focus") then
-                    self:Hide()
-                end
-            end)
         end
-
         local powerBar = CreateFrame("StatusBar", nil, frame)
         powerBar:SetParentKey("PowerBar")
-        powerBar:SetPoint("TOPLEFT", healthBar, "BOTTOMLEFT")
-        powerBar:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT", 0, -5)
+        powerBar:SetPoint("TOPLEFT", healthBar, "BOTTOMLEFT", 0, 5)
+        powerBar:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT")
         powerBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
+        powerBar:SetFrameLevel(healthBar:GetFrameLevel() + 1)
         Util.AddStatusBarBackground(powerBar)
         Util.AddBackdrop(powerBar, 1, CUI_BACKDROP_DS_3)
     end
@@ -206,11 +257,17 @@ function SetupUnitFrame(frame)
             if not UnitExists(self.unit) then return end
             UpdateAll(frame)
         elseif event == "PLAYER_REGEN_ENABLED" then
-            UIFrameFadeOut(self, 0.6, 1, 0.5)
+            UF.UpdateAlpha(self)
         elseif event == "PLAYER_REGEN_DISABLED" then
-            UIFrameFadeIn(self, 0.6, 0.5, 1)
+            UF.UpdateAlpha(self, true)
         elseif event == "PARTY_LEADER_CHANGED" or event == "GROUP_FORMED" or event == "GROUP_LEFT" then
             UpdateLeaderAssist(self)
+        end
+    end)
+
+    frame:HookScript("OnShow", function(self)
+        if not UnitExists(self.unit) then
+            self:Hide()
         end
     end)
 
@@ -227,54 +284,6 @@ function UF.Load()
     SetupUnitFrame(FocusFrame)
 
     hooksecurefunc(TargetFrame, "UpdateAuras", function(self)
-        local auraFrames = {}
-        local maxRow = 8
-        local frameSize = 20
-        local offset = 2
-        local index = 0
-
-        for frame in self.auraPools:EnumerateActive() do
-            auraFrames[frame.auraInstanceID] = frame
-        end        
-
-        self.activeBuffs:Iterate(function(id, aura)
-            local frame = auraFrames[id]
-            frame:ClearAllPoints()
-            frame:SetSize(frameSize, frameSize)
-            frame.Icon:SetTexCoord(.08, .92, .08, .92)
-            frame.Count:SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", 12, "")
-
-            if not frame.Backdrop then
-                Util.AddBackdrop(frame, 1, CUI_BACKDROP_DS_2)
-            end
-            
-            local level = math.floor(index/maxRow)
-
-            frame:ClearAllPoints()
-            frame:SetPoint("BOTTOMRIGHT", TargetFrame.HealthBar, "TOPRIGHT", -(index*(frameSize+offset))+(level*maxRow*(frameSize+offset)), 2+(level*frameSize))
-
-            index = index + 1
-        end)
-
-        index = 0
-
-        self.activeDebuffs:Iterate(function(id, aura)
-            local frame = auraFrames[id]
-            frame:SetSize(frameSize, frameSize)
-            frame:SetPoint("TOPLEFT", TargetFrame.HealthBar, "BOTTOMLEFT")
-            frame.Icon:SetTexCoord(.08, .92, .08, .92)
-            frame.Count:SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", 12, "")
-
-            if not frame.Backdrop then
-                Util.AddBackdrop(frame, 1, CUI_BACKDROP_DS_2)
-            end
-
-            local level = math.floor(index/maxRow)
-
-            frame:ClearAllPoints()
-            frame:SetPoint("TOPLEFT", TargetFrame.PowerBar, "BOTTOMLEFT", (index*(frameSize+offset))-(level*maxRow*(frameSize+offset)), -(level*frameSize)-2)
-
-            index = index + 1
-        end)
+        UF.UpdateAuras(self)
     end)
 end

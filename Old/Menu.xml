@@ -1,0 +1,222 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Frame name="CUI_OptionsTemplate" parent="UIParent" hidden="true" movable="true" enableMouse="true" virtual="true" toplevel="true">
+        <Size x="700" y="300"/>
+        <Anchors>
+            <Anchor point="CENTER" x="200" y="100"/>
+        </Anchors>
+
+        <Layers>
+            <Layer level="BACKGROUND" textureSubLevel="-1">
+                <Texture parentKey="Background" file="Interface\TutorialFrame\TutorialFrameBackground" horizTile="true" vertTile="true">
+                    <Anchors>
+                        <Anchor point="TOPLEFT"/>
+                        <Anchor point="BOTTOMRIGHT"/>
+                    </Anchors>
+                </Texture>
+            </Layer>
+        </Layers>
+
+        <Frames>
+            <!-- TOP ROW BUTTONS -->
+
+            <Frame parentKey="Border" inherits="DialogBorderDarkTemplate">
+                <Size x="6" y="0"/>
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="-8" y="8"/>
+                    <Anchor point="BOTTOMRIGHT" x="8" y="-8"/>
+                </Anchors>
+            </Frame>
+
+            <!-- <Button parentKey="GeneralButton" inherits="UIPanelButtonTemplate">
+                <Size x="50" y="20"/>
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="5" y="-5"/>
+                </Anchors>
+                <Layers>
+                    <Layer level="OVERLAY">
+                        <FontString parentKey="Count" text="General" font="Interface\AddOns\CalippoUI\Fonts\FiraSans-Medium.ttf">
+                            <FontHeight>
+                                <AbsValue val="10"/>
+                            </FontHeight>
+                            <Anchors>
+                                <Anchor point="CENTER" x="0" y="0"/>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+            </Button>
+
+            <Button parentKey="UnitFrameButton" inherits="UIPanelButtonTemplate">
+                <Size x="80" y="20"/>
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="55" y="-5"/>
+                </Anchors>
+                <Layers>
+                    <Layer level="OVERLAY">
+                        <FontString parentKey="Count" text="Player/Target" font="Interface\AddOns\CalippoUI\Fonts\FiraSans-Medium.ttf">
+                            <FontHeight>
+                                <AbsValue val="10"/>
+                            </FontHeight>
+                            <Anchors>
+                                <Anchor point="CENTER" x="0" y="0"/>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+            </Button>
+
+            <Button parentKey="GroupFrameButton" inherits="UIPanelButtonTemplate">
+                <Size x="70" y="20"/>
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="135" y="-5"/>
+                </Anchors>
+                <Layers>
+                    <Layer level="OVERLAY">
+                        <FontString parentKey="Count" text="Party/Raid" font="Interface\AddOns\CalippoUI\Fonts\FiraSans-Medium.ttf">
+                            <FontHeight>
+                                <AbsValue val="10"/>
+                            </FontHeight>
+                            <Anchors>
+                                <Anchor point="CENTER" x="0" y="0"/>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+            </Button> -->
+
+            <Button parentKey="ReloadButton" inherits="UIPanelButtonTemplate">
+                <Size x="50" y="20"/>
+                <Anchors>
+                    <Anchor point="TOPRIGHT" x="-40" y="-5"/>
+                </Anchors>
+                <Layers>
+                    <Layer level="OVERLAY">
+                        <FontString parentKey="Count" text="Reload" font="Interface\AddOns\CalippoUI\Fonts\FiraSans-Medium.ttf">
+                            <FontHeight>
+                                <AbsValue val="10"/>
+                            </FontHeight>
+                            <Anchors>
+                                <Anchor point="CENTER" x="0" y="0"/>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnClick>
+                        ReloadUI()
+                    </OnClick>
+                </Scripts>
+            </Button>
+
+            <Button parentKey="CloseButton" inherits="UIPanelCloseButton">
+                <Size x="20" y="20"/>
+                <Anchors>
+                    <Anchor point="TOPRIGHT" x="-5" y="-5"/>
+                </Anchors>
+            </Button>
+
+            <!-- OPTION FRAMES -->
+
+            <Frame parentKey="OptionsContainer">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="5" y="-40"/>
+                    <Anchor point="BOTTOMRIGHT"/>
+                </Anchors>
+            </Frame>
+
+            <!-- <Frame parentKey="UnitFrameOptions" hidden="true">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="5" y="-40"/>
+                    <Anchor point="BOTTOMRIGHT"/>
+                </Anchors>
+            </Frame>
+
+            <Frame parentKey="GroupFrameOptions" hidden="true">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="5" y="-40"/>
+                    <Anchor point="BOTTOMRIGHT"/>
+                </Anchors>
+            </Frame>  -->
+        </Frames>
+
+        <!-- SCRIPTS -->
+
+        <Scripts>
+            <OnLoad>
+                self:RegisterForDrag("LeftButton")
+            </OnLoad>
+
+            <OnDragStart>
+                self:StartMoving()
+            </OnDragStart>
+
+            <OnDragStop>
+                self:StopMovingOrSizing()
+            </OnDragStop>
+        </Scripts>
+    </Frame>
+
+    <!-- TEMPLATES -->
+
+    <Button name="CUI_ButtonTemplate" inherits="UIPanelButtonTemplate" virtual="true">
+        <Size x="80" y="20"/>
+        <Layers>
+            <Layer level="OVERLAY">
+                <FontString parentKey="Text" font="Interface\AddOns\CalippoUI\Fonts\FiraSans-Medium.ttf">
+                    <FontHeight>
+                        <AbsValue val="10"/>
+                    </FontHeight>
+                    <Anchors>
+                        <Anchor point="CENTER" x="0" y="0"/>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+    </Button>
+
+    <FontString name="CUI_LargeFontTemplate" font="Interface\AddOns\CalippoUI\Fonts\FiraSans-Medium.ttf" virtual="true">
+        <FontHeight>
+            <AbsValue val="16"/>
+        </FontHeight>
+    </FontString>
+
+    <FontString name="CUI_MediumFontTemplate" font="Interface\AddOns\CalippoUI\Fonts\FiraSans-Medium.ttf" virtual="true">
+        <FontHeight>
+            <AbsValue val="13"/>
+        </FontHeight>
+    </FontString>
+
+    <FontString name="CUI_SmallFontTemplate" font="Interface\AddOns\CalippoUI\Fonts\FiraSans-Medium.ttf" virtual="true">
+        <FontHeight>
+            <AbsValue val="10"/>
+        </FontHeight>
+    </FontString>
+
+    <Slider name="CUI_SliderTemplate" inherits="MinimalSliderWithSteppersTemplate" virtual="true">
+        <Size x="150" y="40"/>
+    </Slider>
+
+    <Frame name="CUI_CheckButtonTemplate" virtual="true">
+        <Size x="100" y="20"/>
+        <Layers>
+            <Layer>
+                <FontString parentKey="Text" text="TEST TEXT!" font="Interface\AddOns\CalippoUI\Fonts\FiraSans-Medium.ttf">
+                    <FontHeight>
+                        <AbsValue val="10"/>
+                    </FontHeight>
+                    <Anchors>
+                        <Anchor point="LEFT" x="0" y="0"/>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <CheckButton parentKey="CheckButton" inherits="MinimalCheckboxArtTemplate" virtual="true">
+                <Size x="20" y="20"/>
+                <Anchors>
+                    <Anchor point="RIGHT" x="0" y="0"/>
+                </Anchors>
+            </CheckButton>
+        </Frames>
+    </Frame>
+</Ui>

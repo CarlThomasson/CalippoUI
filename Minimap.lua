@@ -4,6 +4,18 @@ CUI.MM = {}
 local MM = CUI.MM
 local Util = CUI.Util
 
+---------------------------------------------------------------------------------------------------
+
+function MM.UpdateAlpha(frame, inCombat)
+    if InCombatLockdown() or inCombat then 
+        UIFrameFadeIn(frame, 0.6, frame:GetAlpha(), 1)
+    else
+        UIFrameFadeOut(frame, 0.6, frame:GetAlpha(), CalippoDB.Minimap.Alpha)
+    end
+end
+
+---------------------------------------------------------------------------------------------------
+
 function MM.Load()
     MinimapBackdrop:Hide()
     MinimapCompassTexture:Hide()
@@ -19,7 +31,21 @@ function MM.Load()
     MinimapCluster.InstanceDifficulty:ClearAllPoints()
     MinimapCluster.InstanceDifficulty:SetPoint("TOPRIGHT", MinimapCluster, "TOPRIGHT")
     MinimapCluster:SetSize(200, 200)
-    MinimapCluster:SetAlpha(0.8)
+
+    MinimapCluster:HookScript("OnShow", function(self)
+        MinimapCluster:SetSize(200, 200)
+    end)
+
+    MinimapCluster:RegisterEvent("PLAYER_REGEN_ENABLED")
+    MinimapCluster:RegisterEvent("PLAYER_REGEN_DISABLED")
+    MinimapCluster:HookScript("OnEvent", function(self, event)
+        if event == "PLAYER_REGEN_ENABLED" then
+            MM.UpdateAlpha(self)
+        elseif event == "PLAYER_REGEN_DISABLED" then
+            MM.UpdateAlpha(self, true)
+        end
+    end)
+    MM.UpdateAlpha(MinimapCluster)
 
     TimeManagerClockButton:ClearAllPoints()
     TimeManagerClockButton:SetPoint("BOTTOM", Minimap, "BOTTOM", 0, 5)
@@ -41,4 +67,14 @@ function MM.Load()
         MinimapCluster.Tracking.Button:SetAlpha(0)
         GameTimeFrame:SetAlpha(0)
     end)
+
+    local cuiButton = CreateFrame("Button", "CUI_OptionsButton", Minimap)
+    cuiButton:SetSize(30, 30)
+    cuiButton:SetPoint("BOTTOMLEFT", Minimap, "BOTTOMLEFT")
+    
+    
+    cuiButton:SetScript("OnClick", function(self)
+        CUI_OptionsFrame:Show()
+    end)
+
 end

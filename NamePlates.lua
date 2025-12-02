@@ -5,6 +5,8 @@ local NP = CUI.NP
 local Util = CUI.Util
 local Hide = CUI.Hide
 
+---------------------------------------------------------------------------------------------------
+
 local function UpdateAuras(unitFrame)
     for index, frame in ipairs({unitFrame.AurasFrame.DebuffListFrame:GetChildren()}) do
         frame.CountFrame.Count:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 12, "OUTLINE")
@@ -83,127 +85,131 @@ local function UpdateCastBar(castBar)
     castBar:Show()
 end
 
+---------------------------------------------------------------------------------------------------
+
+local function SetupNamePlate(unitToken)
+    local namePlate = C_NamePlate.GetNamePlateForUnit(unitToken)
+    local unitFrame = namePlate.UnitFrame
+
+    unitFrame.name:Hide()
+    unitFrame.name:HookScript("OnShow", function(self)
+        self:Hide()
+    end)
+
+    unitFrame.myHealPrediction:Hide()
+    unitFrame.myHealPrediction:HookScript("OnShow", function(self)
+        self:Hide()
+    end)
+
+    if not unitFrame.CUI_Name then
+        local name = unitFrame:CreateFontString(nil, "OVERLAY")
+        name:SetParentKey("CUI_Name")
+        name:SetPoint("LEFT", unitFrame.healthBar, "LEFT", 3, 0)
+        name:SetPoint("RIGHT", unitFrame.healthBar, "RIGHT", -30, 0)
+        name:SetJustifyH("LEFT")
+        name:SetWordWrap(false)
+        name:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 10, "")
+    end
+    unitFrame.CUI_Name:SetText(UnitName(unitToken))
+
+    if not unitFrame.CUI_HealthText then
+        local health = unitFrame:CreateFontString(nil, "OVERLAY")
+        health:SetParentKey("CUI_HealthText")
+        health:SetPoint("RIGHT", unitFrame.healthBar, "RIGHT", -3, 0)
+        health:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 10, "")
+    end
+    unitFrame.CUI_HealthText:SetText(Util.UnitHealthPercent(unitToken))
+
+    unitFrame.healthBar.bgTexture:Hide()
+    unitFrame.healthBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
+
+    if not unitFrame.healthBar.Backdrop then
+        Util.AddBackdrop(unitFrame.healthBar, 1, CUI_BACKDROP_DS_3)
+        unitFrame.healthBar.Backdrop:SetFrameStrata("LOW")
+    end
+
+    unitFrame.healthBar.deselectedOverlay:Hide()
+
+    unitFrame.healthBar.selectedBorder:ClearAllPoints()
+    unitFrame.healthBar.selectedBorder:SetPoint("TOPLEFT", unitFrame.healthBar, "TOPLEFT", -2, 2)
+    unitFrame.healthBar.selectedBorder:SetPoint("BOTTOMRIGHT", unitFrame.healthBar, "BOTTOMRIGHT", 2, -2)
+
+    if not unitFrame.CUI_Background then
+        local background = unitFrame:CreateTexture(nil, "BACKGROUND")
+        background:SetParentKey("CUI_Background")
+        background:SetAllPoints(unitFrame.healthBar)
+        background:SetColorTexture(0, 0, 0, 1)
+    end
+
+    unitFrame.AurasFrame.DebuffListFrame:ClearAllPoints()
+    unitFrame.AurasFrame.DebuffListFrame:SetPoint("BOTTOMLEFT", unitFrame.HealthBarsContainer, "TOPLEFT", 0, 2)
+
+    local blizzardCastBar = unitFrame.castBar
+    blizzardCastBar:Hide()
+    blizzardCastBar:HookScript("OnShow", function(self)
+        self:Hide()
+    end)
+
+    if not unitFrame.CUI_CastBar then
+        local castBar = CreateFrame("Statusbar", nil, unitFrame)
+        castBar:SetParentKey("CUI_CastBar")
+        castBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
+        castBar:SetStatusBarColor(0.8, 0.8, 0, 1)
+        castBar:SetPoint("TOPLEFT", unitFrame.healthBar, "BOTTOMLEFT", 0, -1)
+        castBar:SetPoint("TOPRIGHT", unitFrame.healthBar, "BOTTOMRIGHT", 0, -1)
+        castBar:SetHeight(10)
+
+        Util.AddStatusBarBackground(castBar)
+        Util.AddBackdrop(castBar, 1, CUI_BACKDROP_DS_3)
+
+        castBar.isCasting = false
+        castBar.unit = unitToken
+
+        local castBarText = castBar:CreateFontString(nil, "OVERLAY")
+        castBarText:SetParentKey("Text")
+        castBarText:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 8, "")
+        castBarText:SetPoint("LEFT", castBar, "LEFT", 3, 0)
+
+        castBar:SetScript("OnUpdate", function(self)
+            if not self.isCasting then return end
+            self:SetValue(GetTime() * 1000)
+        end)
+    end
+    unitFrame.CUI_CastBar.unit = unitToken
+    UpdateCastBar(unitFrame.CUI_CastBar)
+
+    unitFrame:RegisterUnitEvent("UNIT_HEALTH", unitToken)
+    unitFrame:RegisterUnitEvent("UNIT_AURA", unitToken)
+    unitFrame:RegisterUnitEvent("UNIT_SPELLCAST_START", unitToken)
+    unitFrame:RegisterUnitEvent("UNIT_SPELLCAST_STOP", unitToken)
+    unitFrame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_START", unitToken)
+    unitFrame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_UPDATE", unitToken)
+    unitFrame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP", unitToken)
+    unitFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
+    unitFrame:HookScript("OnEvent", function(self, event, unit)
+        -- TODO : Försök att inte använda UNIT_AURA
+        if event == "UNIT_AURA" then
+            UpdateAuras(self)
+        elseif event == "UNIT_HEALTH" then
+            unitFrame.CUI_HealthText:SetText(Util.UnitHealthPercent(unit))
+        elseif event == "PLAYER_TARGET_CHANGED" then
+            self.healthBar.deselectedOverlay:Hide()
+        elseif event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START" then
+            UpdateCastBar(self.CUI_CastBar)
+        elseif event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP" then                    
+            UpdateCastBar(self.CUI_CastBar)
+        end
+    end)
+end
+
+---------------------------------------------------------------------------------------------------
 
 function NP.Load()
     local frame = CreateFrame("Frame", "CUI_NamePlateTracker", UIParent)
     frame:RegisterEvent("NAME_PLATE_UNIT_ADDED")
-    frame:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
     frame:SetScript("OnEvent", function(self, event, unitToken)
         if event == "NAME_PLATE_UNIT_ADDED" then
-            local namePlate = C_NamePlate.GetNamePlateForUnit(unitToken)
-            local unitFrame = namePlate.UnitFrame
-
-            unitFrame.name:Hide()
-            unitFrame.name:HookScript("OnShow", function(self)
-                self:Hide()
-            end)
-
-            unitFrame.myHealPrediction:Hide()
-            unitFrame.myHealPrediction:HookScript("OnShow", function(self)
-                self:Hide()
-            end)
-
-            if not unitFrame.CUI_Name then
-                local name = unitFrame:CreateFontString(nil, "OVERLAY")
-                name:SetParentKey("CUI_Name")
-                name:SetPoint("LEFT", unitFrame.healthBar, "LEFT", 3, 0)
-                name:SetPoint("RIGHT", unitFrame.healthBar, "RIGHT", -30, 0)
-                name:SetJustifyH("LEFT")
-                name:SetWordWrap(false)
-                name:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 10, "")
-            end
-            unitFrame.CUI_Name:SetText(UnitName(unitToken))
-
-            if not unitFrame.CUI_HealthText then
-                local health = unitFrame:CreateFontString(nil, "OVERLAY")
-                health:SetParentKey("CUI_HealthText")
-                health:SetPoint("RIGHT", unitFrame.healthBar, "RIGHT", -3, 0)
-                health:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 10, "")
-            end
-            unitFrame.CUI_HealthText:SetText(Util.UnitHealthPercent(unitToken))
-
-            unitFrame.healthBar.bgTexture:Hide()
-            unitFrame.healthBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
-
-            if not unitFrame.healthBar.Backdrop then
-                Util.AddBackdrop(unitFrame.healthBar, 1, CUI_BACKDROP_DS_3)
-                unitFrame.healthBar.Backdrop:SetFrameStrata("LOW")
-            end
-
-            unitFrame.healthBar.deselectedOverlay:Hide()
-
-            unitFrame.healthBar.selectedBorder:ClearAllPoints()
-            unitFrame.healthBar.selectedBorder:SetPoint("TOPLEFT", unitFrame.healthBar, "TOPLEFT", -2, 2)
-            unitFrame.healthBar.selectedBorder:SetPoint("BOTTOMRIGHT", unitFrame.healthBar, "BOTTOMRIGHT", 2, -2)
-
-            if not unitFrame.CUI_Background then
-                local background = unitFrame:CreateTexture(nil, "BACKGROUND")
-                background:SetParentKey("CUI_Background")
-                background:SetAllPoints(unitFrame.healthBar)
-                background:SetColorTexture(0, 0, 0, 1)
-            end
-
-            unitFrame.AurasFrame.DebuffListFrame:ClearAllPoints()
-            unitFrame.AurasFrame.DebuffListFrame:SetPoint("BOTTOMLEFT", unitFrame.HealthBarsContainer, "TOPLEFT", 0, 2)
-
-            local blizzardCastBar = unitFrame.castBar
-            blizzardCastBar:Hide()
-            blizzardCastBar:HookScript("OnShow", function(self)
-                self:Hide()
-            end)
-
-            if not unitFrame.CUI_CastBar then
-                local castBar = CreateFrame("Statusbar", nil, unitFrame)
-                castBar:SetParentKey("CUI_CastBar")
-                castBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
-                castBar:SetStatusBarColor(0.8, 0.8, 0, 1)
-                castBar:SetPoint("TOPLEFT", unitFrame.healthBar, "BOTTOMLEFT", 0, -1)
-                castBar:SetPoint("TOPRIGHT", unitFrame.healthBar, "BOTTOMRIGHT", 0, -1)
-                castBar:SetHeight(10)
-
-                Util.AddStatusBarBackground(castBar)
-                Util.AddBackdrop(castBar, 1, CUI_BACKDROP_DS_3)
-
-                castBar.isCasting = false
-                castBar.unit = unitToken
-
-                local castBarText = castBar:CreateFontString(nil, "OVERLAY")
-                castBarText:SetParentKey("Text")
-                castBarText:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 8, "")
-                castBarText:SetPoint("LEFT", castBar, "LEFT", 3, 0)
-
-                castBar:SetScript("OnUpdate", function(self)
-                    if not self.isCasting then return end
-                    self:SetValue(GetTime() * 1000)
-                end)
-            end
-            unitFrame.CUI_CastBar.unit = unitToken
-            UpdateCastBar(unitFrame.CUI_CastBar)
-
-            unitFrame:RegisterUnitEvent("UNIT_HEALTH", unitToken)
-            unitFrame:RegisterUnitEvent("UNIT_AURA", unitToken)
-            unitFrame:RegisterUnitEvent("UNIT_SPELLCAST_START", unitToken)
-            unitFrame:RegisterUnitEvent("UNIT_SPELLCAST_STOP", unitToken)
-            unitFrame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_START", unitToken)
-            unitFrame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_UPDATE", unitToken)
-            unitFrame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP", unitToken)
-            unitFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
-            unitFrame:HookScript("OnEvent", function(self, event, unit)
-                -- TODO : Försök att inte använda UNIT_AURA
-                if event == "UNIT_AURA" then
-                    UpdateAuras(self)
-                elseif event == "UNIT_HEALTH" then
-                    unitFrame.CUI_HealthText:SetText(Util.UnitHealthPercent(unit))
-                elseif event == "PLAYER_TARGET_CHANGED" then
-                    self.healthBar.deselectedOverlay:Hide()
-                elseif event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START" then
-                    UpdateCastBar(self.CUI_CastBar)
-                elseif event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP" then                    
-                    UpdateCastBar(self.CUI_CastBar)
-                end
-            end)
-        elseif event == "NAME_PLATE_UNIT_REMOVED" then
-
+            SetupNamePlate(unitToken)
         end
     end)
 end

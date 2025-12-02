@@ -5,23 +5,21 @@
 ## IconTexture: Interface\AddOns\CalippoUI\Media\Icon.tga
 
 Database.lua
-Menu.lua
-
-Frames.xml
-Menu.xml
 
 HideBlizzard.lua
 Util.lua
 UnitFrames.lua
 GroupFrames.lua
-Bars.lua
+ActionBars.lua
 Chat.lua
 TradeAutoWhisper.lua
 CooldownManager.lua
-Resources.lua
-Castbar.lua
+ResourceBar.lua
+CastBar.lua
 Minimap.lua
 PlayerAuras.lua
 NamePlates.lua
+
+Config.lua
 
 OnLoad.lua

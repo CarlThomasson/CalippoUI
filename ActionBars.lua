@@ -1,7 +1,7 @@
 local addonName, CUI = ...
 
-CUI.Bars = {}
-local Bars = CUI.Bars
+CUI.AB = {}
+local AB = CUI.AB
 local Hide = CUI.Hide
 local Util = CUI.Util
 
@@ -11,6 +11,7 @@ local microMenuButtons = {
     PlayerSpellsMicroButton,
     AchievementMicroButton,
     QuestLogMicroButton,
+    HousingMicroButton,
     GuildMicroButton,
     LFDMicroButton,
     CollectionsMicroButton,
@@ -36,26 +37,25 @@ local function HideBlizzard()
     Hide.HideFrame(TalkingHeadFrame)
 end
 
-function Bars.SetAlphas(alpha)
-    MicroMenu:SetAlpha(alpha)
-
-    for bar in pairs(actionBars) do
-        bar:SetAlpha(alpha)
+function AB.UpdateAlphas()
+    for bar, _ in pairs(actionBars) do
+        bar:SetAlpha(CalippoDB.ActionBars[bar:GetName()].Alpha)
     end
+    MicroMenu:SetAlpha(CalippoDB.ActionBars.MicroMenu.Alpha)
 end 
 
-local function AddActionBarHooks(bar, button)
+local function AddActionBarHooks(actionBar, button)
     for i=1, 12 do
         local frame = _G[button..i]
-        frame:HookScript("OnEnter", function() bar:SetAlpha(1) end)
-        frame:HookScript("OnLeave", function() bar:SetAlpha(CalippoDB.BarAlpha) end)
+        frame:HookScript("OnEnter", function() actionBar:SetAlpha(1) end)
+        frame:HookScript("OnLeave", function() actionBar:SetAlpha(CalippoDB.ActionBars[actionBar:GetName()].Alpha) end)
     end
 end
 
 local function AddMicroMenuHooks()
     for _, button in pairs(microMenuButtons) do
         button:HookScript("OnEnter", function() MicroMenu:SetAlpha(1) end)
-        button:HookScript("OnLeave", function() MicroMenu:SetAlpha(CalippoDB.BarAlpha) end)
+        button:HookScript("OnLeave", function() MicroMenu:SetAlpha(CalippoDB.ActionBars.MicroMenu.Alpha) end)
     end
 end
 
@@ -108,10 +108,10 @@ local function StyleButtons()
     end
 end
 
-function Bars.Load()
+function AB.Load()
     HideBlizzard()
 
-    Bars.SetAlphas(CalippoDB.BarAlpha)
+    AB.UpdateAlphas()
     
     AddHookSecure()
 
@@ -121,7 +121,12 @@ function Bars.Load()
         AddActionBarHooks(bar, button)
     end
 
-
-
     StyleButtons()
+
+    MultiBar7:ClearAllPoints()
+    MultiBar7:SetPoint("TOPLEFT", PlayerFrame.HealthBar, "BOTTOMLEFT", 0, -2)
+    EditModeManagerFrame:HookScript("OnHide", function(self)
+        MultiBar7:ClearAllPoints()
+        MultiBar7:SetPoint("TOPLEFT", PlayerFrame.HealthBar, "BOTTOMLEFT", 0, -2)
+    end)
 end

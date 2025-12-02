@@ -3,6 +3,8 @@ local addonName, CUI = ...
 CUI.Util = {}
 local Util = CUI.Util
 
+---------------------------------------------------------------------------------------------------
+
 function Util.AddBackdrop(frame, offset, backdropInfo)
     local bd = CreateFrame("Frame", nil, frame, "BackdropTemplate")
     bd:SetParentKey("Backdrop")

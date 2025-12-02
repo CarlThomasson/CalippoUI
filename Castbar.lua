@@ -4,6 +4,8 @@ CUI.CB = {}
 local CB = CUI.CB
 local Util = CUI.Util
 
+---------------------------------------------------------------------------------------------------
+
 local function HideFrame(frame)
     frame:Hide()
     frame:SetScript("OnShow", function(self)
@@ -16,6 +18,8 @@ local function HideBlizzard()
         HideFrame(frame)
     end
 end
+
+---------------------------------------------------------------------------------------------------
 
 local function SetupCastBar()
     local castBarFrame = CreateFrame("Statusbar", "CUI_CastBar", PlayerCastingBarFrame)
@@ -56,6 +60,8 @@ local function SetupCastBar()
         end
     end)
 end
+
+---------------------------------------------------------------------------------------------------
 
 function CB.Load()
     HideBlizzard()

@@ -4,6 +4,18 @@ CUI.CDM = {}
 local CDM = CUI.CDM
 local Util = CUI.Util
 
+---------------------------------------------------------------------------------------------------
+
+function CDM.UpdateAlpha(frame, inCombat)
+    if InCombatLockdown() or inCombat then 
+        UIFrameFadeIn(frame, 0.6, frame:GetAlpha(), 1)
+    else
+        UIFrameFadeOut(frame, 0.6, frame:GetAlpha(), CalippoDB.CooldownManager[frame:GetName()].Alpha)
+    end
+end
+
+---------------------------------------------------------------------------------------------------
+
 local function UpdateStyle(viewer)
     for _, frame in ipairs({viewer:GetChildren()}) do
         if frame.Icon then
@@ -156,9 +168,22 @@ local function HookScripts(viewer)
     end
 end
 
+---------------------------------------------------------------------------------------------------
+
 function CDM.Load()
     for _, viewer in pairs(cooldownViewers) do
         HookScripts(viewer)
-        Util.AddCombatFading(viewer)
+
+        viewer:RegisterEvent("PLAYER_REGEN_ENABLED")
+        viewer:RegisterEvent("PLAYER_REGEN_DISABLED")
+        viewer:HookScript("OnEvent", function(self, event)
+            if event == "PLAYER_REGEN_ENABLED" then
+                CDM.UpdateAlpha(self)
+            elseif event == "PLAYER_REGEN_DISABLED" then
+                CDM.UpdateAlpha(self, true)
+            end
+        end)
+
+        CDM.UpdateAlpha(viewer)
     end
 end

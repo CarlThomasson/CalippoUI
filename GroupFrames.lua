@@ -5,6 +5,8 @@ local GF = CUI.GF
 local Util = CUI.Util
 local Hide = CUI.Hide
 
+---------------------------------------------------------------------------------------------------
+
 local function HideBlizzard()
     Hide.HideBlizzardRaidManager()
     Hide.HideFrame(CompactPartyFrameTitle)
@@ -18,6 +20,8 @@ local function HideBlizzard()
         -- Hide.HideFrame(frame.MyHealAbsorb)
     end
 end
+
+---------------------------------------------------------------------------------------------------
 
 local function UpdateFrames()
     local numMem = GetNumGroupMembers()
@@ -108,6 +112,8 @@ local function SetupFrames()
 
     -- Raid...
 end
+
+---------------------------------------------------------------------------------------------------
 
 function GF.Load()
     HideBlizzard()

@@ -10,85 +10,132 @@ function DB.Load()
         CalippoDB = {}
     end
 
-    if not CalippoDB.BarAlpha then
-        CalippoDB.BarAlpha = 0
+    if not CalippoDB.ActionBars then
+        CalippoDB.ActionBars = {}
+        CalippoDB.ActionBars.Enabled = true
+
+        CalippoDB.ActionBars.MainActionBar = {}
+        CalippoDB.ActionBars.MainActionBar.Alpha = 1
+
+        CalippoDB.ActionBars.MultiBarBottomLeft = {}
+        CalippoDB.ActionBars.MultiBarBottomLeft.Alpha = 1
+
+        CalippoDB.ActionBars.MultiBarBottomRight = {}
+        CalippoDB.ActionBars.MultiBarBottomRight.Alpha = 1
+
+        CalippoDB.ActionBars.MultiBarLeft = {}
+        CalippoDB.ActionBars.MultiBarLeft.Alpha = 1
+
+        CalippoDB.ActionBars.MultiBarRight = {}
+        CalippoDB.ActionBars.MultiBarRight.Alpha = 1
+
+        CalippoDB.ActionBars.MultiBar5 = {}
+        CalippoDB.ActionBars.MultiBar5.Alpha = 1
+
+        CalippoDB.ActionBars.MultiBar6 = {}
+        CalippoDB.ActionBars.MultiBar6.Alpha = 1
+
+        CalippoDB.ActionBars.MultiBar7 = {}
+        CalippoDB.ActionBars.MultiBar7.Alpha = 1
+
+        CalippoDB.ActionBars.MultiBar7 = {}
+        CalippoDB.ActionBars.MultiBar7.Alpha = 1
+
+        CalippoDB.ActionBars.MicroMenu = {}
+        CalippoDB.ActionBars.MicroMenu.Alpha = 1
     end
 
-    if not CalippoDB.playerFrame then
-        CalippoDB.playerFrame = {}
-        CalippoDB.playerFrame.posX = -258
-        CalippoDB.playerFrame.posY = -156
-        CalippoDB.playerFrame.sizeX = 195
-        CalippoDB.playerFrame.sizeY = 50
+    if not CalippoDB.UnitFrames then
+        CalippoDB.UnitFrames = {}
+        CalippoDB.UnitFrames.Enabled = true
+
+        CalippoDB.UnitFrames.AuraSize = 20
+        CalippoDB.UnitFrames.AuraPadding = 2
+        CalippoDB.UnitFrames.AuraRowLength = 8
+
+        CalippoDB.UnitFrames.PlayerFrame = {}
+        CalippoDB.UnitFrames.PlayerFrame.Alpha = 1
+        CalippoDB.UnitFrames.PlayerFrame.OffsetX = 0
+        CalippoDB.UnitFrames.PlayerFrame.OffsetY = 0
+        CalippoDB.UnitFrames.PlayerFrame.SizeX = 200
+        CalippoDB.UnitFrames.PlayerFrame.SizeY = 50
+
+        CalippoDB.UnitFrames.TargetFrame = {}
+        CalippoDB.UnitFrames.TargetFrame.Alpha = 1
+        CalippoDB.UnitFrames.TargetFrame.OffsetX = 0
+        CalippoDB.UnitFrames.TargetFrame.OffsetY = 0
+        CalippoDB.UnitFrames.TargetFrame.SizeX = 200
+        CalippoDB.UnitFrames.TargetFrame.SizeY = 50
+
+        CalippoDB.UnitFrames.FocusFrame = {}
+        CalippoDB.UnitFrames.FocusFrame.Alpha = 1
+        CalippoDB.UnitFrames.FocusFrame.OffsetX = 0
+        CalippoDB.UnitFrames.FocusFrame.OffsetY = 0
+        CalippoDB.UnitFrames.FocusFrame.SizeX = 150
+        CalippoDB.UnitFrames.FocusFrame.SizeY = 40
     end
 
-    if not CalippoDB.targetFrame then
-        CalippoDB.targetFrame = {}
-        CalippoDB.targetFrame.posX = 258
-        CalippoDB.targetFrame.posY = -156
-        CalippoDB.targetFrame.sizeX = 195
-        CalippoDB.targetFrame.sizeY = 50
-        
-    end
-
-    if not CalippoDB.partyFrame then
-        CalippoDB.partyFrame = {}
-        CalippoDB.partyFrame.posX = -380
-        CalippoDB.partyFrame.posY = 220
-        CalippoDB.partyFrame.sizeX = 175
-        CalippoDB.partyFrame.sizeY = 70
-    end
-
-    if not CalippoDB.raidFrame then
-        CalippoDB.raidFrame = {}
-        CalippoDB.raidFrame.posX = -700
-        CalippoDB.raidFrame.posY = 220
-        CalippoDB.raidFrame.sizeX = 100
-        CalippoDB.raidFrame.sizeY = 60
+    if not CalippoDB.GroupFrames then
+        CalippoDB.GroupFrames = {}
+        CalippoDB.GroupFrames.Enabled = true
     end
 
     if not CalippoDB.AutoWhisper then
-        CalippoDB.AutoWhisper = false
+        CalippoDB.AutoWhisper = {}
+        CalippoDB.AutoWhisper.Enabled = true
     end
 
-    if not CalippoDB.IsEnabled then
-        CalippoDB.IsEnabled = {}
-        CalippoDB.IsEnabled.Chat = true
-        CalippoDB.IsEnabled.UnitFrame = true
-        CalippoDB.IsEnabled.GroupFrame = true
-        CalippoDB.IsEnabled.Bars = true
+    if not CalippoDB.CooldownManager then
+        CalippoDB.CooldownManager = {}
+        CalippoDB.CooldownManager.Enabled = true
+
+        CalippoDB.CooldownManager.EssentialCooldownViewer = {}
+        CalippoDB.CooldownManager.EssentialCooldownViewer.Alpha = 1
+
+        CalippoDB.CooldownManager.UtilityCooldownViewer = {}
+        CalippoDB.CooldownManager.UtilityCooldownViewer.Alpha = 1
+
+        CalippoDB.CooldownManager.BuffIconCooldownViewer = {}
+        CalippoDB.CooldownManager.BuffIconCooldownViewer.Alpha = 1
     end
 
-    Const.cUnit = {
-        ["player"] = "Player",
-        ["target"] = "Target",
-        ["party"] = "Party",
-        ["raid"] = "Raid",
-    }
+    if not CalippoDB.Chat then
+        CalippoDB.Chat = {}
+        CalippoDB.Chat.Enabled = true
+    end
 
-    Const.BuffWhitelist = {
-        -- Paladin
-        [53563] = "Beacon of Light",
-        [156910] = "Beacon of Faith",
-        [200025] = "Beacon of Virtue",
+    if not CalippoDB.PlayerAuras then
+        CalippoDB.PlayerAuras = {}
+        CalippoDB.PlayerAuras.Enabled = true
 
-        -- Shaman
-        [61295] = "Riptide",
-        [974] = "Earth Shield (Player)",
-        [383648] = "Earth Shield (Other)",
+        CalippoDB.PlayerAuras.Alpha = 1
+    end
 
-        -- Monk
-        [119611] = "Renewing Mist",
-    }
+    if not CalippoDB.NamePlates then
+        CalippoDB.NamePlates = {}
+        CalippoDB.NamePlates.Enabled = true
+    end  
+    
+    if not CalippoDB.Minimap then
+        CalippoDB.Minimap = {}
+        CalippoDB.Minimap.Enabled = true
 
-    Const.DebuffBlacklist = {
-        [57723] = "Exhaustion",
-        [57724] = "Sated",
-        [80354] = "Temporal Displacement",
-        [264689] = "Fatigued",
-        [390435] = "Exhaustion",
-        [206151] = "Challenger's Burden",
-    }
+        CalippoDB.Minimap.Alpha = 1
+    end  
+
+    if not CalippoDB.CastBar then
+        CalippoDB.CastBar = {}
+        CalippoDB.CastBar.Enabled = true
+    end  
+
+    if not CalippoDB.ResourceBar then
+        CalippoDB.ResourceBar = {}
+        CalippoDB.ResourceBar.Enabled = true
+
+        CalippoDB.ResourceBar.Alpha = 1
+        CalippoDB.ResourceBar.Height = 20
+        CalippoDB.ResourceBar.FontSize = 12
+    end  
 
     CUI_BACKDROP_DS_3 = {
         edgeFile = "Interface/AddOns/CalippoUI/Media/DropShadowBorder.blp", 
