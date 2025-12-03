@@ -8,10 +8,8 @@ local Util = CUI.Util
 
 function PA.UpdateAlpha(frame, inCombat)
     if InCombatLockdown() or inCombat then 
-        --frame:SetAlpha(1)
         UIFrameFadeIn(frame, 0.6, frame:GetAlpha(), 1)
     else
-        --frame:SetAlpha(CalippoDB.PlayerAuras.Alpha)
         UIFrameFadeOut(frame, 0.6, frame:GetAlpha(), CalippoDB.PlayerAuras.Alpha)
     end
 end

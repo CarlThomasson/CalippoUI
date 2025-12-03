@@ -118,6 +118,8 @@ end
 function GF.Load()
     HideBlizzard()
 
+    SetupFrames()
+
     local frame = CreateFrame("Frame", "CUI_GroupFrameUpdater", UIParent)
     frame:RegisterEvent("GROUP_ROSTER_UPDATE")
     frame:RegisterEvent("PLAYER_ROLES_ASSIGNED")
@@ -134,6 +136,5 @@ function GF.Load()
         end
     end)
 
-    SetupFrames()
     UpdateFrames()
 end

@@ -16,33 +16,39 @@ function DB.Load()
 
         CalippoDB.ActionBars.MainActionBar = {}
         CalippoDB.ActionBars.MainActionBar.Alpha = 1
+        CalippoDB.ActionBars.MainActionBar.CombatAlpha = 1
 
         CalippoDB.ActionBars.MultiBarBottomLeft = {}
         CalippoDB.ActionBars.MultiBarBottomLeft.Alpha = 1
+        CalippoDB.ActionBars.MultiBarBottomLeft.CombatAlpha = 1
 
         CalippoDB.ActionBars.MultiBarBottomRight = {}
         CalippoDB.ActionBars.MultiBarBottomRight.Alpha = 1
-
-        CalippoDB.ActionBars.MultiBarLeft = {}
-        CalippoDB.ActionBars.MultiBarLeft.Alpha = 1
+        CalippoDB.ActionBars.MultiBarBottomRight.CombatAlpha = 1
 
         CalippoDB.ActionBars.MultiBarRight = {}
         CalippoDB.ActionBars.MultiBarRight.Alpha = 1
+        CalippoDB.ActionBars.MultiBarRight.CombatAlpha = 1
+
+        CalippoDB.ActionBars.MultiBarLeft = {}
+        CalippoDB.ActionBars.MultiBarLeft.Alpha = 1
+        CalippoDB.ActionBars.MultiBarLeft.CombatAlpha = 1
 
         CalippoDB.ActionBars.MultiBar5 = {}
         CalippoDB.ActionBars.MultiBar5.Alpha = 1
+        CalippoDB.ActionBars.MultiBar5.CombatAlpha = 1
 
         CalippoDB.ActionBars.MultiBar6 = {}
         CalippoDB.ActionBars.MultiBar6.Alpha = 1
+        CalippoDB.ActionBars.MultiBar6.CombatAlpha = 1
 
         CalippoDB.ActionBars.MultiBar7 = {}
         CalippoDB.ActionBars.MultiBar7.Alpha = 1
-
-        CalippoDB.ActionBars.MultiBar7 = {}
-        CalippoDB.ActionBars.MultiBar7.Alpha = 1
+        CalippoDB.ActionBars.MultiBar7.CombatAlpha = 1
 
         CalippoDB.ActionBars.MicroMenu = {}
         CalippoDB.ActionBars.MicroMenu.Alpha = 1
+        CalippoDB.ActionBars.MicroMenu.CombatAlpha = 1
     end
 
     if not CalippoDB.UnitFrames then
@@ -78,11 +84,6 @@ function DB.Load()
     if not CalippoDB.GroupFrames then
         CalippoDB.GroupFrames = {}
         CalippoDB.GroupFrames.Enabled = true
-    end
-
-    if not CalippoDB.AutoWhisper then
-        CalippoDB.AutoWhisper = {}
-        CalippoDB.AutoWhisper.Enabled = true
     end
 
     if not CalippoDB.CooldownManager then
@@ -136,6 +137,11 @@ function DB.Load()
         CalippoDB.ResourceBar.Height = 20
         CalippoDB.ResourceBar.FontSize = 12
     end  
+
+    if not CalippoDB.AutoWhisper then
+        CalippoDB.AutoWhisper = {}
+        CalippoDB.AutoWhisper.Enabled = false
+    end
 
     CUI_BACKDROP_DS_3 = {
         edgeFile = "Interface/AddOns/CalippoUI/Media/DropShadowBorder.blp", 

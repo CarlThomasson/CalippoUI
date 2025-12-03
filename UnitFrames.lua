@@ -26,18 +26,18 @@ end
 
 ---------------------------------------------------------------------------------------------------
 
-function UF.UpdateSizePos(frame)
-    frame.HealthBar:SetPoint("CENTER", frame, "CENTER", CalippoDB.UnitFrames[frame:GetName()].OffsetX, CalippoDB.UnitFrames[frame:GetName()].OffsetY)
-    frame.HealthBar:SetSize(CalippoDB.UnitFrames[frame:GetName()].SizeX, CalippoDB.UnitFrames[frame:GetName()].SizeY)
-    frame.Overlay.UnitName:SetWidth(frame.Overlay:GetWidth() - 60)
-end
-
 function UF.UpdateAlpha(frame, inCombat)
     if InCombatLockdown() or inCombat then 
         frame:SetAlpha(1)
     else
-        UIFrameFadeOut(frame, 0.6, frame:GetAlpha(), CalippoDB.UnitFrames[frame:GetName()].Alpha)
+        frame:SetAlpha(CalippoDB.UnitFrames[frame:GetName()].Alpha)
     end
+end
+
+function UF.UpdateSizePos(frame)
+    frame.HealthBar:SetPoint("CENTER", frame, "CENTER", CalippoDB.UnitFrames[frame:GetName()].OffsetX, CalippoDB.UnitFrames[frame:GetName()].OffsetY)
+    frame.HealthBar:SetSize(CalippoDB.UnitFrames[frame:GetName()].SizeX, CalippoDB.UnitFrames[frame:GetName()].SizeY)
+    frame.Overlay.UnitName:SetWidth(frame.Overlay:GetWidth() - 60)
 end
 
 function UF.UpdateAuras(unitFrame)
@@ -57,6 +57,7 @@ function UF.UpdateAuras(unitFrame)
         frame:SetSize(frameSize, frameSize)
         frame.Icon:SetTexCoord(.08, .92, .08, .92)
         frame.Count:SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", 12, "")
+        frame.Count:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -1, 0)
 
         if not frame.Backdrop then
             Util.AddBackdrop(frame, 1, CUI_BACKDROP_DS_2)
@@ -78,6 +79,7 @@ function UF.UpdateAuras(unitFrame)
         frame:SetPoint("TOPLEFT", TargetFrame.HealthBar, "BOTTOMLEFT")
         frame.Icon:SetTexCoord(.08, .92, .08, .92)
         frame.Count:SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", 12, "")
+        frame.Count:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -1, 0)
 
         if not frame.Backdrop then
             Util.AddBackdrop(frame, 1, CUI_BACKDROP_DS_2)

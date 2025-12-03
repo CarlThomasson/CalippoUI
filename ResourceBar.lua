@@ -70,7 +70,7 @@ function RB.Load()
 
     UpdateMaxPower(powerBar)
 
-    RB.UpdateAlpha(powerBar)
+    PlayerFrameBottomManagedFramesContainer:Hide()
 
     powerBar:RegisterUnitEvent("UNIT_POWER_UPDATE", "player")
     powerBar:RegisterUnitEvent("UNIT_MAXPOWER", "player")
@@ -87,4 +87,6 @@ function RB.Load()
             RB.UpdateAlpha(self, true)
         end
     end)
+
+    RB.UpdateAlpha(powerBar)
 end

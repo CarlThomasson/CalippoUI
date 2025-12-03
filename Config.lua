@@ -86,7 +86,7 @@ local function SetupMainPage(mainCategory, layout)
 
     layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Toggle Modules"))
 
-	local initializer = CreateSettingsButtonInitializer("Reload UI", "Reload", function() ReloadUI() end, "Reloads the UI", "Reload")
+	local initializer = CreateSettingsButtonInitializer("Reload UI to apply changes", "Reload", function() ReloadUI() end, "Reloads the UI", "Reload")
 	layout:AddInitializer(initializer)
 
 	for i, v in ipairs(modules) do
@@ -107,71 +107,46 @@ end
 local function SetupActionBarPage(mainCategory)
 	local category, layout = Settings.RegisterVerticalLayoutSubcategory(mainCategory, "Action Bars")
 
-	local actionBars = {
-		{
-			["name"] = "ACTIONBAR1_ALPHA_SLIDER",
-			["text"] = "Action Bar 1",
-			["dbEntry"] = "MainActionBar",
-		},
-		{
-			["name"] = "ACTIONBAR2_ALPHA_SLIDER",
-			["text"] = "Action Bar 2",
-			["dbEntry"] = "MultiBarBottomLeft",
-		},
-		{
-			["name"] = "ACTIONBAR3_ALPHA_SLIDER",
-			["text"] = "Action Bar 3",
-			["dbEntry"] = "MultiBarBottomRight",
-		},
-		{
-			["name"] = "ACTIONBAR4_ALPHA_SLIDER",
-			["text"] = "Action Bar 4",
-			["dbEntry"] = "MultiBarRight",
-		},
-		{
-			["name"] = "ACTIONBAR5_ALPHA_SLIDER",
-			["text"] = "Action Bar 5",
-			["dbEntry"] = "MultiBarLeft",
-		},
-		{
-			["name"] = "ACTIONBAR6_ALPHA_SLIDER",
-			["text"] = "Action Bar 6",
-			["dbEntry"] = "MultiBar5",
-		},
-		{
-			["name"] = "ACTIONBAR7_ALPHA_SLIDER",
-			["text"] = "Action Bar 7",
-			["dbEntry"] = "MultiBar6",
-		},
-		{
-			["name"] = "ACTIONBAR8_ALPHA_SLIDER",
-			["text"] = "Action Bar 8 (Anchored to player frame)",
-			["dbEntry"] = "MultiBar7",
-		},
-		{
-			["name"] = "MICROMENU_ALPHA_SLIDER",
-			["text"] = "Micro Menu",
-			["dbEntry"] = "MicroMenu",
-		},
-	}
-
-	for i, v in ipairs(actionBars) do
-		layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(v.text))
+	local function CreateActionBarSettings(title, category, shortName, frame) 
+		layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(title))
 		
-		local sliderSettings = Settings.RegisterProxySetting(
+		CreateSlider(
 			category,
-			v.name,
-			Settings.VarType.Number,
-			"Alpha",
-			CalippoDB.ActionBars[v.dbEntry].Alpha,
-			function() return CalippoDB.ActionBars[v.dbEntry].Alpha end,
-			function(value) CalippoDB.ActionBars[v.dbEntry].Alpha = value; AB.UpdateAlphas() end
+			shortName.."_ALPHA",
+			"Alpha (Out of combat)",
+			0,
+			function() return CalippoDB.ActionBars[frame:GetName()].Alpha end,
+			function(v) CalippoDB.ActionBars[frame:GetName()].Alpha = v; AB.UpdateAlpha(frame) end,
+			0,
+			1,
+			0.01,
+			function(v) return math.floor(v * 100) end
+		)
+
+		CreateSlider(
+			category,
+			shortName.."_COMBATALPHA",
+			"Alpha (In combat)",
+			0,
+			function() return CalippoDB.ActionBars[frame:GetName()].CombatAlpha end,
+			function(v) CalippoDB.ActionBars[frame:GetName()].CombatAlpha = v; AB.UpdateAlpha(frame) end,
+			0,
+			1,
+			0.01,
+			function(v) return math.floor(v * 100) end
 		)	
-		
-		local sliderOptions = Settings.CreateSliderOptions(0, 1, 0.01)
-		sliderOptions:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, function(value) return math.ceil(value * 100) end)
-		Settings.CreateSlider(category, sliderSettings, sliderOptions)
 	end
+
+	CreateActionBarSettings("Action Bar 1", category, "AB1", MainActionBar)
+	CreateActionBarSettings("Action Bar 2", category, "AB2", MultiBarBottomLeft)
+	CreateActionBarSettings("Action Bar 3", category, "AB3", MultiBarBottomRight)
+	CreateActionBarSettings("Action Bar 4", category, "AB4", MultiBarRight)
+	CreateActionBarSettings("Action Bar 5", category, "AB5", MultiBarLeft)
+	CreateActionBarSettings("Action Bar 6", category, "AB6", MultiBar5)
+	CreateActionBarSettings("Action Bar 7", category, "AB7", MultiBar6)
+	CreateActionBarSettings("Action Bar 8 (Anchored to Player Frame)", category, "AB8", MultiBar7)
+	CreateActionBarSettings("Micro Menu", category, "MICRO", MicroMenu)
+
 end
 
 local function SetupUnitFramePage(mainCategory)
@@ -396,7 +371,7 @@ end
 
 ---------------------------------------------------------------------------------------------------
 
-function Conf.Load()
+function Conf.Load()	
     local mainCategory, layout = Settings.RegisterVerticalLayoutCategory("CalippoUI")
 
 	SettingsPanel:RegisterForDrag("LeftButton")

@@ -64,8 +64,18 @@ local function UpdateCastBar(castBar)
     end
     
     if isChannel then
+        local castBarColor = GetCastBarColor(castBar:GetParent().castBar)
+        castBar.Background:SetColorTexture(castBarColor.r, castBarColor.g, castBarColor.b, castBarColor.a, 1)
+        
+        local v = 0.2
+        castBar:SetStatusBarColor(castBarColor.r*v, castBarColor.g*v, castBarColor.b*v)
         castBar:SetReverseFill(true)
     else
+        local castBarColor = GetCastBarColor(castBar:GetParent().castBar)
+        castBar:SetStatusBarColor(castBarColor.r, castBarColor.g, castBarColor.b, castBarColor.a)
+
+        local v = 0.2
+        castBar.Background:SetColorTexture(castBarColor.r*v, castBarColor.g*v, castBarColor.b*v, 1)
         castBar:SetReverseFill(false)
     end
 
@@ -75,11 +85,7 @@ local function UpdateCastBar(castBar)
     castBar:SetMinMaxValues(startTime, endTime)
     castBar:SetValue(currentTime)
     
-    local castBarColor = GetCastBarColor(castBar:GetParent().castBar)
-    castBar:SetStatusBarColor(castBarColor.r, castBarColor.g, castBarColor.b, castBarColor.a)
 
-    local v = 0.2
-    castBar.Background:SetColorTexture(castBarColor.r*v, castBarColor.g*v, castBarColor.b*v, 1)
 
     castBar.isCasting = true
     castBar:Show()
@@ -125,7 +131,6 @@ local function SetupNamePlate(unitToken)
 
     if not unitFrame.healthBar.Backdrop then
         Util.AddBackdrop(unitFrame.healthBar, 1, CUI_BACKDROP_DS_3)
-        unitFrame.healthBar.Backdrop:SetFrameStrata("LOW")
     end
 
     unitFrame.healthBar.deselectedOverlay:Hide()
@@ -198,6 +203,12 @@ local function SetupNamePlate(unitToken)
             UpdateCastBar(self.CUI_CastBar)
         elseif event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP" then                    
             UpdateCastBar(self.CUI_CastBar)
+        elseif event == "PLAYER_TARGET_CHANGED" then
+            if unitFrame.healthBar.selectedBorder:IsShown() then
+                self.healthBar.Backdrop:Hide()
+            else
+                self.healthBar.Backdrop:Show()
+            end
         end
     end)
 end

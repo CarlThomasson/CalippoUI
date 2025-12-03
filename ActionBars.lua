@@ -5,6 +5,16 @@ local AB = CUI.AB
 local Hide = CUI.Hide
 local Util = CUI.Util
 
+---------------------------------------------------------------------------------------------------
+
+local function HideBlizzard()
+    Hide.HideFrame(BagsBar)
+    Hide.HideFrame(StanceBar)
+    Hide.HideFrame(TalkingHeadFrame)
+end
+
+---------------------------------------------------------------------------------------------------
+
 local microMenuButtons = {
     CharacterMicroButton,
     ProfessionMicroButton,
@@ -31,24 +41,23 @@ local actionBars = {
     [MultiBar7] = "MultiBar7Button",
 }
 
-local function HideBlizzard()
-    Hide.HideFrame(BagsBar)
-    Hide.HideFrame(StanceBar)
-    Hide.HideFrame(TalkingHeadFrame)
+---------------------------------------------------------------------------------------------------
+
+function AB.UpdateAlpha(frame, inCombat)
+    if InCombatLockdown() or inCombat then 
+        frame:SetAlpha(CalippoDB.ActionBars[frame:GetName()].CombatAlpha)
+    else
+        frame:SetAlpha(CalippoDB.ActionBars[frame:GetName()].Alpha)
+    end
 end
 
-function AB.UpdateAlphas()
-    for bar, _ in pairs(actionBars) do
-        bar:SetAlpha(CalippoDB.ActionBars[bar:GetName()].Alpha)
-    end
-    MicroMenu:SetAlpha(CalippoDB.ActionBars.MicroMenu.Alpha)
-end 
+---------------------------------------------------------------------------------------------------
 
 local function AddActionBarHooks(actionBar, button)
     for i=1, 12 do
         local frame = _G[button..i]
         frame:HookScript("OnEnter", function() actionBar:SetAlpha(1) end)
-        frame:HookScript("OnLeave", function() actionBar:SetAlpha(CalippoDB.ActionBars[actionBar:GetName()].Alpha) end)
+        frame:HookScript("OnLeave", function() AB.UpdateAlpha(actionBar) end)
     end
 end
 
@@ -108,10 +117,10 @@ local function StyleButtons()
     end
 end
 
+---------------------------------------------------------------------------------------------------
+
 function AB.Load()
     HideBlizzard()
-
-    AB.UpdateAlphas()
     
     AddHookSecure()
 
@@ -119,13 +128,28 @@ function AB.Load()
 
     for bar, button in pairs(actionBars) do
         AddActionBarHooks(bar, button)
+
+        bar:RegisterEvent("PLAYER_REGEN_ENABLED")
+        bar:RegisterEvent("PLAYER_REGEN_DISABLED")
+        bar:HookScript("OnEvent", function(self, event)
+            if event == "PLAYER_REGEN_ENABLED" then
+                AB.UpdateAlpha(self)
+            elseif event == "PLAYER_REGEN_DISABLED" then
+                AB.UpdateAlpha(self, true)
+            end
+        end)
+
+        AB.UpdateAlpha(bar)
     end
 
     StyleButtons()
 
-    MultiBar7:ClearAllPoints()
-    MultiBar7:SetPoint("TOPLEFT", PlayerFrame.HealthBar, "BOTTOMLEFT", 0, -2)
+    if not InCombatLockdown() and PlayerFrame.HealthBar then
+        MultiBar7:ClearAllPoints()
+        MultiBar7:SetPoint("TOPLEFT", PlayerFrame.HealthBar, "BOTTOMLEFT", 0, -2)
+    end
     EditModeManagerFrame:HookScript("OnHide", function(self)
+        if InCombatLockdown() or not PlayerFrame.HealthBar then return end
         MultiBar7:ClearAllPoints()
         MultiBar7:SetPoint("TOPLEFT", PlayerFrame.HealthBar, "BOTTOMLEFT", 0, -2)
     end)

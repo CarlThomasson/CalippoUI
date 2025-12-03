@@ -7,6 +7,8 @@ local Util = CUI.Util
 ---------------------------------------------------------------------------------------------------
 
 function CDM.UpdateAlpha(frame, inCombat)
+    if not frame:IsShown() then return end
+
     if InCombatLockdown() or inCombat then 
         UIFrameFadeIn(frame, 0.6, frame:GetAlpha(), 1)
     else
@@ -32,7 +34,7 @@ local function UpdateStyle(viewer)
         end
 
         if frame.Applications then
-            frame.Applications.Applications:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 16, "OUTLINE")
+            frame.Applications.Applications:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 13, "OUTLINE")
             frame.Applications.Applications:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
         end
 
@@ -42,8 +44,6 @@ local function UpdateStyle(viewer)
                 fontSize = 18
             elseif viewer:GetName() == "UtilityCooldownViewer" then
                 fontSize = 12
-            elseif viewer:GetName() == "BuffIconCooldownViewer" then
-                fontSize = 16 
             end
 
             frame.ChargeCount.Current:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", fontSize, "OUTLINE")
@@ -60,7 +60,7 @@ local function UpdateStyle(viewer)
             elseif viewer:GetName() == "UtilityCooldownViewer" then
                 fontSize = 12
             elseif viewer:GetName() == "BuffIconCooldownViewer" then
-                fontSize = 16 
+                fontSize = 13
             end
 
             local text = frame.Cooldown:GetRegions()
@@ -173,6 +173,11 @@ end
 function CDM.Load()
     for _, viewer in pairs(cooldownViewers) do
         HookScripts(viewer)
+
+        viewer:HookScript("OnShow", function(self)
+            UpdatePositions(self)
+            CDM.UpdateAlpha(self)
+        end)
 
         viewer:RegisterEvent("PLAYER_REGEN_ENABLED")
         viewer:RegisterEvent("PLAYER_REGEN_DISABLED")
