@@ -49,35 +49,47 @@ local function UpdateFrames()
     end
 end
 
-local function SetupAuraFrame(parentFrame, frame, script, addBorder, index, frameSize, padding, anchorPoint, growDirection)
-    frame:HookScript(script, function(self)
-        self:ClearAllPoints()
-        local xPos
-        if growDirection == "LEFT" then
-            xPos = -((index - 1) * (frameSize + padding))
-        elseif growDirection == "RIGHT" then
-            xPos = ((index - 1) * (frameSize + padding))
-        end
+local function UpdateAuraFrame(frame, addBorder, index, frameSize, padding, anchorPoint, growDirection)
+    -- local xPos
+    -- if growDirection == "LEFT" then
+    --     xPos = -((index - 1) * (frameSize + padding))
+    -- elseif growDirection == "RIGHT" then
+    --     xPos = ((index - 1) * (frameSize + padding))
+    -- end
+    
+    -- frame:ClearAllPoints()
+    -- frame:SetPoint(anchorPoint, frame:GetParent().healthBar, anchorPoint, xPos, 0)
+    -- frame:SetSize(frameSize, frameSize)
 
-        self:SetPoint(anchorPoint, parentFrame.healthBar, anchorPoint, xPos, 0)
-        self:SetSize(frameSize, frameSize)
-    end)
-
-    frame:ClearAllPoints()
-    local xPos
-    if growDirection == "LEFT" then
-        xPos = -((index - 1) * (frameSize + padding))
-    elseif growDirection == "RIGHT" then
-        xPos = ((index - 1) * (frameSize + padding))
+    if frame.count then
+        frame.count:ClearAllPoints()
+        frame.count:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT")
+        frame.count:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 11, "")
     end
-
-    frame:SetPoint(anchorPoint, parentFrame.healthBar, anchorPoint, xPos, 0)
-    frame:SetSize(frameSize, frameSize)
 
     if addBorder then
+        if frame.border then
+            frame.border:Hide()
+        end
         frame.icon:SetTexCoord(.08, .92, .08, .92)
-        Util.AddBackdrop(frame, 1, CUI_BACKDROP_DS_2)
+        if not frame.Borders then
+            Util.AddBorder(frame, 1, CUI_BACKDROP_DS_2)
+        end
     end
+end
+
+local function UpdateAllAuraFrames(member)
+    for k=1, 6 do 
+        UpdateAuraFrame(_G["CompactPartyFrameMember"..member.."Buff"..k], true, k, 18, 2, "TOPRIGHT", "LEFT")
+    end
+
+    for k=1, 3 do 
+        UpdateAuraFrame(_G["CompactPartyFrameMember"..member.."Debuff"..k], true, k, 18, 2, "BOTTOMLEFT", "RIGHT")
+    end
+
+    -- for k=1, 3 do 
+    --     UpdateAuraFrame(_G["CompactPartyFrameMember"..member.."DispelDebuff"..k], false, k, 18, 2, "BOTTOMRIGHT", "LEFT")
+    -- end
 end
 
 local function SetupFrames()
@@ -96,18 +108,18 @@ local function SetupFrames()
         unitRole:SetPoint("TOPLEFT", frame.healthBar, "TOPLEFT", 4, -15)
         unitRole:SetSize(10, 10)
 
-        for k=1, 6 do 
-            SetupAuraFrame(frame, _G["CompactPartyFrameMember"..i.."Buff"..k], "OnShow", true, k, 18, 2, "TOPRIGHT", "LEFT")
-        end
+        -- frame:RegisterUnitEvent("UNIT_AURA", frame.unit)
+        -- frame:HookScript("OnEvent", function(self, event)
+        --     if event == "UNIT_AURA" then
+        --         UpdateAllAuraFrames(i)
+        --     end
+        -- end)
 
-        for k=1, 3 do 
-            -- TODO : Försök att inte använda OnUpdate
-            SetupAuraFrame(frame, _G["CompactPartyFrameMember"..i.."Debuff"..k], "OnUpdate", true, k, 18, 2, "BOTTOMLEFT", "RIGHT")
-        end
+        -- EditModeManagerFrame:HookScript("OnHide", function(self)
+        --     UpdateAllAuraFrames(i)
+        -- end)
 
-        for k=1, 3 do 
-            SetupAuraFrame(frame, _G["CompactPartyFrameMember"..i.."DispelDebuff"..k], "OnShow", false, k, 18, 2, "BOTTOMRIGHT", "LEFT")
-        end
+        UpdateAllAuraFrames(i)
     end
 
     -- Raid...
@@ -123,15 +135,9 @@ function GF.Load()
     local frame = CreateFrame("Frame", "CUI_GroupFrameUpdater", UIParent)
     frame:RegisterEvent("GROUP_ROSTER_UPDATE")
     frame:RegisterEvent("PLAYER_ROLES_ASSIGNED")
-    frame:RegisterEvent("GROUP_JOINED")
-    frame:RegisterEvent("GROUP_LEFT")
-    frame:RegisterEvent("GROUP_FORMED")
     frame:SetScript("OnEvent", function(self, event)
         if event == "GROUP_ROSTER_UPDATE" or 
-            event == "PLAYER_ROLES_ASSIGNED" or 
-            event == "GROUP_JOINED" or 
-            event == "GROUP_LEFT" or 
-            event == "GROUP_FORMED" then
+            event == "PLAYER_ROLES_ASSIGNED" then
             UpdateFrames()
         end
     end)

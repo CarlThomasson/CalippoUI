@@ -8,9 +8,9 @@ local Util = CUI.Util
 
 function PA.UpdateAlpha(frame, inCombat)
     if InCombatLockdown() or inCombat then 
-        UIFrameFadeIn(frame, 0.6, frame:GetAlpha(), 1)
+        Util.FadeFrame(frame, "IN", 1)
     else
-        UIFrameFadeOut(frame, 0.6, frame:GetAlpha(), CalippoDB.PlayerAuras.Alpha)
+        Util.FadeFrame(frame, "OUT", CalippoDB.PlayerAuras.Alpha)
     end
 end
 
@@ -18,12 +18,20 @@ end
 
 local function StyleFrame(frame)
     frame.Icon:SetTexCoord(.08, .92, .08, .92)
-    local overlay = CreateFrame("Frame", nil, frame)
-    overlay:SetParentKey("Overlay")
-    overlay:SetAllPoints(frame.Icon)
-    Util.AddBackdrop(overlay, 1, CUI_BACKDROP_DS_2)
+
+    if not frame.Overlay then
+        local overlay = CreateFrame("Frame", nil, frame)
+        overlay:SetParentKey("Overlay")
+        overlay:SetAllPoints(frame.Icon)
+        Util.AddBorder(overlay, 1, CUI_BACKDROP_DS_2)
+    end
+
     frame.Count:SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", 12, "")
     frame.Duration:SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", 12, "")
+
+    if frame.DebuffBorder then
+        frame.DebuffBorder:Hide()
+    end
 end
 
 local function AddCombatAlpha(frame)
@@ -40,6 +48,16 @@ local function AddCombatAlpha(frame)
     PA.UpdateAlpha(frame)
 end
 
+local function StyleBuffsAndDebuffs()
+    for _, frame in pairs({BuffFrame.AuraContainer:GetChildren()}) do
+        StyleFrame(frame)
+    end
+
+    for _, frame in pairs({DebuffFrame.AuraContainer:GetChildren()}) do
+        StyleFrame(frame)
+    end
+end
+
 ---------------------------------------------------------------------------------------------------
 
 function PA.Load()
@@ -48,11 +66,17 @@ function PA.Load()
     AddCombatAlpha(BuffFrame)
     AddCombatAlpha(DebuffFrame)
 
-    for _, frame in pairs({BuffFrame.AuraContainer:GetChildren()}) do
-        StyleFrame(frame)
-    end
+    StyleBuffsAndDebuffs()
 
-    for _, frame in pairs({DebuffFrame.AuraContainer:GetChildren()}) do
-        StyleFrame(frame)
-    end
+    local frame = CreateFrame("Frame", "CUI_PlayerAuraUpdate")
+    frame:RegisterUnitEvent("UNIT_AURA", "player")
+    frame:SetScript("OnEvent", function(self, event)
+        if event == "UNIT_AURA" then
+            StyleBuffsAndDebuffs()
+        end
+    end)
+
+    EditModeManagerFrame:HookScript("OnHide", function(self)
+        StyleBuffsAndDebuffs()
+    end)
 end

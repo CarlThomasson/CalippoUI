@@ -49,6 +49,10 @@ function DB.Load()
         CalippoDB.ActionBars.MicroMenu = {}
         CalippoDB.ActionBars.MicroMenu.Alpha = 1
         CalippoDB.ActionBars.MicroMenu.CombatAlpha = 1
+
+        CalippoDB.ActionBars.PetActionBar = {}
+        CalippoDB.ActionBars.PetActionBar.Alpha = 1
+        CalippoDB.ActionBars.PetActionBar.CombatAlpha = 1
     end
 
     if not CalippoDB.UnitFrames then
@@ -72,6 +76,9 @@ function DB.Load()
         CalippoDB.UnitFrames.TargetFrame.OffsetY = 0
         CalippoDB.UnitFrames.TargetFrame.SizeX = 200
         CalippoDB.UnitFrames.TargetFrame.SizeY = 50
+        CalippoDB.UnitFrames.TargetFrame.AuraSize = 20
+        CalippoDB.UnitFrames.TargetFrame.AuraPadding = 2
+        CalippoDB.UnitFrames.TargetFrame.AuraRowLength = 8
 
         CalippoDB.UnitFrames.FocusFrame = {}
         CalippoDB.UnitFrames.FocusFrame.Alpha = 1
@@ -79,6 +86,16 @@ function DB.Load()
         CalippoDB.UnitFrames.FocusFrame.OffsetY = 0
         CalippoDB.UnitFrames.FocusFrame.SizeX = 150
         CalippoDB.UnitFrames.FocusFrame.SizeY = 40
+        CalippoDB.UnitFrames.FocusFrame.AuraSize = 15
+        CalippoDB.UnitFrames.FocusFrame.AuraPadding = 2
+        CalippoDB.UnitFrames.FocusFrame.AuraRowLength = 5
+
+        CalippoDB.UnitFrames.PetFrame = {}
+        CalippoDB.UnitFrames.PetFrame.Alpha = 1
+        CalippoDB.UnitFrames.PetFrame.OffsetX = 0
+        CalippoDB.UnitFrames.PetFrame.OffsetY = 0
+        CalippoDB.UnitFrames.PetFrame.SizeX = 100
+        CalippoDB.UnitFrames.PetFrame.SizeY = 25
     end
 
     if not CalippoDB.GroupFrames then

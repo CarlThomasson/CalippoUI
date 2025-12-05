@@ -39,36 +39,70 @@ local actionBars = {
     [MultiBar5] = "MultiBar5Button",
     [MultiBar6] = "MultiBar6Button",
     [MultiBar7] = "MultiBar7Button",
+    [MultiBar7] = "MultiBar7Button",
+    [PetActionBar] = "PetActionButton",
 }
 
 ---------------------------------------------------------------------------------------------------
 
 function AB.UpdateAlpha(frame, inCombat)
     if InCombatLockdown() or inCombat then 
-        frame:SetAlpha(CalippoDB.ActionBars[frame:GetName()].CombatAlpha)
+        Util.FadeFrame(frame, "IN", CalippoDB.ActionBars[frame:GetName()].CombatAlpha)
     else
-        frame:SetAlpha(CalippoDB.ActionBars[frame:GetName()].Alpha)
+        Util.FadeFrame(frame, "OUT", CalippoDB.ActionBars[frame:GetName()].Alpha)
     end
 end
 
 ---------------------------------------------------------------------------------------------------
 
-local function AddActionBarHooks(actionBar, button)
-    for i=1, 12 do
-        local frame = _G[button..i]
-        frame:HookScript("OnEnter", function() actionBar:SetAlpha(1) end)
-        frame:HookScript("OnLeave", function() AB.UpdateAlpha(actionBar) end)
+local function PositionMB7()
+    if not InCombatLockdown() and PlayerFrame.HealthBar then
+        MultiBar7:ClearAllPoints()
+        MultiBar7:SetPoint("TOPLEFT", PlayerFrame.HealthBar, "BOTTOMLEFT", 0, -2)
     end
+    MultiBar7:RegisterEvent("PLAYER_ENTERING_WORLD")
+    MultiBar7:HookScript("OnEvent", function(self, event)
+        if event == "PLAYER_ENTERING_WORLD" then
+            MultiBar7:ClearAllPoints()
+            MultiBar7:SetPoint("TOPLEFT", PlayerFrame.HealthBar, "BOTTOMLEFT", 0, -2)
+        end
+    end)
+    EditModeManagerFrame:HookScript("OnHide", function(self)
+        if InCombatLockdown() or not PlayerFrame.HealthBar then return end
+        MultiBar7:ClearAllPoints()
+        MultiBar7:SetPoint("TOPLEFT", PlayerFrame.HealthBar, "BOTTOMLEFT", 0, -2)
+    end)
 end
 
-local function AddMicroMenuHooks()
+local function AddHooks()
+    for bar, button in pairs(actionBars) do
+        for i=1, 12 do
+            local frame = _G[button..i]
+            if not frame then break end
+
+            frame:HookScript("OnEnter", function() Util.FadeFrame(bar, "IN", 1, 0.3) end)
+            frame:HookScript("OnLeave", function() AB.UpdateAlpha(bar) end)
+        end
+
+        bar:RegisterEvent("PLAYER_REGEN_ENABLED")
+        bar:RegisterEvent("PLAYER_REGEN_DISABLED")
+        bar:HookScript("OnEvent", function(self, event)
+            if event == "PLAYER_REGEN_ENABLED" then
+                AB.UpdateAlpha(self)
+            elseif event == "PLAYER_REGEN_DISABLED" then
+                AB.UpdateAlpha(self, true)
+            end
+        end)
+
+        AB.UpdateAlpha(bar)
+    end
+
     for _, button in pairs(microMenuButtons) do
-        button:HookScript("OnEnter", function() MicroMenu:SetAlpha(1) end)
-        button:HookScript("OnLeave", function() MicroMenu:SetAlpha(CalippoDB.ActionBars.MicroMenu.Alpha) end)
+        button:HookScript("OnEnter", function() Util.FadeFrame(MicroMenu, "IN", 1, 0.3) end)
+        button:HookScript("OnLeave", function() AB.UpdateAlpha(MicroMenu) end)
     end
-end
+    AB.UpdateAlpha(MicroMenu)
 
-local function AddHookSecure()
     FramerateFrame:ClearAllPoints()
     FramerateFrame:SetPoint("TOP", Minimap, "BOTTOM", 0, -5)
     hooksecurefunc(FramerateFrame, "UpdatePosition", function(self) 
@@ -88,6 +122,7 @@ local function StyleButtons()
     for bar, button in pairs(actionBars) do
         for i=1, 12 do
             local frame = _G[button..i]
+            if not frame then break end
 
             frame.TextOverlayContainer.HotKey:SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", 10, "OUTLINE")
             frame.TextOverlayContainer.HotKey:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -2, -2)
@@ -106,13 +141,17 @@ local function StyleButtons()
             frame.SlotBackground:Hide()
             frame.IconMask:Hide()
 
+            local background = frame:CreateTexture(nil, "BACKGROUND")
+            background:SetAllPoints(frame)
+            background:SetColorTexture(0, 0, 0, 0.5)
+
             frame.NormalTexture:Hide()
             frame.NormalTexture:HookScript("OnShow", function(self)
                 self:Hide()
             end)
 
             frame.icon:SetTexCoord(.08, .92, .08, .92)
-            Util.AddBackdrop(frame, 1, CUI_BACKDROP_DS_2)
+            Util.AddBorder(frame, 1, CUI_BACKDROP_DS_2)
         end     
     end
 end
@@ -121,36 +160,9 @@ end
 
 function AB.Load()
     HideBlizzard()
-    
-    AddHookSecure()
 
-    AddMicroMenuHooks()
-
-    for bar, button in pairs(actionBars) do
-        AddActionBarHooks(bar, button)
-
-        bar:RegisterEvent("PLAYER_REGEN_ENABLED")
-        bar:RegisterEvent("PLAYER_REGEN_DISABLED")
-        bar:HookScript("OnEvent", function(self, event)
-            if event == "PLAYER_REGEN_ENABLED" then
-                AB.UpdateAlpha(self)
-            elseif event == "PLAYER_REGEN_DISABLED" then
-                AB.UpdateAlpha(self, true)
-            end
-        end)
-
-        AB.UpdateAlpha(bar)
-    end
-
+    AddHooks()
     StyleButtons()
 
-    if not InCombatLockdown() and PlayerFrame.HealthBar then
-        MultiBar7:ClearAllPoints()
-        MultiBar7:SetPoint("TOPLEFT", PlayerFrame.HealthBar, "BOTTOMLEFT", 0, -2)
-    end
-    EditModeManagerFrame:HookScript("OnHide", function(self)
-        if InCombatLockdown() or not PlayerFrame.HealthBar then return end
-        MultiBar7:ClearAllPoints()
-        MultiBar7:SetPoint("TOPLEFT", PlayerFrame.HealthBar, "BOTTOMLEFT", 0, -2)
-    end)
+    PositionMB7()
 end

@@ -17,9 +17,9 @@ local function UpdateAuras(unitFrame)
             frame.Icon:RemoveMaskTexture(mask)
         end
 
-        if not frame.Backdrop then
+        if not frame.Borders then
             frame.Icon:SetTexCoord(.08, .92, .08, .92)
-            Util.AddBackdrop(frame, 1, CUI_BACKDROP_DS_2)
+            Util.AddBorder(frame, 1, CUI_BACKDROP_DS_2)
         end
     end
 end
@@ -65,7 +65,7 @@ local function UpdateCastBar(castBar)
     
     if isChannel then
         local castBarColor = GetCastBarColor(castBar:GetParent().castBar)
-        castBar.Background:SetColorTexture(castBarColor.r, castBarColor.g, castBarColor.b, castBarColor.a, 1)
+        castBar.Background:SetVertexColor(castBarColor.r, castBarColor.g, castBarColor.b, castBarColor.a, 1)
         
         local v = 0.2
         castBar:SetStatusBarColor(castBarColor.r*v, castBarColor.g*v, castBarColor.b*v)
@@ -75,7 +75,7 @@ local function UpdateCastBar(castBar)
         castBar:SetStatusBarColor(castBarColor.r, castBarColor.g, castBarColor.b, castBarColor.a)
 
         local v = 0.2
-        castBar.Background:SetColorTexture(castBarColor.r*v, castBarColor.g*v, castBarColor.b*v, 1)
+        castBar.Background:SetVertexColor(castBarColor.r*v, castBarColor.g*v, castBarColor.b*v, 1)
         castBar:SetReverseFill(false)
     end
 
@@ -85,8 +85,6 @@ local function UpdateCastBar(castBar)
     castBar:SetMinMaxValues(startTime, endTime)
     castBar:SetValue(currentTime)
     
-
-
     castBar.isCasting = true
     castBar:Show()
 end
@@ -129,15 +127,15 @@ local function SetupNamePlate(unitToken)
     unitFrame.healthBar.bgTexture:Hide()
     unitFrame.healthBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
 
-    if not unitFrame.healthBar.Backdrop then
-        Util.AddBackdrop(unitFrame.healthBar, 1, CUI_BACKDROP_DS_3)
+    if not unitFrame.healthBar.Borders then
+        Util.AddBorder(unitFrame.healthBar, 1, CUI_BACKDROP_DS_3)
     end
 
     unitFrame.healthBar.deselectedOverlay:Hide()
 
-    unitFrame.healthBar.selectedBorder:ClearAllPoints()
-    unitFrame.healthBar.selectedBorder:SetPoint("TOPLEFT", unitFrame.healthBar, "TOPLEFT", -2, 2)
-    unitFrame.healthBar.selectedBorder:SetPoint("BOTTOMRIGHT", unitFrame.healthBar, "BOTTOMRIGHT", 2, -2)
+    unitFrame.healthBar.selectedBorder:HookScript("OnShow", function(self)
+        self:Hide()
+    end)
 
     if not unitFrame.CUI_Background then
         local background = unitFrame:CreateTexture(nil, "BACKGROUND")
@@ -165,7 +163,7 @@ local function SetupNamePlate(unitToken)
         castBar:SetHeight(10)
 
         Util.AddStatusBarBackground(castBar)
-        Util.AddBackdrop(castBar, 1, CUI_BACKDROP_DS_3)
+        Util.AddBorder(castBar, 1, CUI_BACKDROP_DS_3)
 
         castBar.isCasting = false
         castBar.unit = unitToken
@@ -191,24 +189,26 @@ local function SetupNamePlate(unitToken)
     unitFrame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_UPDATE", unitToken)
     unitFrame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP", unitToken)
     unitFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
+    unitFrame:RegisterEvent("PLAYER_FOCUS_CHANGED")
     unitFrame:HookScript("OnEvent", function(self, event, unit)
-        -- TODO : Försök att inte använda UNIT_AURA
         if event == "UNIT_AURA" then
             UpdateAuras(self)
         elseif event == "UNIT_HEALTH" then
             unitFrame.CUI_HealthText:SetText(Util.UnitHealthPercent(unit))
         elseif event == "PLAYER_TARGET_CHANGED" then
-            self.healthBar.deselectedOverlay:Hide()
-        elseif event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START" then
-            UpdateCastBar(self.CUI_CastBar)
-        elseif event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP" then                    
-            UpdateCastBar(self.CUI_CastBar)
-        elseif event == "PLAYER_TARGET_CHANGED" then
-            if unitFrame.healthBar.selectedBorder:IsShown() then
-                self.healthBar.Backdrop:Hide()
+            if UnitIsUnit("target", self.unit) then 
+                Util.SetBorderColor(self.healthBar.Borders, 1, 1, 1, 1)
             else
-                self.healthBar.Backdrop:Show()
+                Util.SetBorderColor(self.healthBar.Borders, 0, 0, 0, 1)
             end
+        elseif event == "PLAYER_FOCUS_CHANGED" then
+            
+        elseif event == "UNIT_SPELLCAST_START" or 
+                event == "UNIT_SPELLCAST_CHANNEL_START" or
+                event == "UNIT_SPELLCAST_STOP" or
+                event == "UNIT_SPELLCAST_CHANNEL_STOP" or
+                event == "UNIT_SPELLCAST_CHANNEL_UPDATE" then
+            UpdateCastBar(self.CUI_CastBar)
         end
     end)
 end

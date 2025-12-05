@@ -27,7 +27,7 @@ local function SetupCastBar()
     castBarFrame:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
     castBarFrame:SetStatusBarColor(0, 0.8, 0, 1)
     Util.AddStatusBarBackground(castBarFrame)
-    Util.AddBackdrop(castBarFrame, 1, CUI_BACKDROP_DS_3)
+    Util.AddBorder(castBarFrame, 1, CUI_BACKDROP_DS_3)
 
     castBarFrame:RegisterUnitEvent("UNIT_SPELLCAST_START", "player")
     castBarFrame:RegisterUnitEvent("UNIT_SPELLCAST_STOP", "player")

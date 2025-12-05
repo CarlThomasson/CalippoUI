@@ -10,9 +10,9 @@ function CDM.UpdateAlpha(frame, inCombat)
     if not frame:IsShown() then return end
 
     if InCombatLockdown() or inCombat then 
-        UIFrameFadeIn(frame, 0.6, frame:GetAlpha(), 1)
+        Util.FadeFrame(frame, "IN", 1)
     else
-        UIFrameFadeOut(frame, 0.6, frame:GetAlpha(), CalippoDB.CooldownManager[frame:GetName()].Alpha)
+        Util.FadeFrame(frame, "OUT", CalippoDB.CooldownManager[frame:GetName()].Alpha)
     end
 end
 
@@ -29,7 +29,7 @@ local function UpdateStyle(viewer)
                 local _, _, overlay = frame:GetRegions()
                 overlay:Hide()
 
-                Util.AddBackdrop(frame, 1, CUI_BACKDROP_DS_3)
+                Util.AddBorder(frame, 1, CUI_BACKDROP_DS_3)
             end
         end
 
@@ -52,7 +52,8 @@ local function UpdateStyle(viewer)
 
         if frame.Cooldown then
             frame.Cooldown:SetSwipeTexture("", 0, 0, 0, 1)
-            --frame.Cooldown:SetEdgeTexture()
+            -- frame.Cooldown:SetEdgeTexture("Interface\\AddOns\\CalippoUI\\Media\\edge.blp", 0, 1, 0, 1)
+            -- frame.Cooldown:SetDrawEdge(true)
             
             local fontSize
             if viewer:GetName() == "EssentialCooldownViewer" then

@@ -145,8 +145,8 @@ local function SetupActionBarPage(mainCategory)
 	CreateActionBarSettings("Action Bar 6", category, "AB6", MultiBar5)
 	CreateActionBarSettings("Action Bar 7", category, "AB7", MultiBar6)
 	CreateActionBarSettings("Action Bar 8 (Anchored to Player Frame)", category, "AB8", MultiBar7)
+	CreateActionBarSettings("Pet Bar", category, "PETB", PetActionBar)
 	CreateActionBarSettings("Micro Menu", category, "MICRO", MicroMenu)
-
 end
 
 local function SetupUnitFramePage(mainCategory)
@@ -222,8 +222,8 @@ local function SetupUnitFramePage(mainCategory)
 	end
 
 	CreateUnitFrameSettings("Player Frame", category, "PF", PlayerFrame)
-	CreateUnitFrameSettings("Target Frame", category, "TF", TargetFrame)
 
+	CreateUnitFrameSettings("Target Frame", category, "TF", TargetFrame)
 	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Target Frame Auras"))
 
 	CreateSlider(
@@ -231,8 +231,8 @@ local function SetupUnitFramePage(mainCategory)
 		"TF_AURASIZE",
 		"Aura Size",
 		0,
-		function() return CalippoDB.UnitFrames.AuraSize end,
-		function(v) CalippoDB.UnitFrames.AuraSize = v; UF.UpdateAuras(TargetFrame) end,
+		function() return CalippoDB.UnitFrames.TargetFrame.AuraSize end,
+		function(v) CalippoDB.UnitFrames.TargetFrame.AuraSize = v; UF.UpdateAuras(TargetFrame) end,
 		0,
 		50,
 		1,
@@ -244,8 +244,8 @@ local function SetupUnitFramePage(mainCategory)
 		"TF_AURAPADDING",
 		"Aura Padding",
 		0,
-		function() return CalippoDB.UnitFrames.AuraPadding end,
-		function(v) CalippoDB.UnitFrames.AuraPadding = v; UF.UpdateAuras(TargetFrame) end,
+		function() return CalippoDB.UnitFrames.TargetFrame.AuraPadding end,
+		function(v) CalippoDB.UnitFrames.TargetFrame.AuraPadding = v; UF.UpdateAuras(TargetFrame) end,
 		0,
 		10,
 		1,
@@ -257,8 +257,8 @@ local function SetupUnitFramePage(mainCategory)
 		"TF_AURAROW",
 		"Aura Row Length",
 		0,
-		function() return CalippoDB.UnitFrames.AuraRowLength end,
-		function(v) CalippoDB.UnitFrames.AuraRowLength = v; UF.UpdateAuras(TargetFrame) end,
+		function() return CalippoDB.UnitFrames.TargetFrame.AuraRowLength end,
+		function(v) CalippoDB.UnitFrames.TargetFrame.AuraRowLength = v; UF.UpdateAuras(TargetFrame) end,
 		0,
 		15,
 		1,
@@ -266,9 +266,51 @@ local function SetupUnitFramePage(mainCategory)
 	)
 
 	CreateUnitFrameSettings("Focus Frame", category, "FF", FocusFrame)
+	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Focus Frame Auras"))
+
+	CreateSlider(
+		category,
+		"FF_AURASIZE",
+		"Aura Size",
+		0,
+		function() return CalippoDB.UnitFrames.FocusFrame.AuraSize end,
+		function(v) CalippoDB.UnitFrames.FocusFrame.AuraSize = v; UF.UpdateAuras(FocusFrame) end,
+		0,
+		50,
+		1,
+		nil
+	)
+
+	CreateSlider(
+		category,
+		"FF_AURAPADDING",
+		"Aura Padding",
+		0,
+		function() return CalippoDB.UnitFrames.FocusFrame.AuraPadding end,
+		function(v) CalippoDB.UnitFrames.FocusFrame.AuraPadding = v; UF.UpdateAuras(FocusFrame) end,
+		0,
+		10,
+		1,
+		nil
+	)
+
+	CreateSlider(
+		category,
+		"FF_AURAROW",
+		"Aura Row Length",
+		0,
+		function() return CalippoDB.UnitFrames.FocusFrame.AuraRowLength end,
+		function(v) CalippoDB.UnitFrames.FocusFrame.AuraRowLength = v; UF.UpdateAuras(FocusFrame) end,
+		0,
+		15,
+		1,
+		nil
+	)
+
+	CreateUnitFrameSettings("Pet Frame", category, "PETF", PetFrame)
 end
 
-local function SetuoCDMPage(mainCategory)
+local function SetupCDMPage(mainCategory)
 	local category, layout = Settings.RegisterVerticalLayoutSubcategory(mainCategory, "Cooldown Manager")
 
 	local function CreateCDMSettings(title, category, shortName, frame)
@@ -309,7 +351,7 @@ local function SetupPlayerAuraPage(mainCategory)
 	)
 end
 
-local function SetupResourcePage(mainCategory)
+local function SetupResourceBarPage(mainCategory)
 	local category, layout = Settings.RegisterVerticalLayoutSubcategory(mainCategory, "Resource Bar")
 
 	CreateSlider(
@@ -383,12 +425,30 @@ function Conf.Load()
 	end)
 
 	SetupMainPage(mainCategory, layout)
-	SetupActionBarPage(mainCategory)
-	SetupUnitFramePage(mainCategory)
-	SetuoCDMPage(mainCategory)
-	SetupPlayerAuraPage(mainCategory)
-	SetupResourcePage(mainCategory)
-	SetupMinimapPage(mainCategory)
+
+	if CalippoDB.ActionBars.Enabled then
+		SetupActionBarPage(mainCategory)
+	end
+
+	if CalippoDB.UnitFrames.Enabled then
+		SetupUnitFramePage(mainCategory)
+	end
+
+	if CalippoDB.CooldownManager.Enabled then
+		SetupCDMPage(mainCategory)
+	end
+
+	if CalippoDB.PlayerAuras.Enabled then
+		SetupPlayerAuraPage(mainCategory)
+	end
+
+	if CalippoDB.ResourceBar.Enabled then
+		SetupResourceBarPage(mainCategory)
+	end
+
+	if CalippoDB.Minimap.Enabled then
+		SetupMinimapPage(mainCategory)
+	end
 
     Settings.RegisterAddOnCategory(mainCategory)
 end

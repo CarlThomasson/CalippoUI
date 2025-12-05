@@ -5,18 +5,13 @@ local Util = CUI.Util
 
 ---------------------------------------------------------------------------------------------------
 
-function Util.AddBackdrop(frame, offset, backdropInfo)
-    local bd = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-    bd:SetParentKey("Backdrop")
-    -- bd:SetPoint("TOPLEFT", frame, "TOPLEFT", -offset, offset)
-    -- bd:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", offset, -offset)
-    -- bd:SetBackdrop(backdropInfo)
-
-    frame.borders = {}
+function Util.AddBorder(frame, offset, backdropInfo)
+    if frame.Borders then return end
+    frame.Borders = {}
     for i=1, 4 do
-        frame.borders[i] = frame:CreateLine(nil, "OVERLAY", nil, 0)
-        local l = frame.borders[i]
-        l:SetThickness(1.1)
+        frame.Borders[i] = frame:CreateLine(nil, "OVERLAY", nil, 0)
+        local l = frame.Borders[i]
+        l:SetThickness(PixelUtil.GetNearestPixelSize(1, UIParent:GetEffectiveScale(), 1))
         l:SetColorTexture(0, 0, 0, 1)
         if i==1 then
             l:SetStartPoint("TOPLEFT")
@@ -34,6 +29,12 @@ function Util.AddBackdrop(frame, offset, backdropInfo)
     end
 end
 
+function Util.SetBorderColor(borders, r, g, b, a)
+    for _, line in ipairs(borders) do
+        line:SetColorTexture(r, g, b, a)
+    end
+end
+
 function Util.AddStatusBarBackground(frame)
     local r, g, b = frame:GetStatusBarColor()
 
@@ -43,7 +44,8 @@ function Util.AddStatusBarBackground(frame)
     local bg = frame:CreateTexture(nil, "BACKGROUND")
     bg:SetParentKey("Background")
     bg:SetAllPoints(frame)
-    bg:SetColorTexture(r, g, b, 1)
+    bg:SetTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
+    bg:SetVertexColor(r, g, b, 1)
 end
 
 function Util.GetUnitColor(unit)
@@ -88,22 +90,31 @@ function Util.UnitPowerText(unit)
     return rounded
 end
 
-function Util.AddCombatFading(frame)
-    if not frame then return end
+local frameFadeManager = CreateFrame("Frame")
 
-    if InCombatLockdown() then 
-        frame:SetAlpha(1) 
-    else
-        frame:SetAlpha(0.5)
-    end
+local function UIFrameFadeContains(frame)
+	for i, fadeFrame in ipairs(FADEFRAMES) do
+		if ( fadeFrame == frame ) then
+			return true;
+		end
+	end
 
-    frame:RegisterEvent("PLAYER_REGEN_ENABLED")
-    frame:RegisterEvent("PLAYER_REGEN_DISABLED")
-    frame:HookScript("OnEvent", function(self, event)
-        if event == "PLAYER_REGEN_ENABLED" then
-            self:SetAlpha(0.5)
-        elseif event == "PLAYER_REGEN_DISABLED" then
-            self:SetAlpha(1)
-        end
-    end)
+	return false;
+end
+
+function Util.FadeFrame(frame, inOut, endAlpha, fadeTime)
+    if not fadeTime then fadeTime = 0.8 end
+	local fadeInfo = {}
+	fadeInfo.mode = inOut -- "IN" or "OUT"
+	fadeInfo.timeToFade = fadeTime
+	fadeInfo.startAlpha = frame:GetAlpha()
+	fadeInfo.endAlpha = endAlpha
+
+    frame.fadeInfo = fadeInfo
+
+	if securecallfunction(UIFrameFadeContains, frame) then
+		return
+	end
+	tinsert(FADEFRAMES, frame)
+	frameFadeManager:SetScript("OnUpdate", UIFrameFade_OnUpdate)
 end

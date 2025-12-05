@@ -18,6 +18,28 @@ function Hide.HideFrame(frame)
     frame:SetParent(hiddenParent)
 end
 
+function Hide.HideUnitFrameChildren(frame)
+    if frame.Portrait then
+        Hide.HideFrame(frame.Portrait)
+    end
+
+    if frame.healthbar then
+        Hide.HideFrame(frame.healthbar)
+    end
+
+    if frame.manabar then
+        Hide.HideFrame(frame.manabar)
+    end
+
+    if frame.powerBarAlt then
+        Hide.HideFrame(frame.powerBarAlt)
+    end
+
+    if frame.name then
+        Hide.HideFrame(frame.name)
+    end
+end
+
 function Hide.HideBlizzardParty()
     _G.UIParent:UnregisterEvent("GROUP_ROSTER_UPDATE")
 
