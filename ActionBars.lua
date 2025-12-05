@@ -118,6 +118,30 @@ local function AddHooks()
     end)
 end
 
+local function StyleXPBar()
+    MainStatusTrackingBarContainer.BarFrameTexture:Hide()
+    Util.AddBorder(MainStatusTrackingBarContainer)
+    for _, frame in pairs({MainStatusTrackingBarContainer:GetChildren()}) do
+        if frame.StatusBar then
+            frame.StatusBar:SetAllPoints(MainStatusTrackingBarContainer)
+            
+            local r, g, b = 0.6, 0.2, 0.9
+            local v = 0.2
+
+            frame.StatusBar.BarTexture:SetTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
+            frame.StatusBar.BarTexture:SetVertexColor(r, g, b)
+
+            frame.StatusBar.Background:SetTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
+            frame.StatusBar.Background:SetVertexColor(r*v, g*v, b*v)
+        end
+
+        if frame.OverlayFrame then
+            frame.OverlayFrame:SetAllPoints(MainStatusTrackingBarContainer)
+            frame.OverlayFrame.Text:SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", 10, "")
+        end
+    end
+end
+
 local function StyleButtons()
     for bar, button in pairs(actionBars) do
         for i=1, 12 do
@@ -141,7 +165,8 @@ local function StyleButtons()
             frame.SlotBackground:Hide()
             frame.IconMask:Hide()
 
-            local background = frame:CreateTexture(nil, "BACKGROUND")
+            local background = frame:CreateTexture(nil, "BACKGROUND", nil, -8)
+            background:SetParentKey("Background")
             background:SetAllPoints(frame)
             background:SetColorTexture(0, 0, 0, 0.5)
 
@@ -163,6 +188,8 @@ function AB.Load()
 
     AddHooks()
     StyleButtons()
+
+    StyleXPBar()
 
     PositionMB7()
 end

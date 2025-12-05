@@ -33,8 +33,8 @@ local function GetCastBarColor(castBar)
         color.a = 1
         return color
     else
-        color.r = 0.8
-        color.g = 0.8
+        color.r = 0.9
+        color.g = 0.9
         color.b = 0
         color.a = 1
         return color
@@ -202,7 +202,7 @@ local function SetupNamePlate(unitToken)
                 Util.SetBorderColor(self.healthBar.Borders, 0, 0, 0, 1)
             end
         elseif event == "PLAYER_FOCUS_CHANGED" then
-            
+            -- TODO
         elseif event == "UNIT_SPELLCAST_START" or 
                 event == "UNIT_SPELLCAST_CHANNEL_START" or
                 event == "UNIT_SPELLCAST_STOP" or

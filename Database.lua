@@ -67,18 +67,24 @@ function DB.Load()
         CalippoDB.UnitFrames.PlayerFrame.Alpha = 1
         CalippoDB.UnitFrames.PlayerFrame.OffsetX = 0
         CalippoDB.UnitFrames.PlayerFrame.OffsetY = 0
-        CalippoDB.UnitFrames.PlayerFrame.SizeX = 200
+        CalippoDB.UnitFrames.PlayerFrame.SizeX = 175
         CalippoDB.UnitFrames.PlayerFrame.SizeY = 50
+        CalippoDB.UnitFrames.PlayerFrame.HealthPercent = false
+        CalippoDB.UnitFrames.PlayerFrame.NameFontSize = 12
+        CalippoDB.UnitFrames.PlayerFrame.HealthFontSize = 12
 
         CalippoDB.UnitFrames.TargetFrame = {}
         CalippoDB.UnitFrames.TargetFrame.Alpha = 1
         CalippoDB.UnitFrames.TargetFrame.OffsetX = 0
         CalippoDB.UnitFrames.TargetFrame.OffsetY = 0
-        CalippoDB.UnitFrames.TargetFrame.SizeX = 200
+        CalippoDB.UnitFrames.TargetFrame.SizeX = 175
         CalippoDB.UnitFrames.TargetFrame.SizeY = 50
         CalippoDB.UnitFrames.TargetFrame.AuraSize = 20
         CalippoDB.UnitFrames.TargetFrame.AuraPadding = 2
-        CalippoDB.UnitFrames.TargetFrame.AuraRowLength = 8
+        CalippoDB.UnitFrames.TargetFrame.AuraRowLength = 7
+        CalippoDB.UnitFrames.TargetFrame.HealthPercent = false
+        CalippoDB.UnitFrames.TargetFrame.NameFontSize = 12
+        CalippoDB.UnitFrames.TargetFrame.HealthFontSize = 12
 
         CalippoDB.UnitFrames.FocusFrame = {}
         CalippoDB.UnitFrames.FocusFrame.Alpha = 1
@@ -88,7 +94,10 @@ function DB.Load()
         CalippoDB.UnitFrames.FocusFrame.SizeY = 40
         CalippoDB.UnitFrames.FocusFrame.AuraSize = 15
         CalippoDB.UnitFrames.FocusFrame.AuraPadding = 2
-        CalippoDB.UnitFrames.FocusFrame.AuraRowLength = 5
+        CalippoDB.UnitFrames.FocusFrame.AuraRowLength = 6
+        CalippoDB.UnitFrames.FocusFrame.HealthPercent = false
+        CalippoDB.UnitFrames.FocusFrame.NameFontSize = 12
+        CalippoDB.UnitFrames.FocusFrame.HealthFontSize = 12
 
         CalippoDB.UnitFrames.PetFrame = {}
         CalippoDB.UnitFrames.PetFrame.Alpha = 1
@@ -96,6 +105,9 @@ function DB.Load()
         CalippoDB.UnitFrames.PetFrame.OffsetY = 0
         CalippoDB.UnitFrames.PetFrame.SizeX = 100
         CalippoDB.UnitFrames.PetFrame.SizeY = 25
+        CalippoDB.UnitFrames.PetFrame.HealthPercent = false
+        CalippoDB.UnitFrames.PetFrame.NameFontSize = 12
+        CalippoDB.UnitFrames.PetFrame.HealthFontSize = 12
     end
 
     if not CalippoDB.GroupFrames then
@@ -109,12 +121,18 @@ function DB.Load()
 
         CalippoDB.CooldownManager.EssentialCooldownViewer = {}
         CalippoDB.CooldownManager.EssentialCooldownViewer.Alpha = 1
+        CalippoDB.CooldownManager.EssentialCooldownViewer.CooldownFontSize = 18
+        CalippoDB.CooldownManager.EssentialCooldownViewer.CountFontSize = 18
 
         CalippoDB.CooldownManager.UtilityCooldownViewer = {}
         CalippoDB.CooldownManager.UtilityCooldownViewer.Alpha = 1
+        CalippoDB.CooldownManager.UtilityCooldownViewer.CooldownFontSize = 12
+        CalippoDB.CooldownManager.UtilityCooldownViewer.CountFontSize = 12
 
         CalippoDB.CooldownManager.BuffIconCooldownViewer = {}
         CalippoDB.CooldownManager.BuffIconCooldownViewer.Alpha = 1
+        CalippoDB.CooldownManager.BuffIconCooldownViewer.CooldownFontSize = 14
+        CalippoDB.CooldownManager.BuffIconCooldownViewer.CountFontSize = 14
     end
 
     if not CalippoDB.Chat then
@@ -151,8 +169,12 @@ function DB.Load()
         CalippoDB.ResourceBar.Enabled = true
 
         CalippoDB.ResourceBar.Alpha = 1
+        CalippoDB.ResourceBar.OffsetY = 2
+        CalippoDB.ResourceBar.OffsetX = 0
+        CalippoDB.ResourceBar.AnchorToCDM = true
         CalippoDB.ResourceBar.Height = 20
-        CalippoDB.ResourceBar.FontSize = 12
+        CalippoDB.ResourceBar.Width = 150
+        CalippoDB.ResourceBar.FontSize = 16
     end  
 
     if not CalippoDB.AutoWhisper then

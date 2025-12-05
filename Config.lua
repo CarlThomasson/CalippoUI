@@ -31,77 +31,35 @@ end
 ---------------------------------------------------------------------------------------------------
 
 local function SetupMainPage(mainCategory, layout)
-	local modules = {
-		{
-			["name"] = "ACTIONBAR_TOGGLE",
-			["text"] = "Action Bars",
-			["dbEntry"] = "ActionBars",
-		},
-		{
-			["name"] = "UNITFRAME_TOGGLE",
-			["text"] = "Unit Frames",
-			["dbEntry"] = "UnitFrames",
-		},
-		{
-			["name"] = "GROUPFRAME_TOGGLE",
-			["text"] = "Group Frames",
-			["dbEntry"] = "GroupFrames",
-		},
-		{
-			["name"] = "CDM_TOGGLE",
-			["text"] = "Cooldown Manager",
-			["dbEntry"] = "CooldownManager",
-		},
-		{
-			["name"] = "CHAT_TOGGLE",
-			["text"] = "Chat",
-			["dbEntry"] = "Chat",
-		},
-		{
-			["name"] = "PLAYERAURA_TOGGLE",
-			["text"] = "Player Auras",
-			["dbEntry"] = "PlayerAuras",
-		},
-		{
-			["name"] = "namePLATE_TOGGLE",
-			["text"] = "Nameplates",
-			["dbEntry"] = "NamePlates",
-		},
-		{
-			["name"] = "MINIMAP_TOGGLE",
-			["text"] = "Minimap",
-			["dbEntry"] = "Minimap",
-		},
-		{
-			["name"] = "CASTBAR_TOGGLE",
-			["text"] = "Cast Bar",
-			["dbEntry"] = "CastBar",
-		},
-		{
-			["name"] = "RESOURCE_TOGGLE",
-			["text"] = "Resource Bar",
-			["dbEntry"] = "ResourceBar",
-		},
-	}
-
-    layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Toggle Modules"))
-
-	local initializer = CreateSettingsButtonInitializer("Reload UI to apply changes", "Reload", function() ReloadUI() end, "Reloads the UI", "Reload")
-	layout:AddInitializer(initializer)
-
-	for i, v in ipairs(modules) do
-		local setting = Settings.RegisterProxySetting(
-			mainCategory,
-			v.name,
+	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Toggle Modules"))
+	
+	local function CreateToggleSettings(category, shortName, text, dbEntry)
+		local toggleSettings = Settings.RegisterProxySetting(
+			category,
+			shortName.."_TOGGLE",
 			Settings.VarType.Boolean,
-			v.text,
-			CalippoDB[v.dbEntry].Enabled,
-			function() return CalippoDB[v.dbEntry].Enabled end,
-			function(value) CalippoDB[v.dbEntry].Enabled = value end
+			text,
+			CalippoDB[dbEntry].Enabled,
+			function() return CalippoDB[dbEntry].Enabled end,
+			function(value) CalippoDB[dbEntry].Enabled = value end
 		)
 
-		Settings.CreateCheckbox(mainCategory, setting)
+		Settings.CreateCheckbox(category, toggleSettings)
 	end
+
+	local initializer = CreateSettingsButtonInitializer("Reload UI to apply changes", "Reload", function() ReloadUI() end, "", "")
+	layout:AddInitializer(initializer)
+
+	CreateToggleSettings(mainCategory, "AB", "Action Bars", "ActionBars")
+	CreateToggleSettings(mainCategory, "UF", "Unit Frames", "UnitFrames")
+	CreateToggleSettings(mainCategory, "GF", "Group Frames", "GroupFrames")
+	CreateToggleSettings(mainCategory, "CDM", "Cooldown Manager", "CooldownManager")
+	CreateToggleSettings(mainCategory, "NP", "Nameplates", "NamePlates")
+	CreateToggleSettings(mainCategory, "CB", "Cast Bar", "CastBar")
+	CreateToggleSettings(mainCategory, "RB", "Resource Bar", "ResourceBar")
+	CreateToggleSettings(mainCategory, "PA", "Player Auras", "PlayerAuras")
+	CreateToggleSettings(mainCategory, "MM", "Minimap", "Minimap")
+	CreateToggleSettings(mainCategory, "CH", "Chat", "Chat")
 end
 
 local function SetupActionBarPage(mainCategory)
@@ -202,6 +160,32 @@ local function SetupUnitFramePage(mainCategory)
 			function() return CalippoDB.UnitFrames[frame:GetName()].OffsetY end,
 			function(v) CalippoDB.UnitFrames[frame:GetName()].OffsetY = v; UF.UpdateSizePos(frame) end,
 			-100,
+			100,
+			1,
+			nil
+		)
+
+		CreateSlider(
+			category,
+			shortName.."_NAMEFONTSIZE",
+			"Name font size",
+			0,
+			function() return CalippoDB.UnitFrames[frame:GetName()].NameFontSize end,
+			function(v) CalippoDB.UnitFrames[frame:GetName()].NameFontSize = v; UF.UpdateTexts(frame) end,
+			0,
+			100,
+			1,
+			nil
+		)
+
+		CreateSlider(
+			category,
+			shortName.."_HEALTHFONTSIZE",
+			"Health font size",
+			0,
+			function() return CalippoDB.UnitFrames[frame:GetName()].HealthFontSize end,
+			function(v) CalippoDB.UnitFrames[frame:GetName()].HealthFontSize = v; UF.UpdateTexts(frame) end,
+			0,
 			100,
 			1,
 			nil
@@ -327,11 +311,37 @@ local function SetupCDMPage(mainCategory)
 			0.01,
 			function(v) return math.floor(v * 100) end
 		)
+
+		CreateSlider(
+			category,
+			shortName.."_CDFONTSIZE",
+			"Cooldown Font Size",
+			0,
+			function() return CalippoDB.CooldownManager[frame:GetName()].CooldownFontSize end,
+			function(v) CalippoDB.CooldownManager[frame:GetName()].CooldownFontSize = v; CDM.UpdateStyle(frame) end,
+			1,
+			50,
+			1,
+			nil
+		)
+
+		CreateSlider(
+			category,
+			shortName.."_COUNTFONTSIZE",
+			"Count Font Size",
+			0,
+			function() return CalippoDB.CooldownManager[frame:GetName()].CountFontSize end,
+			function(v) CalippoDB.CooldownManager[frame:GetName()].CountFontSize = v; CDM.UpdateStyle(frame) end,
+			1,
+			50,
+			1,
+			nil
+		)
 	end
 
+	CreateCDMSettings("Buff Viewer", category, "BCV", BuffIconCooldownViewer)
 	CreateCDMSettings("Essential Viewer", category, "ECV", EssentialCooldownViewer)
 	CreateCDMSettings("Utility Viewer", category, "UCV", UtilityCooldownViewer)
-	CreateCDMSettings("Buff Viewer", category, "BCV", BuffIconCooldownViewer)
 end
 
 local function SetupPlayerAuraPage(mainCategory)
@@ -374,8 +384,8 @@ local function SetupResourceBarPage(mainCategory)
 		0,
 		function() return CalippoDB.ResourceBar.FontSize end,
 		function(v) CalippoDB.ResourceBar.FontSize = v; RB.UpdateFontSize(CUI_PowerBar) end,
-		0,
-		50,
+		1,
+		100,
 		1,
 		nil
 	)	
@@ -386,12 +396,63 @@ local function SetupResourceBarPage(mainCategory)
 		"Height",
 		0,
 		function() return CalippoDB.ResourceBar.Height end,
-		function(v) CalippoDB.ResourceBar.Height = v; RB.UpdateHeight(CUI_PowerBar) end,
+		function(v) CalippoDB.ResourceBar.Height = v; RB.UpdateSize(CUI_PowerBar) end,
 		0,
-		50,
+		100,
 		1,
 		nil
 	)	
+
+	CreateSlider(
+		category,
+		"RB_WIDTH",
+		"Width",
+		0,
+		function() return CalippoDB.ResourceBar.Width end,
+		function(v) CalippoDB.ResourceBar.Width = v; RB.UpdateSize(CUI_PowerBar) end,
+		0,
+		500,
+		1,
+		nil
+	)
+
+	CreateSlider(
+		category,
+		"RB_OFFSETX",
+		"Offset X",
+		0,
+		function() return CalippoDB.ResourceBar.OffsetX end,
+		function(v) CalippoDB.ResourceBar.OffsetX = v; RB.UpdatePosition(CUI_PowerBar) end,
+		-500,
+		500,
+		1,
+		nil
+	)	
+
+	CreateSlider(
+		category,
+		"RB_OFFSETY",
+		"Offset Y",
+		0,
+		function() return CalippoDB.ResourceBar.OffsetY end,
+		function(v) CalippoDB.ResourceBar.OffsetY = v; RB.UpdatePosition(CUI_PowerBar) end,
+		-500,
+		500,
+		1,
+		nil
+	)	
+
+	local toggleSettings = Settings.RegisterProxySetting(
+		category,
+		"RB_TOGGLEANCHOR",
+		Settings.VarType.Boolean,
+		"Anchor to CDM",
+		CalippoDB.ResourceBar.AnchorToCDM,
+		function() return CalippoDB.ResourceBar.AnchorToCDM end,
+		function(value) CalippoDB.ResourceBar.AnchorToCDM = value; RB.UpdatePosition(CUI_PowerBar); RB.UpdateSize(CUI_PowerBar) end
+	)
+
+	Settings.CreateCheckbox(category, toggleSettings)
 end
 
 local function SetupMinimapPage(mainCategory)
@@ -438,12 +499,12 @@ function Conf.Load()
 		SetupCDMPage(mainCategory)
 	end
 
-	if CalippoDB.PlayerAuras.Enabled then
-		SetupPlayerAuraPage(mainCategory)
-	end
-
 	if CalippoDB.ResourceBar.Enabled then
 		SetupResourceBarPage(mainCategory)
+	end
+
+	if CalippoDB.PlayerAuras.Enabled then
+		SetupPlayerAuraPage(mainCategory)
 	end
 
 	if CalippoDB.Minimap.Enabled then

@@ -9,17 +9,32 @@ local Util = CUI.Util
 function RB.UpdateAlpha(frame, inCombat)
     if InCombatLockdown() or inCombat then 
         Util.FadeFrame(frame, "IN", 1)
+        Util.FadeFrame(PersonalResourceDisplayFrame, "IN", 1)
     else
         Util.FadeFrame(frame, "OUT", CalippoDB.ResourceBar.Alpha)
+        Util.FadeFrame(PersonalResourceDisplayFrame, "OUT", CalippoDB.ResourceBar.Alpha)
     end
 end
 
-function RB.UpdateHeight(frame)
+function RB.UpdateSize(frame)
     frame:SetHeight(CalippoDB.ResourceBar.Height)
+    if not CalippoDB.ResourceBar.AnchorToCDM then
+        frame:SetWidth(CalippoDB.ResourceBar.Width)
+    end
 end
 
 function RB.UpdateFontSize(frame)
     frame.Text:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", CalippoDB.ResourceBar.FontSize, "")
+end
+
+function RB.UpdatePosition(frame)
+    frame:ClearAllPoints()
+    if CalippoDB.ResourceBar.AnchorToCDM then
+        frame:SetPoint("BOTTOMLEFT", EssentialCooldownViewer, "TOPLEFT", 0, CalippoDB.ResourceBar.OffsetY)
+        frame:SetPoint("BOTTOMRIGHT", EssentialCooldownViewer, "TOPRIGHT", 0, CalippoDB.ResourceBar.OffsetY)
+    else
+        frame:SetPoint("CENTER", UIParent, "CENTER", CalippoDB.ResourceBar.OffsetX, CalippoDB.ResourceBar.OffsetY)
+    end
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -54,10 +69,10 @@ end
 
 local function SetupPowerBar()
     local powerBar = CreateFrame("Statusbar", "CUI_PowerBar", UIParent)
-    powerBar:SetHeight(CalippoDB.ResourceBar.Height)
-    powerBar:SetPoint("BOTTOMLEFT", EssentialCooldownViewer, "TOPLEFT", 0, 2)
-    powerBar:SetPoint("BOTTOMRIGHT", EssentialCooldownViewer, "TOPRIGHT", 0, 2)
     powerBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
+
+    RB.UpdateSize(powerBar)
+    RB.UpdatePosition(powerBar)
 
     UpdatePowerColor(powerBar)
     Util.AddStatusBarBackground(powerBar)
@@ -92,8 +107,23 @@ local function SetupPowerBar()
     RB.UpdateAlpha(PersonalResourceDisplayFrame)
 end
 
+local function SetupPersonalResourceBar()
+    if not prdClassFrame then return end
+
+    local _, class = UnitClass("player")
+
+    prdClassFrame:ClearAllPoints()
+
+    if class == "PALADIN" then
+        prdClassFrame:SetPoint("BOTTOM", PersonalResourceDisplayFrame, "BOTTOM", 0, -5)
+    else
+        prdClassFrame:SetPoint("BOTTOM", PersonalResourceDisplayFrame, "BOTTOM", 0, 5)
+    end
+end
+
 ---------------------------------------------------------------------------------------------------
 
 function RB.Load()
     SetupPowerBar()
+    SetupPersonalResourceBar()
 end

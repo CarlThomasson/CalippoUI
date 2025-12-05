@@ -16,9 +16,7 @@ function CDM.UpdateAlpha(frame, inCombat)
     end
 end
 
----------------------------------------------------------------------------------------------------
-
-local function UpdateStyle(viewer)
+function CDM.UpdateStyle(viewer)
     for _, frame in ipairs({viewer:GetChildren()}) do
         if frame.Icon then
             local mask = frame.Icon:GetMaskTexture(1)
@@ -34,38 +32,23 @@ local function UpdateStyle(viewer)
         end
 
         if frame.Applications then
-            frame.Applications.Applications:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 13, "OUTLINE")
+            frame.Applications.Applications:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 
+                CalippoDB.CooldownManager.BuffIconCooldownViewer.CountFontSize, "OUTLINE")
             frame.Applications.Applications:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
         end
 
         if frame.ChargeCount then
-            local fontSize
-            if viewer:GetName() == "EssentialCooldownViewer" then
-                fontSize = 18
-            elseif viewer:GetName() == "UtilityCooldownViewer" then
-                fontSize = 12
-            end
-
-            frame.ChargeCount.Current:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", fontSize, "OUTLINE")
+            frame.ChargeCount.Current:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 
+                CalippoDB.CooldownManager[viewer:GetName()].CountFontSize, "OUTLINE")
             frame.ChargeCount.Current:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
         end
 
         if frame.Cooldown then
             frame.Cooldown:SetSwipeTexture("", 0, 0, 0, 1)
-            -- frame.Cooldown:SetEdgeTexture("Interface\\AddOns\\CalippoUI\\Media\\edge.blp", 0, 1, 0, 1)
-            -- frame.Cooldown:SetDrawEdge(true)
-            
-            local fontSize
-            if viewer:GetName() == "EssentialCooldownViewer" then
-                fontSize = 18
-            elseif viewer:GetName() == "UtilityCooldownViewer" then
-                fontSize = 12
-            elseif viewer:GetName() == "BuffIconCooldownViewer" then
-                fontSize = 13
-            end
 
             local text = frame.Cooldown:GetRegions()
-            text:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", fontSize, "OUTLINE")
+            text:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 
+                CalippoDB.CooldownManager[viewer:GetName()].CooldownFontSize, "OUTLINE")
         end
 
         if frame.OutOfRange then
@@ -81,6 +64,8 @@ local function UpdateStyle(viewer)
         end
     end
 end
+
+---------------------------------------------------------------------------------------------------
 
 local function UpdatePositions(viewer)
     local iconScale = viewer.iconScale
@@ -148,11 +133,11 @@ local cooldownViewers = {
 
 local function HookScripts(viewer)
     viewer:HookScript("OnShow", function(self)
-        UpdateStyle(self)
+        CDM.UpdateStyle(self)
     end)
 
     viewer:HookScript("OnSizeChanged", function(self)
-        UpdateStyle(self)
+        CDM.UpdateStyle(self)
         UpdatePositions(self)
     end)
 

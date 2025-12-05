@@ -61,12 +61,3 @@ f:SetScript("OnEvent", function(self, event, isLogin, isReload)
         CUI.Conf.Load()
     end
 end)
-
--- SLASH_CALIPPOUI1 = "/cui"
--- function SlashCmdList.CALIPPOUI(msg, editbox)
---     if CUI_OptionsFrame:IsShown() then
---         CUI_OptionsFrame:Hide()
---     else
---         CUI_OptionsFrame:Show()
---     end
--- end
