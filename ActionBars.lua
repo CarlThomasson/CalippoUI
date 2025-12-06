@@ -56,21 +56,21 @@ end
 ---------------------------------------------------------------------------------------------------
 
 local function PositionMB7()
-    if not InCombatLockdown() and PlayerFrame.HealthBar then
+    if not InCombatLockdown() and PlayerFrame.Container.HealthBar then
         MultiBar7:ClearAllPoints()
-        MultiBar7:SetPoint("TOPLEFT", PlayerFrame.HealthBar, "BOTTOMLEFT", 0, -2)
+        MultiBar7:SetPoint("TOPLEFT", PlayerFrame.Container.HealthBar, "BOTTOMLEFT", 0, -2)
     end
     MultiBar7:RegisterEvent("PLAYER_ENTERING_WORLD")
     MultiBar7:HookScript("OnEvent", function(self, event)
         if event == "PLAYER_ENTERING_WORLD" then
             MultiBar7:ClearAllPoints()
-            MultiBar7:SetPoint("TOPLEFT", PlayerFrame.HealthBar, "BOTTOMLEFT", 0, -2)
+            MultiBar7:SetPoint("TOPLEFT", PlayerFrame.Container.HealthBar, "BOTTOMLEFT", 0, -2)
         end
     end)
     EditModeManagerFrame:HookScript("OnHide", function(self)
-        if InCombatLockdown() or not PlayerFrame.HealthBar then return end
+        if InCombatLockdown() or not PlayerFrame.Container.HealthBar then return end
         MultiBar7:ClearAllPoints()
-        MultiBar7:SetPoint("TOPLEFT", PlayerFrame.HealthBar, "BOTTOMLEFT", 0, -2)
+        MultiBar7:SetPoint("TOPLEFT", PlayerFrame.Container.HealthBar, "BOTTOMLEFT", 0, -2)
     end)
 end
 

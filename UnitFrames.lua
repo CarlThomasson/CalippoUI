@@ -204,8 +204,8 @@ local function UpdateNameText(frame)
 end
 
 local function UpdateAll(frame)
-    if frame.Container.PowerBar then UpdatePowerFull(frame) end
     UpdateHealthFull(frame)
+    UpdatePowerFull(frame)
     UpdateLeaderAssist(frame)
     UpdateNameText(frame)
     UF.UpdateAlpha(frame)
@@ -360,7 +360,6 @@ function SetupUnitFrame(frame)
         powerBar:SetPoint("TOPLEFT", healthBar, "BOTTOMLEFT")
         powerBar:SetPoint("BOTTOMRIGHT", containerFrame, "BOTTOMRIGHT")
         powerBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
-        -- powerBar:SetFrameLevel(healthBar:GetFrameLevel() + 123)
         Util.AddStatusBarBackground(powerBar)
         Util.AddBorder(powerBar, 1, CUI_BACKDROP_DS_3)
     end
