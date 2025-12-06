@@ -24,9 +24,21 @@ local function UpdateAuras(unitFrame)
     end
 end
 
-local function GetCastBarColor(castBar)
+local function GetCastBarColor(castBar, blizzardCastBar)
     local color = {}
-    if castBar.barType == "uninterruptable" then
+
+    if not blizzardCastBar.barType then 
+        castBar.shouldUpdateColor = true 
+        color.r = 0
+        color.g = 1
+        color.b = 0
+        color.a = 1
+        return color
+    end
+
+    castBar.shouldUpdateColor = false
+
+    if blizzardCastBar.barType == "uninterruptable" then
         color.r = 0.9
         color.g = 0.9
         color.b = 0.9
@@ -38,6 +50,24 @@ local function GetCastBarColor(castBar)
         color.b = 0
         color.a = 1
         return color
+    end
+end
+
+local function UpdateCastBarColor(castBar, isChannel)
+    if isChannel then
+        local castBarColor = GetCastBarColor(castBar, castBar:GetParent().castBar)
+        castBar.Background:SetVertexColor(castBarColor.r, castBarColor.g, castBarColor.b, castBarColor.a, 1)
+        
+        local v = 0.2
+        castBar:SetStatusBarColor(castBarColor.r*v, castBarColor.g*v, castBarColor.b*v)
+        castBar:SetReverseFill(true)
+    else
+        local castBarColor = GetCastBarColor(castBar, castBar:GetParent().castBar)
+        castBar:SetStatusBarColor(castBarColor.r, castBarColor.g, castBarColor.b, castBarColor.a)
+
+        local v = 0.2
+        castBar.Background:SetVertexColor(castBarColor.r*v, castBarColor.g*v, castBarColor.b*v, 1)
+        castBar:SetReverseFill(false)
     end
 end
 
@@ -63,23 +93,9 @@ local function UpdateCastBar(castBar)
         return
     end
     
-    if isChannel then
-        local castBarColor = GetCastBarColor(castBar:GetParent().castBar)
-        castBar.Background:SetVertexColor(castBarColor.r, castBarColor.g, castBarColor.b, castBarColor.a, 1)
-        
-        local v = 0.2
-        castBar:SetStatusBarColor(castBarColor.r*v, castBarColor.g*v, castBarColor.b*v)
-        castBar:SetReverseFill(true)
-    else
-        local castBarColor = GetCastBarColor(castBar:GetParent().castBar)
-        castBar:SetStatusBarColor(castBarColor.r, castBarColor.g, castBarColor.b, castBarColor.a)
+    UpdateCastBarColor(castBar, isChannel)
 
-        local v = 0.2
-        castBar.Background:SetVertexColor(castBarColor.r*v, castBarColor.g*v, castBarColor.b*v, 1)
-        castBar:SetReverseFill(false)
-    end
-
-    castBar.Text:SetText(name)
+    castBar.Text:SetText(name, isChannel)
 
     local currentTime = GetTime()
     castBar:SetMinMaxValues(startTime, endTime)
@@ -176,6 +192,10 @@ local function SetupNamePlate(unitToken)
         castBar:SetScript("OnUpdate", function(self)
             if not self.isCasting then return end
             self:SetValue(GetTime() * 1000)
+            if self.shouldUpdateColor then
+                local _, isChannel = GetCastOrChannelInfo(castBar.unit)
+                UpdateCastBarColor(castBar, isChannel)
+            end
         end)
     end
     unitFrame.CUI_CastBar.unit = unitToken

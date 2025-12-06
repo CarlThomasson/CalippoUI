@@ -212,125 +212,128 @@ local function UpdateAll(frame)
     UF.UpdateAlpha(frame)
 end
 
--- local function GetCastBarColor(castBar)
---     local color = {}
---     if castBar.barType == "uninterruptable" then
---         color.r = 0.9
---         color.g = 0.9
---         color.b = 0.9
---         color.a = 1
---         return color
---     else
---         color.r = 0.9
---         color.g = 0.9
---         color.b = 0
---         color.a = 1
---         return color
---     end
--- end
+-------------------------------------------------------------------------------------------------
 
--- local function GetCastOrChannelInfo(unit)
---     local nameCast, _, _, startTimeMSCast, endTimeMSCast = UnitCastingInfo(unit)
---     local nameChannel, _, _, startTimeMSChannel, endTimeMSChannel = UnitChannelInfo(unit)
-
---     if startTimeMSCast then
---         return nameCast, false, startTimeMSCast, endTimeMSCast
---     elseif startTimeMSChannel then
---         return nameChannel, true, startTimeMSChannel, endTimeMSChannel
---     else
---         return nil, nil
---     end
--- end
-
--- local function UpdateCastBar(castBar, blizzardCastBar)
---     local name, isChannel, startTime, endTime = GetCastOrChannelInfo(castBar.unit)
-
---     if not startTime then 
---         castBar.isCasting = false
---         castBar:Hide() 
---         return
---     end
+local function GetCastBarColor(castBar)
+    local color = {}
     
---     if isChannel then
---         local castBarColor = GetCastBarColor(blizzardCastBar)
---         castBar.Background:SetVertexColor(castBarColor.r, castBarColor.g, castBarColor.b, castBarColor.a, 1)
+    if castBar.barType == "uninterruptable" then
+        color.r = 0.9
+        color.g = 0.9
+        color.b = 0.9
+        color.a = 1
+        return color
+    else
+        color.r = 0.9
+        color.g = 0.9
+        color.b = 0
+        color.a = 1
+        return color
+    end
+end
+
+local function GetCastOrChannelInfo(unit)
+    local nameCast, _, _, startTimeMSCast, endTimeMSCast = UnitCastingInfo(unit)
+    local nameChannel, _, _, startTimeMSChannel, endTimeMSChannel = UnitChannelInfo(unit)
+
+    if startTimeMSCast then
+        return nameCast, false, startTimeMSCast, endTimeMSCast
+    elseif startTimeMSChannel then
+        return nameChannel, true, startTimeMSChannel, endTimeMSChannel
+    else
+        return nil, nil
+    end
+end
+
+local function UpdateCastBar(castBar, blizzardCastBar)
+    local name, isChannel, startTime, endTime = GetCastOrChannelInfo(castBar.unit)
+
+    if not startTime then 
+        castBar.isCasting = false
+        castBar:Hide() 
+        return
+    end
+    
+    if isChannel then
+        local castBarColor = GetCastBarColor(blizzardCastBar)
+        castBar.Background:SetVertexColor(castBarColor.r, castBarColor.g, castBarColor.b, castBarColor.a, 1)
         
---         local v = 0.2
---         castBar:SetStatusBarColor(castBarColor.r*v, castBarColor.g*v, castBarColor.b*v)
---         castBar:SetReverseFill(true)
---     else
---         local castBarColor = GetCastBarColor(blizzardCastBar)
---         castBar:SetStatusBarColor(castBarColor.r, castBarColor.g, castBarColor.b, castBarColor.a)
+        local v = 0.2
+        castBar:SetStatusBarColor(castBarColor.r*v, castBarColor.g*v, castBarColor.b*v)
+        castBar:SetReverseFill(true)
+    else
+        local castBarColor = GetCastBarColor(blizzardCastBar)
+        castBar:SetStatusBarColor(castBarColor.r, castBarColor.g, castBarColor.b, castBarColor.a)
 
---         local v = 0.2
---         castBar.Background:SetVertexColor(castBarColor.r*v, castBarColor.g*v, castBarColor.b*v, 1)
---         castBar:SetReverseFill(false)
---     end
+        local v = 0.2
+        castBar.Background:SetVertexColor(castBarColor.r*v, castBarColor.g*v, castBarColor.b*v, 1)
+        castBar:SetReverseFill(false)
+    end
 
---     castBar.Text:SetText(name)
+    castBar.Text:SetText(name)
 
---     local currentTime = GetTime()
---     castBar:SetMinMaxValues(startTime, endTime)
---     castBar:SetValue(currentTime)
+    local currentTime = GetTime()
+    castBar:SetMinMaxValues(startTime, endTime)
+    castBar:SetValue(currentTime)
     
---     castBar.isCasting = true
---     castBar:Show()
--- end
+    castBar.isCasting = true
+    castBar:Show()
+end
 
----------------------------------------------------------------------------------------------------
+function SetupCastBar(unitFrame, blizzardCastBar)
+    local unit = unitFrame.unit
 
--- function SetupCastBar(unitFrame, blizzardCastBar)
---     local unit = unitFrame.unit
+    blizzardCastBar:Hide()
+    blizzardCastBar:HookScript("OnShow", function(self)
+        self:Hide()
+    end)
 
---     blizzardCastBar:Hide()
---     blizzardCastBar:HookScript("OnShow", function(self)
---         self:Hide()
---     end)
+    local castBar = CreateFrame("Statusbar", nil, unitFrame)
+    castBar:SetParentKey("CUI_CastBar")
+    castBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
+    castBar:SetStatusBarColor(0.8, 0.8, 0, 1)
+    castBar:SetPoint("BOTTOMLEFT", unitFrame.HealthBar, "TOPLEFT", 0, 2)
+    castBar:SetPoint("BOTTOMRIGHT", unitFrame.HealthBar, "TOPRIGHT", 0, 2)
+    castBar:SetHeight(13)
 
---     local castBar = CreateFrame("Statusbar", nil, unitFrame)
---     castBar:SetParentKey("CUI_CastBar")
---     castBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
---     castBar:SetStatusBarColor(0.8, 0.8, 0, 1)
---     castBar:SetPoint("TOPLEFT", unitFrame.PowerBar, "BOTTOMLEFT", 0, -1)
---     castBar:SetPoint("TOPRIGHT", unitFrame.PowerBar, "BOTTOMRIGHT", 0, -1)
---     castBar:SetHeight(13)
+    Util.AddStatusBarBackground(castBar)
+    Util.AddBorder(castBar, 1, CUI_BACKDROP_DS_3)
 
---     Util.AddStatusBarBackground(castBar)
---     Util.AddBorder(castBar, 1, CUI_BACKDROP_DS_3)
+    castBar.isCasting = false
+    castBar.unit = unit
 
---     castBar.isCasting = false
---     castBar.unit = unit
+    local castBarText = castBar:CreateFontString(nil, "OVERLAY")
+    castBarText:SetParentKey("Text")
+    castBarText:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 8, "")
+    castBarText:SetPoint("LEFT", castBar, "LEFT", 3, 0)
 
---     local castBarText = castBar:CreateFontString(nil, "OVERLAY")
---     castBarText:SetParentKey("Text")
---     castBarText:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 8, "")
---     castBarText:SetPoint("LEFT", castBar, "LEFT", 3, 0)
+    UpdateCastBar(castBar, blizzardCastBar)
 
---     UpdateCastBar(castBar, blizzardCastBar)
+    castBar:SetScript("OnUpdate", function(self)
+        if not self.isCasting then return end
+        self:SetValue(GetTime() * 1000)
+    end)
 
---     castBar:SetScript("OnUpdate", function(self)
---         if not self.isCasting then return end
---         self:SetValue(GetTime() * 1000)
---     end)
+    castBar:RegisterUnitEvent("UNIT_SPELLCAST_START", unit)
+    castBar:RegisterUnitEvent("UNIT_SPELLCAST_STOP", unit)
+    castBar:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_START", unit)
+    castBar:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_UPDATE", unit)
+    castBar:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP", unit)
+    castBar:RegisterEvent("PLAYER_FOCUS_CHANGED")
+    castBar:HookScript("OnEvent", function(self, event)            
+        if event == "UNIT_SPELLCAST_START" or 
+                event == "UNIT_SPELLCAST_CHANNEL_START" or
+                event == "UNIT_SPELLCAST_STOP" or
+                event == "UNIT_SPELLCAST_CHANNEL_STOP" or
+                event == "UNIT_SPELLCAST_CHANNEL_UPDATE" then
+            UpdateCastBar(self, blizzardCastBar)
+        elseif event == "PLAYER_FOCUS_CHANGED" then
+            UpdateCastBar(self, blizzardCastBar)
+        end
+    end)
+end
 
---     castBar:RegisterUnitEvent("UNIT_SPELLCAST_START", unit)
---     castBar:RegisterUnitEvent("UNIT_SPELLCAST_STOP", unit)
---     castBar:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_START", unit)
---     castBar:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_UPDATE", unit)
---     castBar:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP", unit)
---     castBar:RegisterEvent("PLAYER_FOCUS_CHANGED")
---     castBar:HookScript("OnEvent", function(self, event)            
---         if event == "UNIT_SPELLCAST_START" or 
---                 event == "UNIT_SPELLCAST_CHANNEL_START" or
---                 event == "UNIT_SPELLCAST_STOP" or
---                 event == "UNIT_SPELLCAST_CHANNEL_STOP" or
---                 event == "UNIT_SPELLCAST_CHANNEL_UPDATE" then
---             UpdateCastBar(self, blizzardCastBar)
---         elseif event == "PLAYER_FOCUS_CHANGED" then
---             UpdateCastBar(self, blizzardCastBar)
---         end
---     end)
--- end
+-------------------------------------------------------------------------------------------------
 
 function SetupUnitFrame(frame)
     local unit = frame.unit
@@ -423,12 +426,6 @@ function SetupUnitFrame(frame)
         end
     end)
 
-    -- frame:HookScript("OnShow", function(self)
-    --     if not UnitExists(self.unit) then
-    --         self:Hide()
-    --     end
-    -- end)
-
     UpdateAll(frame)
 end
 
@@ -442,7 +439,7 @@ function UF.Load()
     SetupUnitFrame(FocusFrame)
     SetupUnitFrame(PetFrame)
 
-    -- SetupCastBar(FocusFrame, FocusFrameSpellBar)
+    SetupCastBar(FocusFrame, FocusFrameSpellBar)
 
     hooksecurefunc(TargetFrame, "UpdateAuras", function(self)
         UF.UpdateAuras(self)
