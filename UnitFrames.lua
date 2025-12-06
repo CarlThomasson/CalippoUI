@@ -40,26 +40,26 @@ function UF.UpdateAlpha(frame, inCombat)
 end
 
 function UF.UpdateSizePos(frame)
-    frame.HealthBar:SetPoint("CENTER", frame, "CENTER", CalippoDB.UnitFrames[frame:GetName()].OffsetX, CalippoDB.UnitFrames[frame:GetName()].OffsetY)
-    frame.HealthBar:SetSize(CalippoDB.UnitFrames[frame:GetName()].SizeX, CalippoDB.UnitFrames[frame:GetName()].SizeY)
-    frame.Overlay.UnitName:SetWidth(frame.Overlay:GetWidth() - 60)
+    frame.Container.HealthBar:SetPoint("CENTER", frame, "CENTER", CalippoDB.UnitFrames[frame:GetName()].OffsetX, CalippoDB.UnitFrames[frame:GetName()].OffsetY)
+    frame.Container.HealthBar:SetSize(CalippoDB.UnitFrames[frame:GetName()].SizeX, CalippoDB.UnitFrames[frame:GetName()].SizeY)
+    frame.Container.Overlay.UnitName:SetWidth(frame.Overlay:GetWidth() - 60)
 end
 
 function UF.UpdateTexts(frame)
     local fontSizeN = CalippoDB.UnitFrames[frame:GetName()].NameFontSize
     if fontSizeN == 0 then
-        frame.Overlay.UnitName:Hide()
+        frame.Container.Overlay.UnitName:Hide()
     else
-        frame.Overlay.UnitName:Show()
-        frame.Overlay.UnitName:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", fontSizeN, "")
+        frame.Container.Overlay.UnitName:Show()
+        frame.Container.Overlay.UnitName:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", fontSizeN, "")
     end
 
     local fontSizeH = CalippoDB.UnitFrames[frame:GetName()].HealthFontSize
     if fontSizeH == 0 then
-        frame.Overlay.UnitHealth:Hide()    
+        frame.Container.Overlay.UnitHealth:Hide()    
     else
-        frame.Overlay.UnitHealth:Show()
-        frame.Overlay.UnitHealth:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", fontSizeH, "")
+        frame.Container.Overlay.UnitHealth:Show()
+        frame.Container.Overlay.UnitHealth:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", fontSizeH, "")
     end
 end
 
@@ -90,7 +90,7 @@ function UF.UpdateAuras(unitFrame)
         local level = math.floor(index/maxRow)
 
         frame:ClearAllPoints()
-        frame:SetPoint("BOTTOMRIGHT", unitFrame.HealthBar, "TOPRIGHT", -(index*(frameSize+padding))+(level*maxRow*(frameSize+padding)), 2+(level*(frameSize+padding)))
+        frame:SetPoint("BOTTOMRIGHT", unitFrame.Container, "TOPRIGHT", -(index*(frameSize+padding))+(level*maxRow*(frameSize+padding)), 2+(level*(frameSize+padding)))
 
         index = index + 1
     end)
@@ -101,7 +101,6 @@ function UF.UpdateAuras(unitFrame)
         local frame = auraFrames[id]
         if not frame then return end
         frame:SetSize(frameSize, frameSize)
-        frame:SetPoint("TOPLEFT", TargetFrame.HealthBar, "BOTTOMLEFT")
         frame.Icon:SetTexCoord(.08, .92, .08, .92)
         frame.Count:SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", 12, "")
         frame.Count:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -1, 0)
@@ -117,7 +116,7 @@ function UF.UpdateAuras(unitFrame)
         local level = math.floor(index/maxRow)
 
         frame:ClearAllPoints()
-        frame:SetPoint("TOPLEFT", unitFrame.PowerBar, "BOTTOMLEFT", (index*(frameSize+padding))-(level*maxRow*(frameSize+padding)), -(level*(frameSize+padding))-2)
+        frame:SetPoint("TOPLEFT", unitFrame.Container, "BOTTOMLEFT", (index*(frameSize+padding))-(level*maxRow*(frameSize+padding)), -(level*(frameSize+padding))-2)
 
         index = index + 1
     end)
@@ -128,47 +127,47 @@ end
 local function UpdateHealth(frame)
     local unit = frame.unit
 
-    frame.Overlay.UnitHealth:SetText(Util.UnitHealthText(unit))
-    frame.HealthBar:SetValue(UnitHealth(unit))
+    frame.Container.Overlay.UnitHealth:SetText(Util.UnitHealthText(unit))
+    frame.Container.HealthBar:SetValue(UnitHealth(unit))
 end
 
 local function UpdateMaxHealth(frame)
     local unit = frame.unit
 
-    frame.Overlay.UnitHealth:SetText(Util.UnitHealthText(unit))
-    frame.HealthBar:SetMinMaxValues(0, UnitHealthMax(unit))
-    frame.HealthBar:SetValue(UnitHealth(unit))
+    frame.Container.Overlay.UnitHealth:SetText(Util.UnitHealthText(unit))
+    frame.Container.HealthBar:SetMinMaxValues(0, UnitHealthMax(unit))
+    frame.Container.HealthBar:SetValue(UnitHealth(unit))
 end
 
 local function UpdateHealthFull(frame)
-    if not frame.HealthBar then return end
+    if not frame.Container.HealthBar then return end
 
     local unit = frame.unit
 
     UpdateMaxHealth(frame)
 
-    frame.Overlay.UnitHealth:SetText(Util.UnitHealthText(unit))
+    frame.Container.Overlay.UnitHealth:SetText(Util.UnitHealthText(unit))
 
     local r, g, b = Util.GetUnitColor(unit)
-    frame.HealthBar:SetStatusBarColor(r, g, b)
+    frame.Container.HealthBar:SetStatusBarColor(r, g, b)
 
     local v = 0.2
-    frame.HealthBar.Background:SetColorTexture(r*v, g*v, b*v, 1)
+    frame.Container.HealthBar.Background:SetColorTexture(r*v, g*v, b*v, 1)
 end
 
 local function UpdatePower(frame)
-    frame.PowerBar:SetValue(UnitPower(frame.unit))
+    frame.Container.PowerBar:SetValue(UnitPower(frame.unit))
 end 
 
 local function UpdateMaxPower(frame)
     local unit = frame.unit
 
-    frame.PowerBar:SetMinMaxValues(0, UnitPowerMax(unit))
-    frame.PowerBar:SetValue(UnitPower(unit))
+    frame.Container.PowerBar:SetMinMaxValues(0, UnitPowerMax(unit))
+    frame.Container.PowerBar:SetValue(UnitPower(unit))
 end
 
 local function UpdatePowerFull(frame)
-    if not frame.PowerBar then return end
+    if not frame.Container.PowerBar then return end
 
     local unit = frame.unit
 
@@ -181,31 +180,31 @@ local function UpdatePowerFull(frame)
     if color == nil then
         color = PowerBarColor["MAELSTROM"]
     end
-    frame.PowerBar:SetStatusBarColor(color.r, color.g, color.b, 1)
+    frame.Container.PowerBar:SetStatusBarColor(color.r, color.g, color.b, 1)
 
     local v = 0.2
-    frame.PowerBar.Background:SetColorTexture(color.r*v, color.g*v, color.b*v, 1)
+    frame.Container.PowerBar.Background:SetColorTexture(color.r*v, color.g*v, color.b*v, 1)
 end
 
 local function UpdateLeaderAssist(frame)
     local unit = frame.unit
     if UnitIsGroupLeader(unit) then
-        frame.Overlay.Leader:SetTexture("Interface/AddOns/CalippoUI/Media/GroupLeader.blp")
-        frame.Overlay.Leader:Show()
+        frame.Container.Overlay.Leader:SetTexture("Interface/AddOns/CalippoUI/Media/GroupLeader.blp")
+        frame.Container.Overlay.Leader:Show()
     elseif UnitIsGroupAssistant(unit) then
-        frame.Overlay.Leader:SetTexture("Interface/AddOns/CalippoUI/Media/GroupAssist.blp")
-        frame.Overlay.Leader:Show()
+        frame.Container.Overlay.Leader:SetTexture("Interface/AddOns/CalippoUI/Media/GroupAssist.blp")
+        frame.Container.Overlay.Leader:Show()
     else
-        frame.Overlay.Leader:Hide()
+        frame.Container.Overlay.Leader:Hide()
     end
 end
 
 local function UpdateNameText(frame)
-    frame.Overlay.UnitName:SetText(UnitName(frame.unit))
+    frame.Container.Overlay.UnitName:SetText(UnitName(frame.unit))
 end
 
 local function UpdateAll(frame)
-    if frame.PowerBar then UpdatePowerFull(frame) end
+    if frame.Container.PowerBar then UpdatePowerFull(frame) end
     UpdateHealthFull(frame)
     UpdateLeaderAssist(frame)
     UpdateNameText(frame)
@@ -216,7 +215,7 @@ end
 
 local function GetCastBarColor(castBar)
     local color = {}
-    
+
     if castBar.barType == "uninterruptable" then
         color.r = 0.9
         color.g = 0.9
@@ -338,23 +337,30 @@ end
 function SetupUnitFrame(frame)
     local unit = frame.unit
 
-    local healthBar = CreateFrame("StatusBar", nil, frame)
+    local containerFrame = CreateFrame("Frame", nil, frame)
+    containerFrame:SetParentKey("Container")
+    containerFrame:SetPoint("CENTER", frame, "CENTER", CalippoDB.UnitFrames[frame:GetName()].OffsetX, CalippoDB.UnitFrames[frame:GetName()].OffsetY)
+    containerFrame:SetSize(CalippoDB.UnitFrames[frame:GetName()].SizeX, CalippoDB.UnitFrames[frame:GetName()].SizeY)
+
+    local healthBar = CreateFrame("StatusBar", nil, containerFrame)
     healthBar:SetParentKey("HealthBar")
-    healthBar:SetPoint("CENTER", frame, "CENTER", CalippoDB.UnitFrames[frame:GetName()].OffsetX, CalippoDB.UnitFrames[frame:GetName()].OffsetY)
-    healthBar:SetSize(CalippoDB.UnitFrames[frame:GetName()].SizeX, CalippoDB.UnitFrames[frame:GetName()].SizeY)
-    if unit ~= "player" then
+    healthBar:SetPoint("TOPLEFT", containerFrame, "TOPLEFT")
+    if unit == "player" then
+        healthBar:SetPoint("BOTTOMRIGHT", containerFrame, "BOTTOMRIGHT")
+    elseif unit ~= "player" then
+        healthBar:SetPoint("BOTTOMRIGHT", containerFrame, "BOTTOMRIGHT", 0, 5)
         frame:RegisterEvent("PLAYER_TARGET_CHANGED")
         frame:RegisterUnitEvent("UNIT_POWER_UPDATE", unit)
         frame:RegisterUnitEvent("UNIT_MAXPOWER", unit)
         if unit == "focus" then
             frame:RegisterEvent("PLAYER_FOCUS_CHANGED")
         end
-        local powerBar = CreateFrame("StatusBar", nil, frame)
+        local powerBar = CreateFrame("StatusBar", nil, containerFrame)
         powerBar:SetParentKey("PowerBar")
-        powerBar:SetPoint("TOPLEFT", healthBar, "BOTTOMLEFT", 0, 5)
-        powerBar:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT")
+        powerBar:SetPoint("TOPLEFT", healthBar, "BOTTOMLEFT")
+        powerBar:SetPoint("BOTTOMRIGHT", containerFrame, "BOTTOMRIGHT")
         powerBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
-        powerBar:SetFrameLevel(healthBar:GetFrameLevel() + 5)
+        -- powerBar:SetFrameLevel(healthBar:GetFrameLevel() + 123)
         Util.AddStatusBarBackground(powerBar)
         Util.AddBorder(powerBar, 1, CUI_BACKDROP_DS_3)
     end
@@ -362,16 +368,16 @@ function SetupUnitFrame(frame)
     Util.AddStatusBarBackground(healthBar)
     Util.AddBorder(healthBar, 1, CUI_BACKDROP_DS_3)
 
-    local clickFrame = CreateFrame("Button", nil, healthBar, "SecureUnitButtonTemplate")
+    local clickFrame = CreateFrame("Button", nil, containerFrame, "SecureUnitButtonTemplate")
     clickFrame:SetAttribute("unit", unit)
     clickFrame:RegisterForClicks("AnyDown")
     clickFrame:SetAttribute("*type1", "target")
     clickFrame:SetAttribute("*type2", "togglemenu")
-    clickFrame:SetAllPoints(healthBar)
+    clickFrame:SetAllPoints(containerFrame)
 
-    local overlayFrame = CreateFrame("Frame", nil, frame)
+    local overlayFrame = CreateFrame("Frame", nil, containerFrame)
     overlayFrame:SetParentKey("Overlay")
-    overlayFrame:SetAllPoints(healthBar)
+    overlayFrame:SetAllPoints(containerFrame)
 
     local unitName = overlayFrame:CreateFontString(nil, "OVERLAY")
     unitName:SetParentKey("UnitName")
