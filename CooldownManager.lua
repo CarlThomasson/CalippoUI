@@ -10,13 +10,15 @@ function CDM.UpdateAlpha(frame, inCombat)
     if not frame:IsShown() then return end
 
     if InCombatLockdown() or inCombat then 
-        Util.FadeFrame(frame, "IN", 1)
+        Util.FadeFrame(frame, "IN", CUI.DB.profile.CooldownManager[frame:GetName()].CombatAlpha)
     else
-        Util.FadeFrame(frame, "OUT", CalippoDB.CooldownManager[frame:GetName()].Alpha)
+        Util.FadeFrame(frame, "OUT", CUI.DB.profile.CooldownManager[frame:GetName()].Alpha)
     end
 end
 
 function CDM.UpdateStyle(viewer)
+    local dbEntry = CUI.DB.profile.CooldownManager[viewer:GetName()]
+
     for _, frame in ipairs({viewer:GetChildren()}) do
         if frame.Icon then
             local mask = frame.Icon:GetMaskTexture(1)
@@ -27,28 +29,29 @@ function CDM.UpdateStyle(viewer)
                 local _, _, overlay = frame:GetRegions()
                 overlay:Hide()
 
-                Util.AddBorder(frame, 1, CUI_BACKDROP_DS_3)
+                Util.AddBorder(frame)
             end
         end
 
         if frame.Applications then
             frame.Applications.Applications:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 
-                CalippoDB.CooldownManager.BuffIconCooldownViewer.CountFontSize, "OUTLINE")
+                dbEntry.Charges.Size, "OUTLINE")
             frame.Applications.Applications:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
         end
 
         if frame.ChargeCount then
             frame.ChargeCount.Current:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 
-                CalippoDB.CooldownManager[viewer:GetName()].CountFontSize, "OUTLINE")
+                dbEntry.Charges.Size, "OUTLINE")
             frame.ChargeCount.Current:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
         end
 
         if frame.Cooldown then
+            -- TODO : vvvvv
             frame.Cooldown:SetSwipeTexture("", 0, 0, 0, 1)
 
             local text = frame.Cooldown:GetRegions()
             text:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 
-                CalippoDB.CooldownManager[viewer:GetName()].CooldownFontSize, "OUTLINE")
+                dbEntry.Cooldown.Size, "OUTLINE")
         end
 
         if frame.OutOfRange then

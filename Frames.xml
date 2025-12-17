@@ -1,0 +1,170 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Frame name="CUI_BuffFrameTemplate" virtual="true" enableMouse="true">
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="Icon" setAllPoints="true"/>
+			</Layer>
+			<!-- <Layer level="OVERLAY">
+				<Texture parentKey="Stealable" file="Interface\TargetingFrame\UI-TargetingFrame-Stealable" hidden="true" alphaMode="ADD">
+					<Size x="24" y="24"/>
+					<Anchors>
+						<Anchor point="CENTER" x="0" y="0"/>
+					</Anchors>
+				</Texture>
+			</Layer> -->
+		</Layers>
+		<Frames>
+			<Cooldown parentKey="Cooldown" inherits="CooldownFrameTemplate" hideCountdownNumbers="true" reverse="true" drawEdge="true">
+				<Anchors>
+					<Anchor point="CENTER" x="0" y="0"/>
+				</Anchors>
+			</Cooldown>
+            <Frame parentKey="Overlay">
+                <Anchors>
+                    <Anchor point="TOPLEFT"/>
+                    <Anchor point="BOTTOMRIGHT"/>
+                </Anchors>  
+                <Layers>
+                    <Layer level="OVERLAY">
+                        <FontString parentKey="Count" justifyH="RIGHT" font="Interface\AddOns\CalippoUI\Fonts\FiraSans-Medium.ttf">
+                            <Color r="1" g="1" b="1" a="1"/>
+                            <FontHeight>
+                                <AbsValue val="10"/>
+                            </FontHeight>
+                            <Anchors>
+                                <Anchor point="BOTTOMRIGHT" x="-1" y="0"/>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Frames>
+                    <Frame parentKey="Backdrop" inherits="BackdropTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="0"/>
+                            <Anchor point="BOTTOMRIGHT" x="0" y="0"/>
+                        </Anchors>
+                        <KeyValues>
+                            <KeyValue key="backdropInfo" value="CUI_BACKDROP_B_06" type="global"/>
+                        </KeyValues>
+                    </Frame>
+                </Frames>
+            </Frame>
+		</Frames>
+	</Frame>
+
+    <Frame name="CUI_DebuffFrameTemplate" virtual="true" enableMouse="true">
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="Icon" setAllPoints="true"/>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Cooldown parentKey="Cooldown" inherits="CooldownFrameTemplate" hideCountdownNumbers="true" reverse="true" drawEdge="true">
+				<Anchors>
+					<Anchor point="CENTER" x="0" y="-1"/>
+				</Anchors>
+			</Cooldown>
+            <Frame parentKey="Overlay">
+                <Anchors>
+                    <Anchor point="TOPLEFT"/>
+                    <Anchor point="BOTTOMRIGHT"/>
+                </Anchors>  
+                <Layers>
+                    <Layer level="OVERLAY">
+                        <FontString parentKey="Count" justifyH="RIGHT" font="Interface\AddOns\CalippoUI\Fonts\FiraSans-Medium.ttf">
+                            <Color r="1" g="1" b="1" a="1"/>
+                            <FontHeight>
+                                <AbsValue val="10"/>
+                            </FontHeight>
+                            <Anchors>
+                                <Anchor point="BOTTOMRIGHT" x="-1" y="0"/>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Frames>
+                    <Frame parentKey="Backdrop" inherits="BackdropTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="0"/>
+                            <Anchor point="BOTTOMRIGHT" x="0" y="0"/>
+                        </Anchors>
+                        <KeyValues>
+                            <KeyValue key="backdropInfo" value="CUI_BACKDROP_W_1" type="global"/>
+                        </KeyValues>
+                    </Frame>
+                </Frames>
+            </Frame>
+		</Frames>
+	</Frame>
+
+    <Frame name="CUI_UnitFrameBuff" inherits="CUI_BuffFrameTemplate" virtual="true" enableMouse="true">
+        <Size x="20" y="20"/>
+        <Scripts>
+			<OnUpdate>
+				if ( GameTooltip:IsOwned(self) ) then
+					GameTooltip:SetUnitBuff(self.unit, self.index);
+				end
+			</OnUpdate>
+			<OnEnter>
+                if not InCombatLockdown() then
+                    GameTooltip:SetOwner(self, "ANCHOR_BOTTOMRIGHT", 15, -25);
+                    GameTooltip:SetUnitBuff(self.unit, self.index);
+                end
+			</OnEnter>
+			<OnLeave>
+				GameTooltip:Hide();
+			</OnLeave>
+		</Scripts>
+    </Frame>
+
+    <Frame name="CUI_UnitFrameDebuff" inherits="CUI_DebuffFrameTemplate" virtual="true" enableMouse="true">
+        <Size x="20" y="20"/>
+        <Scripts>
+			<OnUpdate>
+				if ( GameTooltip:IsOwned(self) ) then
+					GameTooltip:SetUnitDebuff(self.unit, self.index);
+				end
+			</OnUpdate>
+			<OnEnter>
+                if not InCombatLockdown() then
+                    GameTooltip:SetOwner(self, "ANCHOR_BOTTOMRIGHT", 15, -25);
+                    GameTooltip:SetUnitDebuff(self.unit, self.index);
+                end
+			</OnEnter>
+			<OnLeave>
+				GameTooltip:Hide();
+			</OnLeave>
+		</Scripts>
+    </Frame>
+
+    <Frame name="CUI_PartyFrameBuff" inherits="CUI_BuffFrameTemplate" virtual="true" enableMouse="true">
+        <Size x="17" y="17"/>
+    </Frame>
+
+    <Frame name="CUI_PartyFrameDebuff" inherits="CUI_DebuffFrameTemplate" virtual="true" enableMouse="true">
+        <Size x="17" y="17"/>
+    </Frame>
+
+    <Frame name="CUI_RaidFrameBuff" inherits="CUI_BuffFrameTemplate" virtual="true" enableMouse="true">
+        <Size x="15" y="15"/>
+    </Frame>
+
+    <Frame name="CUI_RaidFrameDebuff" inherits="CUI_DebuffFrameTemplate" virtual="true" enableMouse="true">
+        <Size x="15" y="15"/>
+    </Frame>
+
+    <Button name="CUI_UnitFrameTemplate" inherits="BackdropTemplate, SecureUnitButtonTemplate" mixin="PingableType_UnitFrameMixin" hidden="true" virtual="true">
+        <Scripts>
+            <OnEnter>
+                if not InCombatLockdown() then
+                    GameTooltip_SetDefaultAnchor(GameTooltip, self)
+                    GameTooltip:SetUnit(self.unit)
+                    GameTooltip:Show() 
+                end
+            </OnEnter>
+            <OnLeave>
+                GameTooltip:Hide()
+            </OnLeave>
+        </Scripts>
+    </Button>
+</Ui>

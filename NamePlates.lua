@@ -19,7 +19,7 @@ local function UpdateAuras(unitFrame)
 
         if not frame.Borders then
             frame.Icon:SetTexCoord(.08, .92, .08, .92)
-            Util.AddBorder(frame, 1, CUI_BACKDROP_DS_2)
+            Util.AddBorder(frame)
         end
     end
 end
@@ -144,7 +144,7 @@ local function SetupNamePlate(unitToken)
     unitFrame.healthBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
 
     if not unitFrame.healthBar.Borders then
-        Util.AddBorder(unitFrame.healthBar, 1, CUI_BACKDROP_DS_3)
+        Util.AddBorder(unitFrame.healthBar)
     end
 
     unitFrame.healthBar.deselectedOverlay:Hide()
@@ -179,7 +179,7 @@ local function SetupNamePlate(unitToken)
         castBar:SetHeight(10)
 
         Util.AddStatusBarBackground(castBar)
-        Util.AddBorder(castBar, 1, CUI_BACKDROP_DS_3)
+        Util.AddBorder(castBar)
 
         castBar.isCasting = false
         castBar.unit = unitToken

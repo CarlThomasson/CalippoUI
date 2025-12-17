@@ -30,15 +30,14 @@ local microMenuButtons = {
     MainMenuMicroButton,
 }
 
-local actionBars = {
+AB.ActionBars = {
     [MainActionBar] = "ActionButton",
     [MultiBarBottomLeft] = "MultiBarBottomLeftButton",
     [MultiBarBottomRight] = "MultiBarBottomRightButton",
-    [MultiBarLeft] = "MultiBarLeftButton",
     [MultiBarRight] = "MultiBarRightButton",
+    [MultiBarLeft] = "MultiBarLeftButton",
     [MultiBar5] = "MultiBar5Button",
     [MultiBar6] = "MultiBar6Button",
-    [MultiBar7] = "MultiBar7Button",
     [MultiBar7] = "MultiBar7Button",
     [PetActionBar] = "PetActionButton",
 }
@@ -47,35 +46,109 @@ local actionBars = {
 
 function AB.UpdateAlpha(frame, inCombat)
     if InCombatLockdown() or inCombat then 
-        Util.FadeFrame(frame, "IN", CalippoDB.ActionBars[frame:GetName()].CombatAlpha)
+        Util.FadeFrame(frame, "IN", CUI.DB.profile.ActionBars[frame:GetName()].CombatAlpha, 0.2)
     else
-        Util.FadeFrame(frame, "OUT", CalippoDB.ActionBars[frame:GetName()].Alpha)
+        Util.FadeFrame(frame, "OUT", CUI.DB.profile.ActionBars[frame:GetName()].Alpha, 0.2)
+    end
+end
+
+function AB.UpdateBar(bar)
+    local button = AB.ActionBars[bar]
+    local dbEntry = CUI.DB.profile.ActionBars[bar:GetName()]
+
+    for i=1, 12 do
+        local frame = _G[button..i]
+        if not frame then break end
+
+        if dbEntry.Keybind.Enabled then
+            frame.TextOverlayContainer.HotKey:SetAlpha(1)
+            frame.TextOverlayContainer.HotKey:SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", dbEntry.Keybind.Size, "OUTLINE")
+            frame.TextOverlayContainer.HotKey:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -1, -1)
+        else
+            frame.TextOverlayContainer.HotKey:SetAlpha(0)
+        end
+
+        if dbEntry.Macro.Enabled then
+            frame.Name:SetAlpha(1)
+            frame.Name:SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", dbEntry.Macro.Size, "OUTLINE")
+            frame.Name:SetPoint("BOTTOM", frame, "BOTTOM", 0, 1)
+        else
+            frame.Name:SetAlpha(0)
+        end
+
+        if dbEntry.Charges.Enabled then
+            frame.Count:SetAlpha(1)
+            frame.Count:SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", dbEntry.Charges.Size, "OUTLINE")
+            frame.Count:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -1, 1)
+        else
+            frame.Count:SetAlpha(0)
+        end
+
+        if dbEntry.Cooldown.Enabled then
+            frame.cooldown:GetRegions():SetAlpha(1)
+            frame.cooldown:GetRegions():SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", dbEntry.Cooldown.Size, "OUTLINE")
+        else
+            frame.cooldown:GetRegions():SetAlpha(0)
+        end
+        frame.cooldown:SetAllPoints(frame)
+
+        frame.Border:Hide()
+        frame.SlotArt:Hide()
+        frame.IconMask:Hide()
+
+        frame.SlotBackground:Hide()
+        frame.SlotBackground:HookScript("OnShow", function(self)
+            self:Hide()
+        end)
+
+        if not frame.Background then
+            local background = frame:CreateTexture(nil, "BACKGROUND", nil, -8)
+            background:SetParentKey("Background")
+            background:SetAllPoints(frame)
+            background:SetColorTexture(0, 0, 0, 0.5)
+        end
+
+        frame.NormalTexture:Hide()
+        frame.NormalTexture:HookScript("OnShow", function(self)
+            self:Hide()
+        end)
+
+        frame.icon:SetTexCoord(.08, .92, .08, .92)
+        if not frame.Borders then
+            Util.AddBorder(frame)
+        end
+    end   
+end
+
+function AB.UpdateBarAnchor(bar)
+    local dbEntry = CUI.DB.profile.ActionBars[bar:GetName()]
+
+    if dbEntry.ShouldAnchor then
+        if not _G[dbEntry.AnchorFrame] then
+            dbEntry.AnchorFrame = "UIParent"
+        end
+
+        if not InCombatLockdown() then
+            bar:ClearAllPoints()
+            bar:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
+        end
+
+        bar:RegisterEvent("PLAYER_ENTERING_WORLD")
+        bar:HookScript("OnEvent", function(self, event)
+            if event == "PLAYER_ENTERING_WORLD" then
+                self:ClearAllPoints()
+                self:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
+            end
+        end)
+    else
+        bar:HookScript("OnEvent", function() end)
     end
 end
 
 ---------------------------------------------------------------------------------------------------
 
-local function PositionMB7()
-    if not InCombatLockdown() and PlayerFrame.Container.HealthBar then
-        MultiBar7:ClearAllPoints()
-        MultiBar7:SetPoint("TOPLEFT", PlayerFrame.Container.HealthBar, "BOTTOMLEFT", 0, -2)
-    end
-    MultiBar7:RegisterEvent("PLAYER_ENTERING_WORLD")
-    MultiBar7:HookScript("OnEvent", function(self, event)
-        if event == "PLAYER_ENTERING_WORLD" then
-            MultiBar7:ClearAllPoints()
-            MultiBar7:SetPoint("TOPLEFT", PlayerFrame.Container.HealthBar, "BOTTOMLEFT", 0, -2)
-        end
-    end)
-    EditModeManagerFrame:HookScript("OnHide", function(self)
-        if InCombatLockdown() or not PlayerFrame.Container.HealthBar then return end
-        MultiBar7:ClearAllPoints()
-        MultiBar7:SetPoint("TOPLEFT", PlayerFrame.Container.HealthBar, "BOTTOMLEFT", 0, -2)
-    end)
-end
-
 local function AddHooks()
-    for bar, button in pairs(actionBars) do
+    for bar, button in pairs(AB.ActionBars) do
         for i=1, 12 do
             local frame = _G[button..i]
             if not frame then break end
@@ -83,6 +156,9 @@ local function AddHooks()
             frame:HookScript("OnEnter", function() Util.FadeFrame(bar, "IN", 1, 0.3) end)
             frame:HookScript("OnLeave", function() AB.UpdateAlpha(bar) end)
         end
+
+        bar:HookScript("OnEnter", function() Util.FadeFrame(bar, "IN", 1, 0.3) end)
+        bar:HookScript("OnLeave", function() AB.UpdateAlpha(bar) end)
 
         bar:RegisterEvent("PLAYER_REGEN_ENABLED")
         bar:RegisterEvent("PLAYER_REGEN_DISABLED")
@@ -116,6 +192,24 @@ local function AddHooks()
         self:ClearAllPoints()
         self:SetPoint("CENTER", Minimap, "BOTTOMLEFT")
     end)
+
+    EditModeManagerFrame:HookScript("OnHide", function(self)
+        if InCombatLockdown() then return end
+        for bar, _ in pairs(AB.ActionBars) do
+            local dbEntry = CUI.DB.profile.ActionBars[bar:GetName()]
+
+            if dbEntry.ShouldAnchor then
+                local anchorFrame = dbEntry.AnchorFrame
+                local anchorPoint = dbEntry.AnchorPoint
+                local anchorRelativePoint = dbEntry.AnchorRelativePoint
+                local posX = dbEntry.PosX
+                local posY = dbEntry.PosY
+
+                bar:ClearAllPoints()
+                bar:SetPoint(anchorPoint, anchorFrame, anchorRelativePoint, posX, posY)
+            end
+        end
+    end)
 end
 
 local function StyleXPBar()
@@ -143,41 +237,9 @@ local function StyleXPBar()
 end
 
 local function StyleButtons()
-    for bar, button in pairs(actionBars) do
-        for i=1, 12 do
-            local frame = _G[button..i]
-            if not frame then break end
-
-            frame.TextOverlayContainer.HotKey:SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", 10, "OUTLINE")
-            frame.TextOverlayContainer.HotKey:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -2, -2)
-
-            frame.Name:SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", 10, "OUTLINE")
-            frame.Name:SetPoint("BOTTOM", frame, "BOTTOM", 0, 2)
-
-            frame.Count:SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", 16, "OUTLINE")
-            frame.Count:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -2, 2)
-
-            frame.cooldown:SetAllPoints(frame)
-            frame.cooldown:GetRegions():SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", 16, "OUTLINE")
-
-            frame.Border:Hide()
-            frame.SlotArt:Hide()
-            frame.SlotBackground:Hide()
-            frame.IconMask:Hide()
-
-            local background = frame:CreateTexture(nil, "BACKGROUND", nil, -8)
-            background:SetParentKey("Background")
-            background:SetAllPoints(frame)
-            background:SetColorTexture(0, 0, 0, 0.5)
-
-            frame.NormalTexture:Hide()
-            frame.NormalTexture:HookScript("OnShow", function(self)
-                self:Hide()
-            end)
-
-            frame.icon:SetTexCoord(.08, .92, .08, .92)
-            Util.AddBorder(frame, 1, CUI_BACKDROP_DS_2)
-        end     
+    for bar, button in pairs(AB.ActionBars) do
+        AB.UpdateBar(bar)
+        AB.UpdateBarAnchor(bar)
     end
 end
 
@@ -190,6 +252,4 @@ function AB.Load()
     StyleButtons()
 
     StyleXPBar()
-
-    PositionMB7()
 end

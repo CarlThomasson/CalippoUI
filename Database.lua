@@ -1,232 +1,668 @@
 local addonName, CUI = ...
 
-CUI.DB = {}
-CUI.Const = {}
-local DB = CUI.DB
-local Const = CUI.Const
+CUI.Database = {}
+local Database = CUI.Database
 
-function DB.Load()
-    if not CalippoDB then
-        CalippoDB = {}
-    end
+local defaults = {
+    global = {
+        Config = {
+            Width = 800,
+            Height = 600,
 
-    if not CalippoDB.ActionBars then
-        CalippoDB.ActionBars = {}
-        CalippoDB.ActionBars.Enabled = true
+            AnchorPoint = "CENTER",
+            AnchorRelativePoint = "CENTER",
+            PosX = 0,
+            PosY = 0,
+        },
+    },
+    profile = {
+        ActionBars = {
+            Enabled = true,
 
-        CalippoDB.ActionBars.MainActionBar = {}
-        CalippoDB.ActionBars.MainActionBar.Alpha = 1
-        CalippoDB.ActionBars.MainActionBar.CombatAlpha = 1
+            MainActionBar = {
+                Alpha = 1,
+                CombatAlpha = 1,
 
-        CalippoDB.ActionBars.MultiBarBottomLeft = {}
-        CalippoDB.ActionBars.MultiBarBottomLeft.Alpha = 1
-        CalippoDB.ActionBars.MultiBarBottomLeft.CombatAlpha = 1
+                Keybind = {
+                    Enabled = true,
+                    Size = 10,
+                },
+                Cooldown = {
+                    Enabled = true,
+                    Size = 16,
+                },
+                Charges = {
+                    Enabled = true,
+                    Size = 16,
+                },
+                Macro = {
+                    Enabled = true,
+                    Size = 10,
+                },
 
-        CalippoDB.ActionBars.MultiBarBottomRight = {}
-        CalippoDB.ActionBars.MultiBarBottomRight.Alpha = 1
-        CalippoDB.ActionBars.MultiBarBottomRight.CombatAlpha = 1
+                ShouldAnchor = false,
+                AnchorFrame = "UIParent",
+                AnchorPoint = "CENTER",
+                AnchorRelativePoint = "CENTER",
+                PosX = 0,
+                PosY = 0,
+                
+            },
+            MultiBarBottomLeft = {
+                Alpha = 1,
+                CombatAlpha = 1,
 
-        CalippoDB.ActionBars.MultiBarRight = {}
-        CalippoDB.ActionBars.MultiBarRight.Alpha = 1
-        CalippoDB.ActionBars.MultiBarRight.CombatAlpha = 1
+                Keybind = {
+                    Enabled = true,
+                    Size = 10,
+                },
+                Cooldown = {
+                    Enabled = true,
+                    Size = 16,
+                },
+                Charges = {
+                    Enabled = true,
+                    Size = 16,
+                },
+                Macro = {
+                    Enabled = true,
+                    Size = 10,
+                },
 
-        CalippoDB.ActionBars.MultiBarLeft = {}
-        CalippoDB.ActionBars.MultiBarLeft.Alpha = 1
-        CalippoDB.ActionBars.MultiBarLeft.CombatAlpha = 1
+                ShouldAnchor = false,
+                AnchorFrame = "UIParent",
+                AnchorPoint = "CENTER",
+                AnchorRelativePoint = "CENTER",
+                PosX = 0,
+                PosY = 0,
+            },
+            MultiBarBottomRight = {
+                Alpha = 1,
+                CombatAlpha = 1,
 
-        CalippoDB.ActionBars.MultiBar5 = {}
-        CalippoDB.ActionBars.MultiBar5.Alpha = 1
-        CalippoDB.ActionBars.MultiBar5.CombatAlpha = 1
+                Keybind = {
+                    Enabled = true,
+                    Size = 10,
+                },
+                Cooldown = {
+                    Enabled = true,
+                    Size = 16,
+                },
+                Charges = {
+                    Enabled = true,
+                    Size = 16,
+                },
+                Macro = {
+                    Enabled = true,
+                    Size = 10,
+                },
 
-        CalippoDB.ActionBars.MultiBar6 = {}
-        CalippoDB.ActionBars.MultiBar6.Alpha = 1
-        CalippoDB.ActionBars.MultiBar6.CombatAlpha = 1
+                ShouldAnchor = false,
+                AnchorFrame = "UIParent",
+                AnchorPoint = "CENTER",
+                AnchorRelativePoint = "CENTER",
+                PosX = 0,
+                PosY = 0,
+            },
+            MultiBarLeft = {
+                Alpha = 1,
+                CombatAlpha = 1,
 
-        CalippoDB.ActionBars.MultiBar7 = {}
-        CalippoDB.ActionBars.MultiBar7.Alpha = 1
-        CalippoDB.ActionBars.MultiBar7.CombatAlpha = 1
+                Keybind = {
+                    Enabled = true,
+                    Size = 10,
+                },
+                Cooldown = {
+                    Enabled = true,
+                    Size = 16,
+                },
+                Charges = {
+                    Enabled = true,
+                    Size = 16,
+                },
+                Macro = {
+                    Enabled = true,
+                    Size = 10,
+                },
 
-        CalippoDB.ActionBars.MicroMenu = {}
-        CalippoDB.ActionBars.MicroMenu.Alpha = 1
-        CalippoDB.ActionBars.MicroMenu.CombatAlpha = 1
+                ShouldAnchor = false,
+                AnchorFrame = "UIParent",
+                AnchorPoint = "CENTER",
+                AnchorRelativePoint = "CENTER",
+                PosX = 0,
+                PosY = 0,
+            },
+            MultiBarRight = {
+                Alpha = 1,
+                CombatAlpha = 1,
 
-        CalippoDB.ActionBars.PetActionBar = {}
-        CalippoDB.ActionBars.PetActionBar.Alpha = 1
-        CalippoDB.ActionBars.PetActionBar.CombatAlpha = 1
-    end
+                Keybind = {
+                    Enabled = true,
+                    Size = 10,
+                },
+                Cooldown = {
+                    Enabled = true,
+                    Size = 16,
+                },
+                Charges = {
+                    Enabled = true,
+                    Size = 16,
+                },
+                Macro = {
+                    Enabled = true,
+                    Size = 10,
+                },
 
-    if not CalippoDB.UnitFrames then
-        CalippoDB.UnitFrames = {}
-        CalippoDB.UnitFrames.Enabled = true
+                ShouldAnchor = false,
+                AnchorFrame = "UIParent",
+                AnchorPoint = "CENTER",
+                AnchorRelativePoint = "CENTER",
+                PosX = 0,
+                PosY = 0,
+            },
+            MultiBar5 = {
+                Alpha = 1,
+                CombatAlpha = 1,
 
-        CalippoDB.UnitFrames.AuraSize = 20
-        CalippoDB.UnitFrames.AuraPadding = 2
-        CalippoDB.UnitFrames.AuraRowLength = 8
+                Keybind = {
+                    Enabled = true,
+                    Size = 10,
+                },
+                Cooldown = {
+                    Enabled = true,
+                    Size = 16,
+                },
+                Charges = {
+                    Enabled = true,
+                    Size = 16,
+                },
+                Macro = {
+                    Enabled = true,
+                    Size = 10,
+                },
 
-        CalippoDB.UnitFrames.PlayerFrame = {}
-        CalippoDB.UnitFrames.PlayerFrame.Alpha = 1
-        CalippoDB.UnitFrames.PlayerFrame.OffsetX = 0
-        CalippoDB.UnitFrames.PlayerFrame.OffsetY = 0
-        CalippoDB.UnitFrames.PlayerFrame.SizeX = 175
-        CalippoDB.UnitFrames.PlayerFrame.SizeY = 50
-        CalippoDB.UnitFrames.PlayerFrame.HealthPercent = false
-        CalippoDB.UnitFrames.PlayerFrame.NameFontSize = 12
-        CalippoDB.UnitFrames.PlayerFrame.HealthFontSize = 12
+                ShouldAnchor = false,
+                AnchorFrame = "UIParent",
+                AnchorPoint = "CENTER",
+                AnchorRelativePoint = "CENTER",
+                PosX = 0,
+                PosY = 0,
+            },
+            MultiBar6 = {
+                Alpha = 1,
+                CombatAlpha = 1,
 
-        CalippoDB.UnitFrames.TargetFrame = {}
-        CalippoDB.UnitFrames.TargetFrame.Alpha = 1
-        CalippoDB.UnitFrames.TargetFrame.OffsetX = 0
-        CalippoDB.UnitFrames.TargetFrame.OffsetY = 0
-        CalippoDB.UnitFrames.TargetFrame.SizeX = 175
-        CalippoDB.UnitFrames.TargetFrame.SizeY = 50
-        CalippoDB.UnitFrames.TargetFrame.AuraSize = 20
-        CalippoDB.UnitFrames.TargetFrame.AuraPadding = 2
-        CalippoDB.UnitFrames.TargetFrame.AuraRowLength = 7
-        CalippoDB.UnitFrames.TargetFrame.HealthPercent = false
-        CalippoDB.UnitFrames.TargetFrame.NameFontSize = 12
-        CalippoDB.UnitFrames.TargetFrame.HealthFontSize = 12
+                Keybind = {
+                    Enabled = true,
+                    Size = 10,
+                },
+                Cooldown = {
+                    Enabled = true,
+                    Size = 16,
+                },
+                Charges = {
+                    Enabled = true,
+                    Size = 16,
+                },
+                Macro = {
+                    Enabled = true,
+                    Size = 10,
+                },
 
-        CalippoDB.UnitFrames.FocusFrame = {}
-        CalippoDB.UnitFrames.FocusFrame.Alpha = 1
-        CalippoDB.UnitFrames.FocusFrame.OffsetX = 0
-        CalippoDB.UnitFrames.FocusFrame.OffsetY = 0
-        CalippoDB.UnitFrames.FocusFrame.SizeX = 150
-        CalippoDB.UnitFrames.FocusFrame.SizeY = 40
-        CalippoDB.UnitFrames.FocusFrame.AuraSize = 15
-        CalippoDB.UnitFrames.FocusFrame.AuraPadding = 2
-        CalippoDB.UnitFrames.FocusFrame.AuraRowLength = 6
-        CalippoDB.UnitFrames.FocusFrame.HealthPercent = false
-        CalippoDB.UnitFrames.FocusFrame.NameFontSize = 12
-        CalippoDB.UnitFrames.FocusFrame.HealthFontSize = 12
+                ShouldAnchor = false,
+                AnchorFrame = "UIParent",
+                AnchorPoint = "CENTER",
+                AnchorRelativePoint = "CENTER",
+                PosX = 0,
+                PosY = 0,
+            },
+            MultiBar7 = {
+                Alpha = 1,
+                CombatAlpha = 1,
 
-        CalippoDB.UnitFrames.PetFrame = {}
-        CalippoDB.UnitFrames.PetFrame.Alpha = 1
-        CalippoDB.UnitFrames.PetFrame.OffsetX = 0
-        CalippoDB.UnitFrames.PetFrame.OffsetY = 0
-        CalippoDB.UnitFrames.PetFrame.SizeX = 100
-        CalippoDB.UnitFrames.PetFrame.SizeY = 25
-        CalippoDB.UnitFrames.PetFrame.HealthPercent = false
-        CalippoDB.UnitFrames.PetFrame.NameFontSize = 12
-        CalippoDB.UnitFrames.PetFrame.HealthFontSize = 12
-    end
+                Keybind = {
+                    Enabled = true,
+                    Size = 10,
+                },
+                Cooldown = {
+                    Enabled = true,
+                    Size = 16,
+                },
+                Charges = {
+                    Enabled = true,
+                    Size = 16,
+                },
+                Macro = {
+                    Enabled = true,
+                    Size = 10,
+                },
 
-    if not CalippoDB.GroupFrames then
-        CalippoDB.GroupFrames = {}
-        CalippoDB.GroupFrames.Enabled = true
-    end
+                ShouldAnchor = false,
+                AnchorFrame = "UIParent",
+                AnchorPoint = "CENTER",
+                AnchorRelativePoint = "CENTER",
+                PosX = 0,
+                PosY = 0,
+            },
+            PetActionBar = {
+                Alpha = 1,
+                CombatAlpha = 1,
 
-    if not CalippoDB.CooldownManager then
-        CalippoDB.CooldownManager = {}
-        CalippoDB.CooldownManager.Enabled = true
+                Keybind = {
+                    Enabled = true,
+                    Size = 10,
+                },
+                Cooldown = {
+                    Enabled = true,
+                    Size = 16,
+                },
+                Charges = {
+                    Enabled = true,
+                    Size = 16,
+                },
+                Macro = {
+                    Enabled = true,
+                    Size = 10,
+                },
 
-        CalippoDB.CooldownManager.EssentialCooldownViewer = {}
-        CalippoDB.CooldownManager.EssentialCooldownViewer.Alpha = 1
-        CalippoDB.CooldownManager.EssentialCooldownViewer.CooldownFontSize = 18
-        CalippoDB.CooldownManager.EssentialCooldownViewer.CountFontSize = 18
+                ShouldAnchor = false,
+                AnchorFrame = "UIParent",
+                AnchorPoint = "CENTER",
+                AnchorRelativePoint = "CENTER",
+                PosX = 0,
+                PosY = 0,
+            },
+            MicroMenu = {
+                Alpha = 1,
+                CombatAlpha = 1,
 
-        CalippoDB.CooldownManager.UtilityCooldownViewer = {}
-        CalippoDB.CooldownManager.UtilityCooldownViewer.Alpha = 1
-        CalippoDB.CooldownManager.UtilityCooldownViewer.CooldownFontSize = 12
-        CalippoDB.CooldownManager.UtilityCooldownViewer.CountFontSize = 12
+                ShouldAnchor = false,
+                AnchorFrame = "UIParent",
+                AnchorPoint = "CENTER",
+                AnchorRelativePoint = "CENTER",
+                PosX = 0,
+                PosY = 0,
+            },
+        },
+        UnitFrames = {
+            Enabled = true,
 
-        CalippoDB.CooldownManager.BuffIconCooldownViewer = {}
-        CalippoDB.CooldownManager.BuffIconCooldownViewer.Alpha = 1
-        CalippoDB.CooldownManager.BuffIconCooldownViewer.CooldownFontSize = 14
-        CalippoDB.CooldownManager.BuffIconCooldownViewer.CountFontSize = 14
-    end
+            PlayerFrame = {
+                Alpha = 1,
+                CombatAlpha = 1,
 
-    if not CalippoDB.Chat then
-        CalippoDB.Chat = {}
-        CalippoDB.Chat.Enabled = true
-    end
+                Width = 200,
+                Height = 50,
 
-    if not CalippoDB.PlayerAuras then
-        CalippoDB.PlayerAuras = {}
-        CalippoDB.PlayerAuras.Enabled = true
+                Name = {
+                    Enabled = true,
+                    Size = 16,
+                    Width = 100,
 
-        CalippoDB.PlayerAuras.Alpha = 1
-    end
+                    AnchorPoint = "LEFT",
+                    AnchorRelativePoint = "LEFT",
+                    PosX = 0,
+                    PosY = 0,
+                },
+                HealthText = {
+                    Enabled = true,
+                    Size = 16,
 
-    if not CalippoDB.NamePlates then
-        CalippoDB.NamePlates = {}
-        CalippoDB.NamePlates.Enabled = true
-    end  
-    
-    if not CalippoDB.Minimap then
-        CalippoDB.Minimap = {}
-        CalippoDB.Minimap.Enabled = true
+                    AnchorPoint = "RIGHT",
+                    AnchorRelativePoint = "RIGHT",
+                    PosX = 0,
+                    PosY = 0,
+                },
 
-        CalippoDB.Minimap.Alpha = 1
-    end  
+                LeaderIcon = {
+                    Enabled = true,
+                    Size = 16,
 
-    if not CalippoDB.CastBar then
-        CalippoDB.CastBar = {}
-        CalippoDB.CastBar.Enabled = true
-    end  
+                    AnchorPoint = "TOPLEFT",
+                    AnchorRelativePoint = "TOPLEFT",
+                    PosX = 0,
+                    PosY = 0,   
+                },
 
-    if not CalippoDB.ResourceBar then
-        CalippoDB.ResourceBar = {}
-        CalippoDB.ResourceBar.Enabled = true
+                AnchorFrame = "UIParent",
+                AnchorPoint = "CENTER",
+                AnchorRelativePoint = "CENTER",
+                PosX = -200,
+                PosY = 0,
+            },
+            TargetFrame = {
+                Alpha = 1,
+                CombatAlpha = 1,
 
-        CalippoDB.ResourceBar.Alpha = 1
-        CalippoDB.ResourceBar.OffsetY = 2
-        CalippoDB.ResourceBar.OffsetX = 0
-        CalippoDB.ResourceBar.AnchorToCDM = true
-        CalippoDB.ResourceBar.Height = 20
-        CalippoDB.ResourceBar.Width = 150
-        CalippoDB.ResourceBar.FontSize = 16
-    end  
+                Width = 200,
+                Height = 50,
 
-    if not CalippoDB.AutoWhisper then
-        CalippoDB.AutoWhisper = {}
-        CalippoDB.AutoWhisper.Enabled = false
-    end
+                AnchorFrame = "UIParent",
+                AnchorPoint = "CENTER",
+                AnchorRelativePoint = "CENTER",
+                PosX = 200,
+                PosY = 0,
 
-    CUI_BACKDROP_DS_3 = {
-        edgeFile = "Interface/AddOns/CalippoUI/Media/DropShadowBorder.blp", 
-        edgeSize = 3, 
-        bgFile = nil
+                Name = {
+                    Enabled = true,
+                    Size = 16,
+                    Width = 100,
+
+                    AnchorPoint = "LEFT",
+                    AnchorRelativePoint = "LEFT",
+                    PosX = 5,
+                    PosY = 0,
+
+                },
+                HealthText = {
+                    Enabled = true,
+                    Size = 16,
+
+                    AnchorPoint = "RIGHT",
+                    AnchorRelativePoint = "RIGHT",
+                    PosX = -5,
+                    PosY = 0,
+                },
+
+                LeaderIcon = {
+                    Enabled = true,
+                    Size = 16,
+
+                    AnchorPoint = "TOPLEFT",
+                    AnchorRelativePoint = "TOPLEFT",
+                    PosX = 0,
+                    PosY = 0,   
+                },
+
+                Buffs = {
+                    Enabled = true,
+
+                    RowLength = 6,
+                    Size = 20,
+                    DirH = "LEFT",
+                    DirV = "UP",
+                    Padding = 2,
+
+                    AnchorFrame = "UIParent",
+                    AnchorPoint = "CENTER",
+                    AnchorRelativePoint = "CENTER",
+                    PosX = 0,
+                    PosY = 0,
+                },
+                Debuffs = {
+                    Enabled = true,
+
+                    RowLength = 6,
+                    Size = 20,
+                    DirH = "LEFT",
+                    DirV = "UP",
+                    Padding = 2,
+
+                    AnchorFrame = "UIParent",
+                    AnchorPoint = "CENTER",
+                    AnchorRelativePoint = "CENTER",
+                    PosX = 0,
+                    PosY = 0,
+                },
+            },
+            FocusFrame = {
+                Alpha = 1,
+                CombatAlpha = 1,
+
+                Width = 150,
+                Height = 40,
+
+                AnchorFrame = "UIParent",
+                AnchorPoint = "CENTER",
+                AnchorRelativePoint = "CENTER",
+                PosX = 200,
+                PosY = -100,
+
+                Name = {
+                    Enabled = true,
+                    Size = 12,
+                    Width = 100,
+
+                    AnchorPoint = "LEFT",
+                    AnchorRelativePoint = "LEFT",
+                    PosX = 5,
+                    PosY = 0,
+                },
+                HealthText = {
+                    Enabled = true,
+                    Size = 12,
+
+                    AnchorPoint = "RIGHT",
+                    AnchorRelativePoint = "RIGHT",
+                    PosX = -5,
+                    PosY = 0,
+                },
+
+                LeaderIcon = {
+                    Enabled = true,
+                    Size = 16,
+
+                    AnchorPoint = "TOPLEFT",
+                    AnchorRelativePoint = "TOPLEFT",
+                    PosX = 0,
+                    PosY = 0,   
+                },
+
+                Buffs = {
+                    Enabled = true,
+
+                    RowLength = 6,
+                    Size = 20,
+                    DirH = "LEFT",
+                    DirV = "UP",
+                    Padding = 2,
+
+                    AnchorFrame = "UIParent",
+                    AnchorPoint = "CENTER",
+                    AnchorRelativePoint = "CENTER",
+                    PosX = 0,
+                    PosY = 0,
+                },
+                Debuffs = {
+                    Enabled = true,
+
+                    RowLength = 6,
+                    Size = 20,
+                    DirH = "LEFT",
+                    DirV = "UP",
+                    Padding = 2,
+
+                    AnchorFrame = "UIParent",
+                    AnchorPoint = "CENTER",
+                    AnchorRelativePoint = "CENTER",
+                    PosX = 0,
+                    PosY = 0,
+                },
+            },
+            PetFrame = {
+                Alpha = 1,
+                CombatAlpha = 1,
+
+                Width = 200,
+                Height = 25,
+
+                Name = {
+                    Enabled = true,
+                    Size = 12,
+                    Width = 100,
+
+                    AnchorPoint = "LEFT",
+                    AnchorRelativePoint = "LEFT",
+                    PosX = 5,
+                    PosY = 0,
+                },
+                HealthText = {
+                    Enabled = true,
+                    Size = 12,
+
+                    AnchorPoint = "RIGHT",
+                    AnchorRelativePoint = "RIGHT",
+                    PosX = -5,
+                    PosY = 0,
+                },
+
+                LeaderIcon = {
+                    Enabled = true,
+                    Size = 16,
+
+                    AnchorPoint = "TOPLEFT",
+                    AnchorRelativePoint = "TOPLEFT",
+                    PosX = 0,
+                    PosY = 0,   
+                },
+
+                AnchorFrame = "UIParent",
+                AnchorPoint = "CENTER",
+                AnchorRelativePoint = "CENTER",
+                PosX = 0,
+                PosY = 0,
+            },
+            BossFrame = {
+                Alpha = 1,
+                CombatAlpha = 1,
+
+                Width = 200,
+                Height = 25,
+
+                Name = {
+                    Enabled = true,
+                    Size = 16,
+                    Width = 100,
+
+                    AnchorPoint = "LEFT",
+                    AnchorRelativePoint = "LEFT",
+                    PosX = 0,
+                    PosY = 0,
+                },
+                HealthText = {
+                    Enabled = true,
+                    Size = 16,
+
+                    AnchorPoint = "RIGHT",
+                    AnchorRelativePoint = "RIGHT",
+                    PosX = 0,
+                    PosY = 0,
+                },
+
+                LeaderIcon = {
+                    Enabled = true,
+                    Size = 16,
+
+                    AnchorPoint = "TOPLEFT",
+                    AnchorRelativePoint = "TOPLEFT",
+                    PosX = 0,
+                    PosY = 0,   
+                },
+
+                AnchorFrame = "UIParent",
+                AnchorPoint = "CENTER",
+                AnchorRelativePoint = "CENTER",
+                PosX = 0,
+                PosY = 0,
+            },
+        },
+        GroupFrames = {
+            Enabled = true,
+        },
+        PlayerCastBar = {
+            Enabled = true,
+
+            Width = 200,
+            Height = 20,
+
+            Color = {0, 1, 0, 1},
+
+            AnchorFrame = "UIParent",
+            AnchorPoint = "CENTER",
+            AnchorRelativePoint = "CENTER",
+            PosX = 0,
+            PosY = 0,
+        },
+        PlayerAuras = {
+            Enabled = true,
+
+            Alpha = 1,
+            CombatAlpha = 1,
+        },
+        Minimap = {
+            Enabled = true,
+
+            Alpha = 1,
+            CombatAlpha = 1,
+        },
+        Chat = {
+            Enabled = true,
+        },
+        Nameplates = {
+            Enabled = true,
+        },
+        ResourceBar = {
+            Enabled = true,
+
+            Alpha = 1,
+            CombatAlpha = 1,
+
+            Width = 200,
+            Height = 25,
+
+            Text = {
+                Size = 16,
+            },
+
+            MatchWidth = true,
+
+            AnchorFrame = "EssentialCooldownViewer",
+            AnchorPoint = "CENTER",
+            AnchorRelativePoint = "CENTER",
+            PosX = 0,
+            PosY = 0,
+        },
+        CooldownManager = {
+            Enabled = true,
+
+            EssentialCooldownViewer = {
+                Alpha = 1,
+                CombatAlpha = 1,
+
+                Cooldown = {
+                    Size = 16,
+                },
+                Charges = {
+                    Size = 16,
+                },
+            },
+            UtilityCooldownViewer = {
+                Alpha = 1,
+                CombatAlpha = 1,
+
+                Cooldown = {
+                    Size = 12,
+                },
+                Charges = {
+                    Size = 12,
+                },
+            },
+            BuffIconCooldownViewer = {
+                Alpha = 1,
+                CombatAlpha = 1,
+
+                Cooldown = {
+                    Size = 12,
+                },
+                Charges = {
+                    Size = 12,
+                },
+            },
+        }
     }
+}
 
-    CUI_BACKDROP_DS_2 = {
-        edgeFile = "Interface/AddOns/CalippoUI/Media/DropShadowBorder.blp", 
-        edgeSize = 2, 
-        bgFile = nil
-    }
-
-    CUI_BACKDROP_DS_1 = {
-        edgeFile = "Interface/AddOns/CalippoUI/Media/DropShadowBorder.blp", 
-        edgeSize = 1, 
-        bgFile = nil
-    }
-
-    CUI_BACKDROP_W_2 = {
-        edgeFile = "Interface/AddOns/CalippoUI/Media/white.blp", 
-        edgeSize = 2, 
-        bgFile = nil
-    }
-
-    CUI_BACKDROP_W_1 = {
-        edgeFile = "Interface/AddOns/CalippoUI/Media/white.blp", 
-        edgeSize = 1, 
-        bgFile = nil
-    }
-
-    CUI_BACKDROP_W_06 = {
-        edgeFile = "Interface/AddOns/CalippoUI/Media/white.blp", 
-        edgeSize = 0.6, 
-        bgFile = nil
-    }
-
-    CUI_BACKDROP_B_1 = {
-        edgeFile = "Interface/AddOns/CalippoUI/Media/black.blp", 
-        edgeSize = 1, 
-        bgFile = nil
-    }
-
-    CUI_BACKDROP_B_06 = {
-        edgeFile = "Interface/AddOns/CalippoUI/Media/black.blp", 
-        edgeSize = 0.6, 
-        bgFile = nil
-    }
+function Database.Load()
+    CUI.DB = LibStub("AceDB-3.0"):New("CalippoDB", defaults, "Default")
 end
+    

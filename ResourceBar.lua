@@ -11,29 +11,28 @@ function RB.UpdateAlpha(frame, inCombat)
         Util.FadeFrame(frame, "IN", 1)
         Util.FadeFrame(PersonalResourceDisplayFrame, "IN", 1)
     else
-        Util.FadeFrame(frame, "OUT", CalippoDB.ResourceBar.Alpha)
-        Util.FadeFrame(PersonalResourceDisplayFrame, "OUT", CalippoDB.ResourceBar.Alpha)
+        local dbEntry = CUI.DB.profile.ResourceBar
+
+        Util.FadeFrame(frame, "OUT", dbEntry.Alpha)
+        Util.FadeFrame(PersonalResourceDisplayFrame, "OUT", dbEntry.Alpha)
     end
 end
 
-function RB.UpdateSize(frame)
-    frame:SetHeight(CalippoDB.ResourceBar.Height)
-    if not CalippoDB.ResourceBar.AnchorToCDM then
-        frame:SetWidth(CalippoDB.ResourceBar.Width)
-    end
+function RB.UpdateText(frame)
+    frame.Text:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", CUI.DB.profile.ResourceBar.Text.Size, "")
 end
 
-function RB.UpdateFontSize(frame)
-    frame.Text:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", CalippoDB.ResourceBar.FontSize, "")
-end
+function RB.UpdateFrame(frame)
+    local dbEntry = CUI.DB.profile.ResourceBar
 
-function RB.UpdatePosition(frame)
+    frame:SetSize(dbEntry.Width, dbEntry.Height)
+
     frame:ClearAllPoints()
-    if CalippoDB.ResourceBar.AnchorToCDM then
-        frame:SetPoint("BOTTOMLEFT", EssentialCooldownViewer, "TOPLEFT", 0, CalippoDB.ResourceBar.OffsetY)
-        frame:SetPoint("BOTTOMRIGHT", EssentialCooldownViewer, "TOPRIGHT", 0, CalippoDB.ResourceBar.OffsetY)
+    if dbEntry.MatchWidth then
+        frame:SetPoint("BOTTOMLEFT", dbEntry.AnchorFrame, "TOPLEFT", 0, dbEntry.PosY)
+        frame:SetPoint("BOTTOMRIGHT", dbEntry.AnchorFrame, "TOPRIGHT", 0, dbEntry.PosY)
     else
-        frame:SetPoint("CENTER", UIParent, "CENTER", CalippoDB.ResourceBar.OffsetX, CalippoDB.ResourceBar.OffsetY)
+        frame:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
     end
 end
 
@@ -71,16 +70,15 @@ local function SetupPowerBar()
     local powerBar = CreateFrame("Statusbar", "CUI_PowerBar", UIParent)
     powerBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
 
-    RB.UpdateSize(powerBar)
-    RB.UpdatePosition(powerBar)
+    RB.UpdateFrame(powerBar)
 
     UpdatePowerColor(powerBar)
     Util.AddStatusBarBackground(powerBar)
-    Util.AddBorder(powerBar, 1, CUI_BACKDROP_DS_3)
+    Util.AddBorder(powerBar)
 
     local text = powerBar:CreateFontString(nil, "OVERLAY")
     text:SetParentKey("Text")
-    text:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", CalippoDB.ResourceBar.FontSize, "")
+    text:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", CUI.DB.profile.ResourceBar.Text.Size, "")
     text:SetPoint("CENTER", powerBar, "CENTER")
 
     UpdateMaxPower(powerBar)

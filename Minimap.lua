@@ -8,9 +8,9 @@ local Util = CUI.Util
 
 function MM.UpdateAlpha(frame, inCombat)
     if InCombatLockdown() or inCombat then 
-        Util.FadeFrame(frame, "IN", 1)
+        Util.FadeFrame(frame, "IN", CUI.DB.profile.Minimap.CombatAlpha)
     else
-        Util.FadeFrame(frame, "OUT", CalippoDB.Minimap.Alpha)
+        Util.FadeFrame(frame, "OUT", CUI.DB.profile.Minimap.Alpha)
     end
 end
 
@@ -50,7 +50,7 @@ local function SetupMinimap()
     GameTimeFrame:SetAlpha(0)
 
     Minimap:SetMaskTexture("Interface\\ChatFrame\\ChatFrameBackground")
-    Util.AddBorder(Minimap, 1, CUI_BACKDROP_DS_2)
+    Util.AddBorder(Minimap)
 
     Minimap:ClearAllPoints()
     Minimap:SetPoint("TOPRIGHT", MinimapCluster.MinimapContainer, "TOPRIGHT")

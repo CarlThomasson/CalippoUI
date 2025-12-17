@@ -9,507 +9,801 @@ local PA = CUI.PA
 local RB = CUI.RB
 local MM = CUI.MM
 
----------------------------------------------------------------------------------------------------
+local AceGUI = LibStub("AceGUI-3.0")
 
-local function CreateSlider(category, name, text, default, getter, setter, min, max, step, display)
-	local sliderSettings = Settings.RegisterProxySetting(
-		category,
-		name,
-		Settings.VarType.Number,
-		text,
-		default,
-		getter,
-		setter
-	)	
-	
-	local sliderOptions = Settings.CreateSliderOptions(min, max, step)
-	if not display then display = function(v) return v end end
-	sliderOptions:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, display)
-	Settings.CreateSlider(category, sliderSettings, sliderOptions)
+---------------------------------------------------------------------------------------------------------------------------------------
+
+local anchorPoints = {
+    ["TOPLEFT"] = "Top Left",
+    ["TOPRIGHT"] = "Top Right",
+    ["BOTTOMLEFT"] = "Bottom Left",
+    ["BOTTOMRIGHT"] = "Bottom Right",
+    ["TOP"] = "Top",
+    ["BOTTOM"] = "Bottom",
+    ["LEFT"] = "Left",
+    ["RIGHT"] = "Right",
+    ["CENTER"] = "Center",
+}
+
+---------------------------------------------------------------------------------------------------------------------------------------
+
+local function CreateInlineGroup(container, title)
+    local inlineGroup = AceGUI:Create("InlineGroup")
+    inlineGroup:SetTitle(title)
+    inlineGroup:SetLayout("Flow")
+    inlineGroup:SetRelativeWidth(1)
+    container:AddChild(inlineGroup)
+    return inlineGroup
 end
 
----------------------------------------------------------------------------------------------------
-
-local function SetupMainPage(mainCategory, layout)
-	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Toggle Modules"))
-	
-	local function CreateToggleSettings(category, shortName, text, dbEntry)
-		local toggleSettings = Settings.RegisterProxySetting(
-			category,
-			shortName.."_TOGGLE",
-			Settings.VarType.Boolean,
-			text,
-			CalippoDB[dbEntry].Enabled,
-			function() return CalippoDB[dbEntry].Enabled end,
-			function(value) CalippoDB[dbEntry].Enabled = value end
-		)
-
-		Settings.CreateCheckbox(category, toggleSettings)
-	end
-
-	local initializer = CreateSettingsButtonInitializer("Reload UI to apply changes", "Reload", function() ReloadUI() end, "", "")
-	layout:AddInitializer(initializer)
-
-	CreateToggleSettings(mainCategory, "AB", "Action Bars", "ActionBars")
-	CreateToggleSettings(mainCategory, "UF", "Unit Frames", "UnitFrames")
-	CreateToggleSettings(mainCategory, "GF", "Group Frames", "GroupFrames")
-	CreateToggleSettings(mainCategory, "CDM", "Cooldown Manager", "CooldownManager")
-	CreateToggleSettings(mainCategory, "NP", "Nameplates", "NamePlates")
-	CreateToggleSettings(mainCategory, "CB", "Cast Bar", "CastBar")
-	CreateToggleSettings(mainCategory, "RB", "Resource Bar", "ResourceBar")
-	CreateToggleSettings(mainCategory, "PA", "Player Auras", "PlayerAuras")
-	CreateToggleSettings(mainCategory, "MM", "Minimap", "Minimap")
-	CreateToggleSettings(mainCategory, "CH", "Chat", "Chat")
+local function CreateSlider(container, label, min, max, step, value, func, width)
+    local slider = AceGUI:Create("Slider")
+    slider:SetLabel(label)
+    slider:SetSliderValues(min, max, step)
+    slider:SetValue(value)
+    slider:SetCallback("OnValueChanged", func)
+    if width then slider:SetRelativeWidth(width) end
+    container:AddChild(slider)
+    return slider
 end
 
-local function SetupActionBarPage(mainCategory)
-	local category, layout = Settings.RegisterVerticalLayoutSubcategory(mainCategory, "Action Bars")
-
-	local function CreateActionBarSettings(title, category, shortName, frame) 
-		layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(title))
-		
-		CreateSlider(
-			category,
-			shortName.."_ALPHA",
-			"Alpha (Out of combat)",
-			0,
-			function() return CalippoDB.ActionBars[frame:GetName()].Alpha end,
-			function(v) CalippoDB.ActionBars[frame:GetName()].Alpha = v; AB.UpdateAlpha(frame) end,
-			0,
-			1,
-			0.01,
-			function(v) return math.floor(v * 100) end
-		)
-
-		CreateSlider(
-			category,
-			shortName.."_COMBATALPHA",
-			"Alpha (In combat)",
-			0,
-			function() return CalippoDB.ActionBars[frame:GetName()].CombatAlpha end,
-			function(v) CalippoDB.ActionBars[frame:GetName()].CombatAlpha = v; AB.UpdateAlpha(frame) end,
-			0,
-			1,
-			0.01,
-			function(v) return math.floor(v * 100) end
-		)	
-	end
-
-	CreateActionBarSettings("Action Bar 1", category, "AB1", MainActionBar)
-	CreateActionBarSettings("Action Bar 2", category, "AB2", MultiBarBottomLeft)
-	CreateActionBarSettings("Action Bar 3", category, "AB3", MultiBarBottomRight)
-	CreateActionBarSettings("Action Bar 4", category, "AB4", MultiBarRight)
-	CreateActionBarSettings("Action Bar 5", category, "AB5", MultiBarLeft)
-	CreateActionBarSettings("Action Bar 6", category, "AB6", MultiBar5)
-	CreateActionBarSettings("Action Bar 7", category, "AB7", MultiBar6)
-	CreateActionBarSettings("Action Bar 8 (Anchored to Player Frame)", category, "AB8", MultiBar7)
-	CreateActionBarSettings("Pet Bar", category, "PETB", PetActionBar)
-	CreateActionBarSettings("Micro Menu", category, "MICRO", MicroMenu)
+local function CreateCheckBox(container, label, value, func, width)
+    local checkBox = AceGUI:Create("CheckBox")
+    checkBox:SetLabel(label)
+    checkBox:SetValue(value)
+    checkBox:SetCallback("OnValueChanged", func)
+    if width then checkBox:SetRelativeWidth(width) end
+    container:AddChild(checkBox)
+    return checkBox
 end
 
-local function SetupUnitFramePage(mainCategory)
-	local category, layout = Settings.RegisterVerticalLayoutSubcategory(mainCategory, "Unit Frames")
-
-	local function CreateUnitFrameSettings(title, category, shortName, frame)
-		layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(title))
-
-		CreateSlider(
-			category,
-			shortName.."_SIZEX",
-			"Width",
-			0,
-			function() return CalippoDB.UnitFrames[frame:GetName()].SizeX end,
-			function(v) CalippoDB.UnitFrames[frame:GetName()].SizeX = v; UF.UpdateSizePos(frame) end,
-			0,
-			300,
-			1,
-			nil
-		)
-
-		CreateSlider(
-			category,
-			shortName.."_SIZEY",
-			"Height",
-			0,
-			function() return CalippoDB.UnitFrames[frame:GetName()].SizeY end,
-			function(v) CalippoDB.UnitFrames[frame:GetName()].SizeY = v; UF.UpdateSizePos(frame) end,
-			0,
-			300,
-			1,
-			nil
-		)
-
-		CreateSlider(
-			category,
-			shortName.."_OFFSETX",
-			"Offset X",
-			0,
-			function() return CalippoDB.UnitFrames[frame:GetName()].OffsetX end,
-			function(v) CalippoDB.UnitFrames[frame:GetName()].OffsetX = v; UF.UpdateSizePos(frame) end,
-			-100,
-			100,
-			1,
-			nil
-		)
-
-		CreateSlider(
-			category,
-			shortName.."_OFFSETY",
-			"Offset Y",
-			0,
-			function() return CalippoDB.UnitFrames[frame:GetName()].OffsetY end,
-			function(v) CalippoDB.UnitFrames[frame:GetName()].OffsetY = v; UF.UpdateSizePos(frame) end,
-			-100,
-			100,
-			1,
-			nil
-		)
-
-		CreateSlider(
-			category,
-			shortName.."_NAMEFONTSIZE",
-			"Name font size",
-			0,
-			function() return CalippoDB.UnitFrames[frame:GetName()].NameFontSize end,
-			function(v) CalippoDB.UnitFrames[frame:GetName()].NameFontSize = v; UF.UpdateTexts(frame) end,
-			0,
-			100,
-			1,
-			nil
-		)
-
-		CreateSlider(
-			category,
-			shortName.."_HEALTHFONTSIZE",
-			"Health font size",
-			0,
-			function() return CalippoDB.UnitFrames[frame:GetName()].HealthFontSize end,
-			function(v) CalippoDB.UnitFrames[frame:GetName()].HealthFontSize = v; UF.UpdateTexts(frame) end,
-			0,
-			100,
-			1,
-			nil
-		)
-
-		CreateSlider(
-			category,
-			shortName.."_ALPHA",
-			"Alpha (Out of combat)",
-			0,
-			function() return CalippoDB.UnitFrames[frame:GetName()].Alpha end,
-			function(v) CalippoDB.UnitFrames[frame:GetName()].Alpha = v; UF.UpdateAlpha(frame) end,
-			0,
-			1,
-			0.01,
-			function(v) return math.floor(v * 100) end
-		)
-	end
-
-	CreateUnitFrameSettings("Player Frame", category, "PF", PlayerFrame)
-
-	CreateUnitFrameSettings("Target Frame", category, "TF", TargetFrame)
-	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Target Frame Auras"))
-
-	CreateSlider(
-		category,
-		"TF_AURASIZE",
-		"Aura Size",
-		0,
-		function() return CalippoDB.UnitFrames.TargetFrame.AuraSize end,
-		function(v) CalippoDB.UnitFrames.TargetFrame.AuraSize = v; UF.UpdateAuras(TargetFrame) end,
-		0,
-		50,
-		1,
-		nil
-	)
-
-	CreateSlider(
-		category,
-		"TF_AURAPADDING",
-		"Aura Padding",
-		0,
-		function() return CalippoDB.UnitFrames.TargetFrame.AuraPadding end,
-		function(v) CalippoDB.UnitFrames.TargetFrame.AuraPadding = v; UF.UpdateAuras(TargetFrame) end,
-		0,
-		10,
-		1,
-		nil
-	)
-
-	CreateSlider(
-		category,
-		"TF_AURAROW",
-		"Aura Row Length",
-		0,
-		function() return CalippoDB.UnitFrames.TargetFrame.AuraRowLength end,
-		function(v) CalippoDB.UnitFrames.TargetFrame.AuraRowLength = v; UF.UpdateAuras(TargetFrame) end,
-		0,
-		15,
-		1,
-		nil
-	)
-
-	CreateUnitFrameSettings("Focus Frame", category, "FF", FocusFrame)
-	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Focus Frame Auras"))
-
-	CreateSlider(
-		category,
-		"FF_AURASIZE",
-		"Aura Size",
-		0,
-		function() return CalippoDB.UnitFrames.FocusFrame.AuraSize end,
-		function(v) CalippoDB.UnitFrames.FocusFrame.AuraSize = v; UF.UpdateAuras(FocusFrame) end,
-		0,
-		50,
-		1,
-		nil
-	)
-
-	CreateSlider(
-		category,
-		"FF_AURAPADDING",
-		"Aura Padding",
-		0,
-		function() return CalippoDB.UnitFrames.FocusFrame.AuraPadding end,
-		function(v) CalippoDB.UnitFrames.FocusFrame.AuraPadding = v; UF.UpdateAuras(FocusFrame) end,
-		0,
-		10,
-		1,
-		nil
-	)
-
-	CreateSlider(
-		category,
-		"FF_AURAROW",
-		"Aura Row Length",
-		0,
-		function() return CalippoDB.UnitFrames.FocusFrame.AuraRowLength end,
-		function(v) CalippoDB.UnitFrames.FocusFrame.AuraRowLength = v; UF.UpdateAuras(FocusFrame) end,
-		0,
-		15,
-		1,
-		nil
-	)
-
-	CreateUnitFrameSettings("Pet Frame", category, "PETF", PetFrame)
+local function CreateEditBox(container, label, value, func, width)
+    local editBox = AceGUI:Create("EditBox")
+    editBox:SetLabel(label)
+    editBox:SetText(value)
+    editBox:SetCallback("OnEnterPressed", func)
+    if width then editBox:SetRelativeWidth(width) end
+    container:AddChild(editBox)
 end
 
-local function SetupCDMPage(mainCategory)
-	local category, layout = Settings.RegisterVerticalLayoutSubcategory(mainCategory, "Cooldown Manager")
-
-	local function CreateCDMSettings(title, category, shortName, frame)
-		layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(title))
-		CreateSlider(
-			category,
-			shortName.."_ALPHA",
-			"Alpha (Out of combat)",
-			0,
-			function() return CalippoDB.CooldownManager[frame:GetName()].Alpha end,
-			function(v) CalippoDB.CooldownManager[frame:GetName()].Alpha = v; CDM.UpdateAlpha(frame) end,
-			0,
-			1,
-			0.01,
-			function(v) return math.floor(v * 100) end
-		)
-
-		CreateSlider(
-			category,
-			shortName.."_CDFONTSIZE",
-			"Cooldown Font Size",
-			0,
-			function() return CalippoDB.CooldownManager[frame:GetName()].CooldownFontSize end,
-			function(v) CalippoDB.CooldownManager[frame:GetName()].CooldownFontSize = v; CDM.UpdateStyle(frame) end,
-			1,
-			50,
-			1,
-			nil
-		)
-
-		CreateSlider(
-			category,
-			shortName.."_COUNTFONTSIZE",
-			"Count Font Size",
-			0,
-			function() return CalippoDB.CooldownManager[frame:GetName()].CountFontSize end,
-			function(v) CalippoDB.CooldownManager[frame:GetName()].CountFontSize = v; CDM.UpdateStyle(frame) end,
-			1,
-			50,
-			1,
-			nil
-		)
-	end
-
-	CreateCDMSettings("Buff Viewer", category, "BCV", BuffIconCooldownViewer)
-	CreateCDMSettings("Essential Viewer", category, "ECV", EssentialCooldownViewer)
-	CreateCDMSettings("Utility Viewer", category, "UCV", UtilityCooldownViewer)
+local function CreateDropDown(container, label, value, list, func, width)
+    local dropDown = AceGUI:Create("Dropdown")
+    dropDown:SetLabel(label)
+    dropDown:SetList(list)
+    dropDown:SetValue(value)
+    dropDown:SetCallback("OnValueChanged", func)
+    if width then dropDown:SetRelativeWidth(width) end
+    container:AddChild(dropDown)
 end
 
-local function SetupPlayerAuraPage(mainCategory)
-	local category, layout = Settings.RegisterVerticalLayoutSubcategory(mainCategory, "Player Auras")
+---------------------------------------------------------------------------------------------------------------------------------------
 
-	CreateSlider(
-		category,
-		"PA_ALPHA",
-		"Alpha (Out of combat)",
-		0,
-		function() return CalippoDB.PlayerAuras.Alpha end,
-		function(v) CalippoDB.PlayerAuras.Alpha = v; PA.UpdateAlpha(BuffFrame); PA.UpdateAlpha(DebuffFrame) end,
-		0,
-		1,
-		0.01,
-		function(v) return math.floor(v * 100) end
-	)
+local function CreateAnchorGroup(container, dbEntry, func, frame)
+    local anchorGroup = CreateInlineGroup(container, "Anchor")
+
+    CreateEditBox(anchorGroup, "Anchor Frame", dbEntry.AnchorFrame,
+        function(self, event, value)
+            -- TODO : Gör så att "X.Y" fungerar
+            local frameExists = _G[value]
+            if frameExists then
+                dbEntry.AnchorFrame = value
+                func(frame)
+            else
+                print("Frame does not exist!")
+                self:SetText(dbEntry.AnchorFrame)
+            end
+        end, 0.33)
+
+    CreateDropDown(anchorGroup, "Anchor Point", dbEntry.AnchorPoint, anchorPoints,
+        function(self, event, value)
+            dbEntry.AnchorPoint = value
+            func(frame)
+        end, 0.33)
+        
+    CreateDropDown(anchorGroup, "Relative Anchor Point", dbEntry.AnchorRelativePoint, anchorPoints,
+        function(self, event, value)
+            dbEntry.AnchorRelativePoint = value
+            func(frame)
+        end, 0.33)
+        
+    CreateSlider(anchorGroup, "Position X", -500, 500, 1, dbEntry.PosX,
+        function(self, event, value)
+            dbEntry.PosX = value
+            func(frame)
+        end, 0.5)
+
+    CreateSlider(anchorGroup, "Position Y", -500, 500, 1, dbEntry.PosY,
+        function(self, event, value)
+            dbEntry.PosY = value
+            func(frame)
+        end, 0.5)
+
+    return anchorGroup
 end
 
-local function SetupResourceBarPage(mainCategory)
-	local category, layout = Settings.RegisterVerticalLayoutSubcategory(mainCategory, "Resource Bar")
+local function CreateAlphaGroup(container, dbEntry, func, frame)
+    local alphaGroup = CreateInlineGroup(container, "Alpha") 
 
-	CreateSlider(
-		category,
-		"RB_ALPHA",
-		"Alpha (Out of combat)",
-		0,
-		function() return CalippoDB.ResourceBar.Alpha end,
-		function(v) CalippoDB.ResourceBar.Alpha = v; RB.UpdateAlpha(CUI_PowerBar) end,
-		0,
-		1,
-		0.01,
-		function(v) return math.floor(v * 100) end
-	)
+    CreateSlider(alphaGroup, "Alpha (Out of combat)", 0, 100, 1, dbEntry.Alpha*100, 
+        function(self, event, value)
+            dbEntry.Alpha = value/100
+            func(frame)
+        end, 0.5)
 
-	CreateSlider(
-		category,
-		"RB_FONTSIZE",
-		"Font Size",
-		0,
-		function() return CalippoDB.ResourceBar.FontSize end,
-		function(v) CalippoDB.ResourceBar.FontSize = v; RB.UpdateFontSize(CUI_PowerBar) end,
-		1,
-		100,
-		1,
-		nil
-	)	
+    CreateSlider(alphaGroup, "Alpha (In Combat)", 0, 100, 1, dbEntry.CombatAlpha*100, 
+        function(self, event, value)
+            dbEntry.CombatAlpha = value/100
+            func(frame)
+        end, 0.5)
 
-	CreateSlider(
-		category,
-		"RB_HEIGHT",
-		"Height",
-		0,
-		function() return CalippoDB.ResourceBar.Height end,
-		function(v) CalippoDB.ResourceBar.Height = v; RB.UpdateSize(CUI_PowerBar) end,
-		0,
-		100,
-		1,
-		nil
-	)	
-
-	CreateSlider(
-		category,
-		"RB_WIDTH",
-		"Width",
-		0,
-		function() return CalippoDB.ResourceBar.Width end,
-		function(v) CalippoDB.ResourceBar.Width = v; RB.UpdateSize(CUI_PowerBar) end,
-		0,
-		500,
-		1,
-		nil
-	)
-
-	CreateSlider(
-		category,
-		"RB_OFFSETX",
-		"Offset X",
-		0,
-		function() return CalippoDB.ResourceBar.OffsetX end,
-		function(v) CalippoDB.ResourceBar.OffsetX = v; RB.UpdatePosition(CUI_PowerBar) end,
-		-500,
-		500,
-		1,
-		nil
-	)	
-
-	CreateSlider(
-		category,
-		"RB_OFFSETY",
-		"Offset Y",
-		0,
-		function() return CalippoDB.ResourceBar.OffsetY end,
-		function(v) CalippoDB.ResourceBar.OffsetY = v; RB.UpdatePosition(CUI_PowerBar) end,
-		-500,
-		500,
-		1,
-		nil
-	)	
-
-	local toggleSettings = Settings.RegisterProxySetting(
-		category,
-		"RB_TOGGLEANCHOR",
-		Settings.VarType.Boolean,
-		"Anchor to CDM",
-		CalippoDB.ResourceBar.AnchorToCDM,
-		function() return CalippoDB.ResourceBar.AnchorToCDM end,
-		function(value) CalippoDB.ResourceBar.AnchorToCDM = value; RB.UpdatePosition(CUI_PowerBar); RB.UpdateSize(CUI_PowerBar) end
-	)
-
-	Settings.CreateCheckbox(category, toggleSettings)
+    return alphaGroup
 end
 
-local function SetupMinimapPage(mainCategory)
-	local category, layout = Settings.RegisterVerticalLayoutSubcategory(mainCategory, "Minimap")
+local function CreateSizeGroup(container, dbEntry, func, frame)
+    local sizeGroup = CreateInlineGroup(container, "Size")
 
-	CreateSlider(
-		category,
-		"MM_ALPHA",
-		"Alpha (Out of combat)",
-		0,
-		function() return CalippoDB.Minimap.Alpha end,
-		function(v) CalippoDB.Minimap.Alpha = v; MM.UpdateAlpha(MinimapCluster) end,
-		0,
-		1,
-		0.01,
-		function(v) return math.floor(v * 100) end
-	)	
+    CreateSlider(sizeGroup, "Width", 1, 500, 1, dbEntry.Width,
+        function(self, event, value)
+            dbEntry.Width = value
+            func(frame)
+        end, 0.5)
+
+    CreateSlider(sizeGroup, "Height", 1, 500, 1, dbEntry.Height,
+        function(self, event, value)
+            dbEntry.Height = value
+            func(frame)
+        end, 0.5)
+
+    return sizeGroup
 end
 
----------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------
 
-function Conf.Load()	
-    local mainCategory, layout = Settings.RegisterVerticalLayoutCategory("CalippoUI")
+local function CreateGeneralSettings(container)
+    local dbEntry = CUI.DB.profile
 
-	SettingsPanel:RegisterForDrag("LeftButton")
-	SettingsPanel:HookScript("OnDragStart", function(self)
-		self:StartMoving()
-	end)
-	SettingsPanel:HookScript("OnDragStop", function(self)
-		self:StopMovingOrSizing()
-	end)
+    local scrollFrame = AceGUI:Create("ScrollFrame")
+    scrollFrame:SetLayout("List")
+    container:AddChild(scrollFrame)
 
-	SetupMainPage(mainCategory, layout)
+    local modulesGroup = CreateInlineGroup(scrollFrame, "Toggle Modules (Reload to apply changes)")
 
-	if CalippoDB.ActionBars.Enabled then
-		SetupActionBarPage(mainCategory)
-	end
+    CreateCheckBox(modulesGroup, "Action Bars", dbEntry.ActionBars.Enabled,
+        function(self, event, value)
+            dbEntry.ActionBars.Enabled = value
+        end, 0.33)
 
-	if CalippoDB.UnitFrames.Enabled then
-		SetupUnitFramePage(mainCategory)
-	end
+    CreateCheckBox(modulesGroup, "Unit Frames", dbEntry.UnitFrames.Enabled,
+        function(self, event, value)
+            dbEntry.UnitFrames.Enabled = value
+        end, 0.33)
 
-	if CalippoDB.CooldownManager.Enabled then
-		SetupCDMPage(mainCategory)
-	end
+    CreateCheckBox(modulesGroup, "Cooldown Manager", dbEntry.CooldownManager.Enabled,
+        function(self, event, value)
+            dbEntry.CooldownManager.Enabled = value
+        end, 0.33)
 
-	if CalippoDB.ResourceBar.Enabled then
-		SetupResourceBarPage(mainCategory)
-	end
+    CreateCheckBox(modulesGroup, "Resource Bar", dbEntry.ResourceBar.Enabled,
+        function(self, event, value)
+            dbEntry.ResourceBar.Enabled = value
+        end, 0.33)
 
-	if CalippoDB.PlayerAuras.Enabled then
-		SetupPlayerAuraPage(mainCategory)
-	end
+    CreateCheckBox(modulesGroup, "Player Cast Bar", dbEntry.PlayerCastBar.Enabled,
+        function(self, event, value)
+            dbEntry.PlayerCastBar.Enabled = value
+        end, 0.33)
 
-	if CalippoDB.Minimap.Enabled then
-		SetupMinimapPage(mainCategory)
-	end
+    CreateCheckBox(modulesGroup, "Nameplates", dbEntry.Nameplates.Enabled,
+        function(self, event, value)
+            dbEntry.Nameplates.Enabled = value
+        end, 0.33)
 
-    Settings.RegisterAddOnCategory(mainCategory)
+    CreateCheckBox(modulesGroup, "Group Frames", dbEntry.GroupFrames.Enabled,
+        function(self, event, value)
+            dbEntry.GroupFrames.Enabled = value
+        end, 0.33)
+
+    CreateCheckBox(modulesGroup, "Minimap", dbEntry.Minimap.Enabled,
+        function(self, event, value)
+            dbEntry.Minimap.Enabled = value
+        end, 0.33)
+
+    CreateCheckBox(modulesGroup, "PlayerAuras", dbEntry.PlayerAuras.Enabled,
+        function(self, event, value)
+            dbEntry.PlayerAuras.Enabled = value
+        end, 0.33)
+
+    local reloadButton = AceGUI:Create("Button")
+    reloadButton:SetText("Reload")
+    reloadButton:SetCallback("OnClick", function() ReloadUI() end)
+    reloadButton:SetRelativeWidth(1)
+    modulesGroup:AddChild(reloadButton)
+end
+
+---------------------------------------------------------------------------------------------------------------------------------------
+
+local function CreateActionBarPage(container, actionBar)
+    local dbEntry = CUI.DB.profile.ActionBars[actionBar]
+    local frame = _G[actionBar]
+
+    local scrollFrame = AceGUI:Create("ScrollFrame")
+    scrollFrame:SetLayout("List")
+    container:AddChild(scrollFrame)
+
+    if actionBar ~= "MicroMenu" then
+        ----------------------------------------------------------------------------------------------------
+        local textGroup = CreateInlineGroup(scrollFrame, "Text")
+
+        CreateCheckBox(textGroup, "Toggle Keybind Text", dbEntry.Keybind.Enabled,
+            function(self, event, value)
+                dbEntry.Keybind.Enabled = value
+                AB.UpdateBar(frame)
+            end, 0.25)
+
+        CreateCheckBox(textGroup, "Toggle Cooldown Text", dbEntry.Cooldown.Enabled,
+            function(self, event, value)
+                dbEntry.Cooldown.Enabled = value
+                AB.UpdateBar(frame)
+            end, 0.25)
+
+        CreateCheckBox(textGroup, "Toggle Charges Text", dbEntry.Charges.Enabled,
+            function(self, event, value)
+                dbEntry.Charges.Enabled = value
+                AB.UpdateBar(frame)
+            end, 0.25)
+
+        CreateCheckBox(textGroup, "Toggle Macro Text", dbEntry.Macro.Enabled,
+            function(self, event, value)
+                dbEntry.Macro.Enabled = value
+                AB.UpdateBar(frame)
+            end, 0.25)
+
+        CreateSlider(textGroup, "Bind Font Size", 1, 50, 1, dbEntry.Keybind.Size, 
+            function(self, event, value)
+                dbEntry.Keybind.Size = value
+                AB.UpdateBar(frame)
+            end, 0.25)
+
+        CreateSlider(textGroup, "Cooldown Font Size", 1, 50, 1, dbEntry.Cooldown.Size, 
+            function(self, event, value)
+                dbEntry.Cooldown.Size = value
+                AB.UpdateBar(frame)
+            end, 0.25)
+
+        CreateSlider(textGroup, "Charge Font Size", 1, 50, 1, dbEntry.Charges.Size, 
+            function(self, event, value)
+                dbEntry.Charges.Size = value
+                AB.UpdateBar(frame)
+            end, 0.25)
+
+        CreateSlider(textGroup, "Macro Font Size", 1, 50, 1, dbEntry.Macro.Size, 
+            function(self, event, value)
+                dbEntry.Macro.Size = value
+                AB.UpdateBar(frame)
+            end, 0.25)
+    end
+    
+    ----------------------------------------------------------------------------------------------------
+
+    CreateAlphaGroup(scrollFrame, dbEntry, AB.UpdateAlpha, frame)
+
+    ----------------------------------------------------------------------------------------------------
+    local anchorGroup = CreateInlineGroup(scrollFrame, "Anchor")
+
+    CreateCheckBox(anchorGroup, "Toggle Anchoring", dbEntry.ShouldAnchor,
+        function(self, event, value)
+            dbEntry.ShouldAnchor = value
+            AB.UpdateBarAnchor(frame)
+        end, 0.5)
+
+    CreateEditBox(anchorGroup, "Anchor Frame", dbEntry.AnchorFrame,
+        function(self, event, value)
+            -- TODO : Gör så att "X.Y" fungerar
+            local frameExists = _G[value]
+            if frameExists then
+                dbEntry.AnchorFrame = value
+                AB.UpdateBarAnchor(frame)
+            else
+                print("Frame does not exist!")
+                self:SetText(dbEntry.AnchorFrame)
+            end
+        end, 0.5)
+
+    CreateDropDown(anchorGroup, "Anchor Point", dbEntry.AnchorPoint, anchorPoints,
+        function(self, event, value)
+            dbEntry.AnchorPoint = value
+            AB.UpdateBarAnchor(frame)
+        end, 0.5)
+        
+    CreateDropDown(anchorGroup, "Relative Anchor Point", dbEntry.AnchorRelativePoint, anchorPoints,
+        function(self, event, value)
+            dbEntry.AnchorRelativePoint = value
+            AB.UpdateBarAnchor(frame)
+        end, 0.5)
+        
+    CreateSlider(anchorGroup, "Position X", -500, 500, 1, dbEntry.PosX,
+        function(self, event, value)
+            dbEntry.PosX = value
+            AB.UpdateBarAnchor(frame)
+        end, 0.5)
+
+    CreateSlider(anchorGroup, "Position Y", -500, 500, 1, dbEntry.PosY,
+        function(self, event, value)
+            dbEntry.PosY = value
+            AB.UpdateBarAnchor(frame)
+        end, 0.5)
+
+    scrollFrame:DoLayout()
+end
+
+local function CreateActionBarSettings(container)
+    local function SelectGroup(container, event, actionBar)
+        container:ReleaseChildren()
+        CreateActionBarPage(container, actionBar)
+    end
+
+    local tabGroup = AceGUI:Create("TabGroup")
+    tabGroup:SetLayout("Fill")
+    tabGroup:SetTabs({{text="Action Bar 1", value="MainActionBar"}, 
+                    {text="Action Bar 2", value="MultiBarBottomLeft"},
+                    {text="Action Bar 3", value="MultiBarBottomRight"},
+                    {text="Action Bar 4", value="MultiBarRight"},
+                    {text="Action Bar 5", value="MultiBarLeft"},
+                    {text="Action Bar 6", value="MultiBar5"},
+                    {text="Action Bar 7", value="MultiBar6"},
+                    {text="Action Bar 8", value="MultiBar7"},
+                    {text="Pet Action Bar", value="PetActionBar"},
+                    {text="Micro Menu", value="MicroMenu"},})
+    tabGroup:SetCallback("OnGroupSelected", SelectGroup)
+    tabGroup:SelectTab("MainActionBar")
+
+    container:AddChild(tabGroup)
+end
+
+---------------------------------------------------------------------------------------------------------------------------------------
+
+local function CreateUnitFrameFramePage(container, unitFrame)
+    local dbEntry = CUI.DB.profile.UnitFrames[unitFrame]
+    local frame = _G["CUI_"..unitFrame]
+
+    local scrollFrame = AceGUI:Create("ScrollFrame")
+    scrollFrame:SetLayout("List")
+    container:AddChild(scrollFrame)
+
+    ----------------------------------------------------------------------------------------------------
+
+    CreateSizeGroup(scrollFrame, dbEntry, UF.UpdateSizePos, frame)
+
+    ----------------------------------------------------------------------------------------------------
+
+    CreateAlphaGroup(scrollFrame, dbEntry, UF.UpdateAlpha, frame)
+
+    ----------------------------------------------------------------------------------------------------
+
+    CreateAnchorGroup(scrollFrame, dbEntry, UF.UpdateSizePos, frame)
+
+    scrollFrame:DoLayout()
+end
+
+local function CreateUnitFrameAuraPage(container, unitFrame)
+    -- TODO
+end
+
+local function CreateUnitFrameTextPage(container, unitFrame)
+    local dbEntry = CUI.DB.profile.UnitFrames[unitFrame]
+    local frame = _G["CUI_"..unitFrame]
+
+    local scrollFrame = AceGUI:Create("ScrollFrame")
+    scrollFrame:SetLayout("List")
+    container:AddChild(scrollFrame)
+
+    ----------------------------------------------------------------------------------------------------
+    local nameGroup = CreateInlineGroup(scrollFrame, "Name")
+
+    CreateCheckBox(nameGroup, "Toggle Name", dbEntry.Name.Enabled,
+        function(self, event, value)
+            dbEntry.Name.Enabled = value
+            UF.UpdateTexts(frame)
+        end, 0.5)
+
+    CreateSlider(nameGroup, "Name Font Size", 1, 50, 1, dbEntry.Name.Size, 
+        function(self, event, value)
+            dbEntry.Name.Size = value
+            UF.UpdateTexts(frame)
+        end, 0.5)
+
+    CreateDropDown(nameGroup, "Anchor Point", dbEntry.Name.AnchorPoint, anchorPoints,
+        function(self, event, value)
+            dbEntry.Name.AnchorPoint = value
+            UF.UpdateTexts(frame)
+        end, 0.5)
+        
+    CreateDropDown(nameGroup, "Relative Anchor Point", dbEntry.Name.AnchorRelativePoint, anchorPoints,
+        function(self, event, value)
+            dbEntry.Name.AnchorRelativePoint = value
+            UF.UpdateTexts(frame)
+        end, 0.5)
+        
+    CreateSlider(nameGroup, "Position X", -500, 500, 1, dbEntry.Name.PosX,
+        function(self, event, value)
+            dbEntry.Name.PosX = value
+            UF.UpdateTexts(frame)
+        end, 0.5)
+
+    CreateSlider(nameGroup, "Position Y", -500, 500, 1, dbEntry.Name.PosY,
+        function(self, event, value)
+            dbEntry.Name.PosY = value
+            UF.UpdateTexts(frame)
+        end, 0.5)
+
+    CreateSlider(nameGroup, "Width", 1, 500, 1, dbEntry.Name.Width,
+        function(self, event, value)
+            dbEntry.Name.Width = value
+            UF.UpdateTexts(frame)
+        end, 1)
+
+    ----------------------------------------------------------------------------------------------------
+    local healthGroup = CreateInlineGroup(scrollFrame, "Health")
+
+    CreateCheckBox(healthGroup, "Toggle Health", dbEntry.HealthText.Enabled,
+        function(self, event, value)
+            dbEntry.HealthText.Enabled = value
+            UF.UpdateTexts(frame)
+        end, 0.5)
+
+    CreateSlider(healthGroup, "Health Font Size", 1, 50, 1, dbEntry.HealthText.Size, 
+        function(self, event, value)
+            dbEntry.HealthText.Size = value
+            UF.UpdateTexts(frame)
+        end, 0.5)
+
+    CreateDropDown(healthGroup, "Anchor Point", dbEntry.HealthText.AnchorPoint, anchorPoints,
+        function(self, event, value)
+            dbEntry.HealthText.AnchorPoint = value
+            UF.UpdateTexts(frame)
+        end, 0.5)
+        
+    CreateDropDown(healthGroup, "Relative Anchor Point", dbEntry.HealthText.AnchorRelativePoint, anchorPoints,
+        function(self, event, value)
+            dbEntry.HealthText.AnchorRelativePoint = value
+            UF.UpdateTexts(frame)
+        end, 0.5)
+        
+    CreateSlider(healthGroup, "Position X", -500, 500, 1, dbEntry.HealthText.PosX,
+        function(self, event, value)
+            dbEntry.HealthText.PosX = value
+            UF.UpdateTexts(frame)
+        end, 0.5)
+
+    CreateSlider(healthGroup, "Position Y", -500, 500, 1, dbEntry.HealthText.PosY,
+        function(self, event, value)
+            dbEntry.HealthText.PosY = value
+            UF.UpdateTexts(frame)
+        end, 0.5)
+
+    scrollFrame:DoLayout()
+end
+
+local function CreateUnitFrameMiscPage(container, unitFrame)
+    local dbEntry = CUI.DB.profile.UnitFrames[unitFrame]
+    local frame = _G["CUI_"..unitFrame]
+
+    local scrollFrame = AceGUI:Create("ScrollFrame")
+    scrollFrame:SetLayout("List")
+    container:AddChild(scrollFrame)
+
+    local leaderGroup = CreateInlineGroup(scrollFrame, "Leader / Assist Icon")
+
+    CreateDropDown(leaderGroup, "Anchor Point", dbEntry.LeaderIcon.AnchorPoint, anchorPoints,
+        function(self, event, value)
+            dbEntry.LeaderIcon.AnchorPoint = value
+            UF.UpdateLeaderAssist(frame)
+        end, 0.5)
+        
+    CreateDropDown(leaderGroup, "Relative Anchor Point", dbEntry.LeaderIcon.AnchorRelativePoint, anchorPoints,
+        function(self, event, value)
+            dbEntry.LeaderIcon.AnchorRelativePoint = value
+            UF.UpdateLeaderAssist(frame)
+        end, 0.5)
+        
+    CreateSlider(leaderGroup, "Position X", -500, 500, 1, dbEntry.LeaderIcon.PosX,
+        function(self, event, value)
+            dbEntry.LeaderIcon.PosX = value
+            UF.UpdateLeaderAssist(frame)
+        end, 0.5)
+
+    CreateSlider(leaderGroup, "Position Y", -500, 500, 1, dbEntry.LeaderIcon.PosY,
+        function(self, event, value)
+            dbEntry.LeaderIcon.PosY = value
+            UF.UpdateLeaderAssist(frame)
+        end, 0.5)
+
+    scrollFrame:DoLayout()
+end
+
+local function CreateUnitFrameTabs(container, unitFrame)
+    local function SelectGroup(container, event, tab)
+        container:ReleaseChildren()
+        if tab == "Frame" then
+            CreateUnitFrameFramePage(container, unitFrame)
+        elseif tab == "Aura" then
+            CreateUnitFrameAuraPage(container, unitFrame)
+        elseif tab == "Text" then
+            CreateUnitFrameTextPage(container, unitFrame)
+        elseif tab == "Misc" then
+            CreateUnitFrameMiscPage(container, unitFrame)
+        end
+    end
+
+    local tabGroup = AceGUI:Create("TabGroup")
+    tabGroup:SetLayout("Fill")
+    tabGroup:SetTabs({{text="Frame", value="Frame"}, 
+                    {text="Auras", value="Aura"},
+                    {text="Texts", value="Text"},
+                    {text="Misc", value="Misc"},})
+    tabGroup:SetCallback("OnGroupSelected", SelectGroup)
+    tabGroup:SelectTab("Frame")
+
+    container:AddChild(tabGroup)
+end
+
+local function CreateUnitFrameSettings(container)
+    local function SelectGroup(container, event, unitFrame)
+        container:ReleaseChildren()
+        CreateUnitFrameTabs(container, unitFrame)
+    end
+
+    local tabGroup = AceGUI:Create("TabGroup")
+    tabGroup:SetLayout("Fill")
+    tabGroup:SetTabs({{text="Player Frame", value="PlayerFrame"}, 
+                    {text="Target Frame", value="TargetFrame"},
+                    {text="Focus Frame", value="FocusFrame"},})
+    tabGroup:SetCallback("OnGroupSelected", SelectGroup)
+    tabGroup:SelectTab("PlayerFrame")
+
+    container:AddChild(tabGroup)
+end
+
+---------------------------------------------------------------------------------------------------------------------------------------
+
+local function CreateCDMPage(container, viewer)
+    local dbEntry = CUI.DB.profile.CooldownManager[viewer]
+    local frame = _G[viewer]
+
+    local scrollFrame = AceGUI:Create("ScrollFrame")
+    scrollFrame:SetLayout("List")
+    container:AddChild(scrollFrame)
+
+    ----------------------------------------------------------------------------------------------------
+    local textGroup = CreateInlineGroup(scrollFrame, "Text")
+
+    CreateSlider(textGroup, "Cooldown Font Size", 1, 50, 1, dbEntry.Cooldown.Size, 
+        function(self, event, value)
+            dbEntry.Cooldown.Size = value
+            CDM.UpdateStyle(frame)
+        end, 0.5)
+
+    CreateSlider(textGroup, "Charges Font Size", 1, 50, 1, dbEntry.Charges.Size, 
+        function(self, event, value)
+            dbEntry.Charges.Size = value
+            CDM.UpdateStyle(frame)
+        end, 0.5)
+
+    ----------------------------------------------------------------------------------------------------
+
+    CreateAlphaGroup(scrollFrame, dbEntry, CDM.UpdateAlpha, frame)
+
+    scrollFrame:DoLayout()
+end
+
+local function CreateCDMSettings(container)
+    local function SelectGroup(container, event, viewer)
+        container:ReleaseChildren()
+        CreateCDMPage(container, viewer)
+    end
+
+    local tabGroup = AceGUI:Create("TabGroup")
+    tabGroup:SetLayout("Fill")
+    tabGroup:SetTabs({{text="Essential", value="EssentialCooldownViewer"}, 
+                    {text="Utility", value="UtilityCooldownViewer"},
+                    {text="Buff", value="BuffIconCooldownViewer"},})
+    tabGroup:SetCallback("OnGroupSelected", SelectGroup)
+    tabGroup:SelectTab("EssentialCooldownViewer")
+
+    container:AddChild(tabGroup)
+end
+
+---------------------------------------------------------------------------------------------------------------------------------------
+
+local function CreateResourceBarPage(container, resource)
+    local dbEntry = CUI.DB.profile.ResourceBar
+    local frame
+    if resource == "Main" then
+        frame = CUI_PowerBar
+    end
+    
+    local scrollFrame = AceGUI:Create("ScrollFrame")
+    scrollFrame:SetLayout("List")
+    container:AddChild(scrollFrame) 
+
+    local sizeGroup = CreateSizeGroup(scrollFrame, dbEntry, RB.UpdateFrame, frame)
+
+    CreateCheckBox(sizeGroup, "Match width to anchored frame", dbEntry.MatchWidth,
+        function(self, event, value)
+            dbEntry.MatchWidth = value
+            RB.UpdateFrame(frame)
+        end)
+
+    local textGroup = CreateInlineGroup(scrollFrame, "Text")
+
+    CreateSlider(textGroup, "Font Size", 1, 50, 1, dbEntry.Text.Size, 
+        function(self, event, value)
+            dbEntry.Text.Size = value
+            RB.UpdateText(frame)
+        end, 1)
+
+    CreateAlphaGroup(scrollFrame, dbEntry, RB.UpdateAlpha, frame)
+
+    CreateAnchorGroup(scrollFrame, dbEntry, RB.UpdateFrame, frame)
+
+    scrollFrame:DoLayout()
+end
+
+local function CreateResourceBarSettings(container)
+    local function SelectGroup(container, event, resource)
+        container:ReleaseChildren()
+        CreateResourceBarPage(container, resource)
+    end
+
+    local tabGroup = AceGUI:Create("TabGroup")
+    tabGroup:SetLayout("Fill")
+    tabGroup:SetTabs({{text="Main", value="Main"},})
+    tabGroup:SetCallback("OnGroupSelected", SelectGroup)
+    tabGroup:SelectTab("Main")
+
+    container:AddChild(tabGroup)
+end
+
+---------------------------------------------------------------------------------------------------------------------------------------
+
+local function CreateMinimapSettings(container)
+    local dbEntry = CUI.DB.profile.Minimap
+
+    local scrollFrame = AceGUI:Create("ScrollFrame")
+    scrollFrame:SetLayout("List")
+    container:AddChild(scrollFrame)
+
+    CreateAlphaGroup(scrollFrame, dbEntry, MM.UpdateAlpha, MinimapCluster)
+
+    scrollFrame:DoLayout()
+end
+
+---------------------------------------------------------------------------------------------------------------------------------------
+
+local function CreatePlayerAuraSettings(container)
+    local dbEntry = CUI.DB.profile.PlayerAuras
+
+    local scrollFrame = AceGUI:Create("ScrollFrame")
+    scrollFrame:SetLayout("List")
+    container:AddChild(scrollFrame)
+
+    local alphaGroup = CreateInlineGroup(scrollFrame, "Alpha") 
+
+    CreateSlider(alphaGroup, "Alpha (Out of combat)", 0, 100, 1, dbEntry.Alpha*100, 
+        function(self, event, value)
+            dbEntry.Alpha = value/100
+            PA.UpdateAlpha(BuffFrame)
+            PA.UpdateAlpha(DebuffFrame)
+        end, 0.5)
+
+    CreateSlider(alphaGroup, "Alpha (In Combat)", 0, 100, 1, dbEntry.CombatAlpha*100, 
+        function(self, event, value)
+            dbEntry.CombatAlpha = value/100
+            PA.UpdateAlpha(BuffFrame)
+            PA.UpdateAlpha(DebuffFrame)
+        end, 0.5)
+
+    scrollFrame:DoLayout()
+end
+
+---------------------------------------------------------------------------------------------------------------------------------------
+
+local function SetupMainTabs(frame)
+    local function SelectGroup(container, event, group)
+        container:ReleaseChildren()
+        if group == "General" then
+            CreateGeneralSettings(container)
+        elseif group == "ActionBars" then
+            CreateActionBarSettings(container)
+        elseif group == "UnitFrames" then
+            CreateUnitFrameSettings(container)
+        elseif group == "CooldownManager" then
+            CreateCDMSettings(container)
+        elseif group == "ResourceBar" then
+            CreateResourceBarSettings(container)
+        elseif group == "Minimap" then
+            CreateMinimapSettings(container)
+        elseif group == "PlayerAuras" then
+            CreatePlayerAuraSettings(container)
+        elseif group == "" then
+
+        elseif group == "" then
+
+        elseif group == "" then
+            
+        end
+    end
+
+    local activeModules = {{text="General", value="General"}}
+    local dbEntry = CUI.DB.profile
+
+    if dbEntry.ActionBars.Enabled then
+        table.insert(activeModules, {text="Action Bars", value="ActionBars"})
+    end
+    if dbEntry.UnitFrames.Enabled then
+        table.insert(activeModules, {text="Unit Frames", value="UnitFrames"})
+    end
+    if dbEntry.CooldownManager.Enabled then
+        table.insert(activeModules, {text="Cooldown Manager", value="CooldownManager"})
+    end
+    if dbEntry.ResourceBar.Enabled then
+        table.insert(activeModules, {text="Resource Bar", value="ResourceBar"})
+    end
+    if dbEntry.PlayerCastBar.Enabled then
+        table.insert(activeModules, {text="Player Cast Bar", value="PlayerCastBar"})
+    end
+    if dbEntry.Nameplates.Enabled then
+        table.insert(activeModules, {text="Nameplates", value="Nameplates"})
+    end
+    if dbEntry.GroupFrames.Enabled then
+        table.insert(activeModules, {text="Group Frames", value="GroupFrames"})
+    end
+    if dbEntry.Minimap.Enabled then
+        table.insert(activeModules, {text="Minimap", value="Minimap"})
+    end
+    if dbEntry.PlayerAuras.Enabled then
+        table.insert(activeModules, {text="Player Auras", value="PlayerAuras"})
+    end
+
+    local tabGroup = AceGUI:Create("TabGroup")
+    tabGroup:SetLayout("Fill")
+    tabGroup:SetTabs(activeModules)
+    tabGroup:SetCallback("OnGroupSelected", SelectGroup)
+    tabGroup:SelectTab("General")
+
+    frame:AddChild(tabGroup)
+end
+
+---------------------------------------------------------------------------------------------------------------------------------------
+
+function Conf.Load()
+    local frame = AceGUI:Create("Frame")
+    frame:SetTitle("CalippoUI")
+    frame:SetStatusText("CalippoUI, bästa UIn i Midnight!")
+    frame:SetCallback("OnClose", function(widget) AceGUI:Release(widget) end)
+    frame:SetLayout("Fill")
+
+    local dbEntry = CUI.DB.global.Config
+    frame:SetWidth(dbEntry.Width)
+    frame:SetHeight(dbEntry.Height)
+    frame:SetPoint(dbEntry.AnchorPoint, UIParent, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
+
+    function frame:OnWidthSet(width)
+        CUI.DB.global.Config.Width = width
+    end
+
+    function frame:OnHeightSet(height)
+        CUI.DB.global.Config.Height = height
+    end
+
+    frame:SetCallback("OnClose",
+        function(self)
+            local point, _, relativePoint, X, Y = self:GetPoint()
+            dbEntry.AnchorPoint = point
+            dbEntry.AnchorRelativePoint = relativePoint
+            dbEntry.PosX = X
+            dbEntry.PosY = Y
+        end)
+
+    SetupMainTabs(frame)
 end

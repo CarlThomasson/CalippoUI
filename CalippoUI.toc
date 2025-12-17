@@ -4,7 +4,13 @@
 ## SavedVariables: CalippoDB
 ## IconTexture: Interface\AddOns\CalippoUI\Media\Icon.tga
 
+
+Libs\LibStub\LibStub.lua
+Libs\AceGUI-3.0\AceGUI-3.0.xml
+Libs\AceDB-3.0\AceDB-3.0.xml
+
 Database.lua
+Frames.xml
 
 HideBlizzard.lua
 Util.lua

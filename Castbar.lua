@@ -3,19 +3,19 @@ local addonName, CUI = ...
 CUI.CB = {}
 local CB = CUI.CB
 local Util = CUI.Util
+local Hide = CUI.Hide
 
 ---------------------------------------------------------------------------------------------------
 
-local function HideFrame(frame)
-    frame:Hide()
-    frame:SetScript("OnShow", function(self)
-        self:Hide()
-    end)
-end
-
 local function HideBlizzard()
+    --PlayerCastingBarFrame:UnregisterAllEvents()
+
     for _, frame in pairs({PlayerCastingBarFrame:GetRegions()}) do
-        HideFrame(frame)
+        Hide.HideFrame(frame)
+    end
+
+    for _, frame in pairs({PlayerCastingBarFrame:GetChildren()}) do
+        Hide.HideFrame(frame)
     end
 end
 
@@ -38,7 +38,6 @@ local function UpdateCastBar(castBar)
     local name, isChannel, startTime, endTime = GetCastOrChannelInfo("player")
 
     if not startTime then 
-        castBar.isCasting = false
         castBar:Hide() 
         return
     end
@@ -59,21 +58,23 @@ local function UpdateCastBar(castBar)
         castBar:SetReverseFill(false)
     end
 
-    local currentTime = GetTime()
-    castBar:SetMinMaxValues(startTime, endTime)
-    castBar:SetValue(currentTime)
+    castBar:SetTimerDuration(castBar.duration)
+    castBar.duration:SetTimeSpan(startTime/1000, endTime/1000)
     
-    castBar.isCasting = true
+    castBar.startTime = startTime
+    castBar.endTime = endTime
     castBar:Show()
 end
 
 local function SetupCastBar()
-    local castBar = CreateFrame("Statusbar", "CUI_CastBar", PlayerCastingBarFrame)
+    local castBar = CreateFrame("Statusbar", "CUI_CastBar", UIParent)
     castBar:SetAllPoints(PlayerCastingBarFrame)
     castBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
-    castBar:SetStatusBarColor(0, 0.8, 0, 1)
+    castBar:SetStatusBarColor(0, 0.8, 0, 0.5)
     Util.AddStatusBarBackground(castBar)
-    Util.AddBorder(castBar, 1, CUI_BACKDROP_DS_3)
+    Util.AddBorder(castBar)
+
+    castBar.duration = C_DurationUtil.CreateDuration()
 
     castBar:RegisterUnitEvent("UNIT_SPELLCAST_START", "player")
     castBar:RegisterUnitEvent("UNIT_SPELLCAST_STOP", "player")
@@ -89,13 +90,9 @@ local function SetupCastBar()
         if event == "UNIT_SPELLCAST_START"  or event == "UNIT_SPELLCAST_CHANNEL_START" or event == "UNIT_SPELLCAST_CHANNEL_UPDATE" then
             UpdateCastBar(self)
         elseif event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP" then
-            self.isCasting = false
+            self:SetMinMaxValues(self.startTime, self.endTime)
+            self:SetValue(GetTime()*1000)
         end
-    end)
-
-    castBar:SetScript("OnUpdate", function(self)
-        if not self.isCasting then return end
-        self:SetValue(GetTime() * 1000)
     end)
 end
 
@@ -103,5 +100,6 @@ end
 
 function CB.Load()
     HideBlizzard()
+    -- Hide.HideFrame(PlayerCastingBarFrame)
     SetupCastBar()
 end

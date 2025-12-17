@@ -8,9 +8,9 @@ local Util = CUI.Util
 
 function PA.UpdateAlpha(frame, inCombat)
     if InCombatLockdown() or inCombat then 
-        Util.FadeFrame(frame, "IN", 1)
+        Util.FadeFrame(frame, "IN", CUI.DB.profile.PlayerAuras.CombatAlpha)
     else
-        Util.FadeFrame(frame, "OUT", CalippoDB.PlayerAuras.Alpha)
+        Util.FadeFrame(frame, "OUT", CUI.DB.profile.PlayerAuras.Alpha)
     end
 end
 
@@ -23,7 +23,7 @@ local function StyleFrame(frame)
         local overlay = CreateFrame("Frame", nil, frame)
         overlay:SetParentKey("Overlay")
         overlay:SetAllPoints(frame.Icon)
-        Util.AddBorder(overlay, 1, CUI_BACKDROP_DS_2)
+        Util.AddBorder(overlay)
     end
 
     frame.Count:SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", 12, "")

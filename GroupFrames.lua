@@ -73,7 +73,7 @@ local function UpdateAuraFrame(frame, addBorder, index, frameSize, padding, anch
         end
         frame.icon:SetTexCoord(.08, .92, .08, .92)
         if not frame.Borders then
-            Util.AddBorder(frame, 1, CUI_BACKDROP_DS_2)
+            Util.AddBorder(frame)
         end
     end
 end

@@ -8,66 +8,88 @@ local Hide = CUI.Hide
 ---------------------------------------------------------------------------------------------------
 
 function HideBlizzard()
-    PlayerFrameBottomManagedFramesContainer:Hide()
+    -- TODO : Unregister events på blizzard frames
 
-    PlayerFrame.PlayerFrameContent:Hide()
-    PlayerFrame.PlayerFrameContainer:Hide()
-    Hide.HideUnitFrameChildren(PlayerFrame)
-
-    TargetFrame.TargetFrameContent:Hide()
-    TargetFrame.TargetFrameContainer:Hide()
-    TargetFrameSpellBar:SetScript("OnShow", function()
-        TargetFrameSpellBar:Hide()
-    end)
-    Hide.HideUnitFrameChildren(TargetFrame)
-
-    FocusFrame.TargetFrameContent:Hide()
-    FocusFrame.TargetFrameContainer:Hide()
-    Hide.HideUnitFrameChildren(PlayerFrame)
-
-    Hide.HideFrame(PetFrameTexture)
-    Hide.HideUnitFrameChildren(PetFrame)
+    Hide.HideFrame(PlayerFrame)
+    Hide.HideFrame(TargetFrame)
+    Hide.HideFrame(FocusFrame)
+    Hide.HideFrame(PetFrame)
 end
 
 ---------------------------------------------------------------------------------------------------
 
 function UF.UpdateAlpha(frame, inCombat)
     if InCombatLockdown() or inCombat then 
-        Util.FadeFrame(frame, "IN", 1)
+        Util.FadeFrame(frame, "IN", CUI.DB.profile.UnitFrames[frame.name].CombatAlpha)
     else
-        Util.FadeFrame(frame, "OUT", CalippoDB.UnitFrames[frame:GetName()].Alpha)
+        Util.FadeFrame(frame, "OUT", CUI.DB.profile.UnitFrames[frame.name].Alpha)
     end
 end
 
 function UF.UpdateSizePos(frame)
-    frame.Container.HealthBar:SetPoint("CENTER", frame, "CENTER", CalippoDB.UnitFrames[frame:GetName()].OffsetX, CalippoDB.UnitFrames[frame:GetName()].OffsetY)
-    frame.Container.HealthBar:SetSize(CalippoDB.UnitFrames[frame:GetName()].SizeX, CalippoDB.UnitFrames[frame:GetName()].SizeY)
-    frame.Container.Overlay.UnitName:SetWidth(frame.Overlay:GetWidth() - 60)
+    local dbEntry = CUI.DB.profile.UnitFrames[frame.name]
+
+    frame:ClearAllPoints()
+    frame:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
+    frame:SetSize(dbEntry.Width, dbEntry.Height)
 end
 
 function UF.UpdateTexts(frame)
-    local fontSizeN = CalippoDB.UnitFrames[frame:GetName()].NameFontSize
-    if fontSizeN == 0 then
-        frame.Container.Overlay.UnitName:Hide()
+    local dbEntry = CUI.DB.profile.UnitFrames[frame.name]
+
+    frame.Overlay.UnitName:SetWidth(dbEntry.Name.Width)
+
+    if dbEntry.Name.Enabled then
+        frame.Overlay.UnitName:Show()
+        frame.Overlay.UnitName:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", dbEntry.Name.Size, "")
+        frame.Overlay.UnitName:ClearAllPoints()
+        frame.Overlay.UnitName:SetPoint(dbEntry.Name.AnchorPoint, frame.Overlay, dbEntry.Name.AnchorRelativePoint, 
+            dbEntry.Name.PosX, dbEntry.Name.PosY)
     else
-        frame.Container.Overlay.UnitName:Show()
-        frame.Container.Overlay.UnitName:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", fontSizeN, "")
+        frame.Overlay.UnitName:Hide()
     end
 
-    local fontSizeH = CalippoDB.UnitFrames[frame:GetName()].HealthFontSize
-    if fontSizeH == 0 then
-        frame.Container.Overlay.UnitHealth:Hide()    
+    if dbEntry.HealthText.Enabled then
+        frame.Overlay.UnitHealth:Show()
+        frame.Overlay.UnitHealth:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", dbEntry.HealthText.Size, "")
+        frame.Overlay.UnitHealth:ClearAllPoints()
+        frame.Overlay.UnitHealth:SetPoint(dbEntry.HealthText.AnchorPoint, frame.Overlay, dbEntry.HealthText.AnchorRelativePoint, 
+            dbEntry.HealthText.PosX, dbEntry.HealthText.PosY)
     else
-        frame.Container.Overlay.UnitHealth:Show()
-        frame.Container.Overlay.UnitHealth:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", fontSizeH, "")
+        frame.Overlay.UnitHealth:Hide()    
+    end
+end
+
+function UF.UpdateLeaderAssist(frame)
+    local unit = frame.unit
+    local dbEntry = CUI.DB.profile.UnitFrames[frame.name].LeaderIcon
+    local leaderFrame = frame.Overlay.Leader
+
+
+    leaderFrame:ClearAllPoints()
+    leaderFrame:SetPoint(dbEntry.AnchorPoint, frame.Overlay, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
+
+    if UnitIsGroupLeader(unit) then
+        leaderFrame:SetTexture("Interface/AddOns/CalippoUI/Media/GroupLeader.blp")
+        leaderFrame:Show()
+    elseif UnitIsGroupAssistant(unit) then
+        leaderFrame:SetTexture("Interface/AddOns/CalippoUI/Media/GroupAssist.blp")
+        leaderFrame:Show()
+    else
+        leaderFrame:Hide()
     end
 end
 
 function UF.UpdateAuras(unitFrame)
+    if true then
+        return -- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    end
+    local dbEntry = CUI.DB.profile.UnitFrames[unitFrame.name]
+
     local auraFrames = {}
-    local maxRow = CalippoDB.UnitFrames[unitFrame:GetName()].AuraRowLength
-    local frameSize = CalippoDB.UnitFrames[unitFrame:GetName()].AuraSize
-    local padding = CalippoDB.UnitFrames[unitFrame:GetName()].AuraPadding
+    local rowLength = dbEntry.Buffs.RowLength
+    local frameSize = dbEntry.Buffs.Size
+    local padding = dbEntry.Buffs.Padding
     local index = 0
 
     for frame in unitFrame.auraPools:EnumerateActive() do
@@ -84,17 +106,17 @@ function UF.UpdateAuras(unitFrame)
         frame.Count:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -1, 0)
 
         if not frame.Borders then
-            Util.AddBorder(frame, 1, CUI_BACKDROP_DS_2)
+            Util.AddBorder(frame)
         end
+
+        Util.PositionFromIndex(index, frame, unitFrame, "BOTTOMRIGHT", "TOPRIGHT", "LEFT", "UP", frameSize, padding, 0, 2, rowLength)
         
-        local level = math.floor(index/maxRow)
-
-        frame:ClearAllPoints()
-        frame:SetPoint("BOTTOMRIGHT", unitFrame.Container, "TOPRIGHT", -(index*(frameSize+padding))+(level*maxRow*(frameSize+padding)), 2+(level*(frameSize+padding)))
-
         index = index + 1
     end)
 
+    rowLength = dbEntry.Debuffs.RowLength
+    frameSize = dbEntry.Debuffs.Size
+    padding = dbEntry.Debuffs.Padding
     index = 0
 
     unitFrame.activeDebuffs:Iterate(function(id, aura)
@@ -110,13 +132,10 @@ function UF.UpdateAuras(unitFrame)
         end
 
         if not frame.Borders then
-            Util.AddBorder(frame, 1, CUI_BACKDROP_DS_2)
+            Util.AddBorder(frame)
         end
 
-        local level = math.floor(index/maxRow)
-
-        frame:ClearAllPoints()
-        frame:SetPoint("TOPLEFT", unitFrame.Container, "BOTTOMLEFT", (index*(frameSize+padding))-(level*maxRow*(frameSize+padding)), -(level*(frameSize+padding))-2)
+        Util.PositionFromIndex(index, frame, unitFrame, "TOPLEFT", "BOTTOMLEFT", "RIGHT", "DOWN", frameSize, padding, 0, -2, rowLength)
 
         index = index + 1
     end)
@@ -127,47 +146,47 @@ end
 local function UpdateHealth(frame)
     local unit = frame.unit
 
-    frame.Container.Overlay.UnitHealth:SetText(Util.UnitHealthText(unit))
-    frame.Container.HealthBar:SetValue(UnitHealth(unit))
+    frame.Overlay.UnitHealth:SetText(Util.UnitHealthText(unit))
+    frame.HealthBar:SetValue(UnitHealth(unit))
 end
 
 local function UpdateMaxHealth(frame)
     local unit = frame.unit
 
-    frame.Container.Overlay.UnitHealth:SetText(Util.UnitHealthText(unit))
-    frame.Container.HealthBar:SetMinMaxValues(0, UnitHealthMax(unit))
-    frame.Container.HealthBar:SetValue(UnitHealth(unit))
+    frame.Overlay.UnitHealth:SetText(Util.UnitHealthText(unit))
+    frame.HealthBar:SetMinMaxValues(0, UnitHealthMax(unit))
+    frame.HealthBar:SetValue(UnitHealth(unit))
 end
 
 local function UpdateHealthFull(frame)
-    if not frame.Container.HealthBar then return end
+    if not frame.HealthBar then return end
 
     local unit = frame.unit
 
     UpdateMaxHealth(frame)
 
-    frame.Container.Overlay.UnitHealth:SetText(Util.UnitHealthText(unit))
+    frame.Overlay.UnitHealth:SetText(Util.UnitHealthText(unit))
 
     local r, g, b = Util.GetUnitColor(unit)
-    frame.Container.HealthBar:SetStatusBarColor(r, g, b)
+    frame.HealthBar:SetStatusBarColor(r, g, b)
 
     local v = 0.2
-    frame.Container.HealthBar.Background:SetColorTexture(r*v, g*v, b*v, 1)
+    frame.HealthBar.Background:SetColorTexture(r*v, g*v, b*v, 1)
 end
 
 local function UpdatePower(frame)
-    frame.Container.PowerBar:SetValue(UnitPower(frame.unit))
+    frame.PowerBar:SetValue(UnitPower(frame.unit))
 end 
 
 local function UpdateMaxPower(frame)
     local unit = frame.unit
 
-    frame.Container.PowerBar:SetMinMaxValues(0, UnitPowerMax(unit))
-    frame.Container.PowerBar:SetValue(UnitPower(unit))
+    frame.PowerBar:SetMinMaxValues(0, UnitPowerMax(unit))
+    frame.PowerBar:SetValue(UnitPower(unit))
 end
 
 local function UpdatePowerFull(frame)
-    if not frame.Container.PowerBar then return end
+    if not frame.PowerBar then return end
 
     local unit = frame.unit
 
@@ -180,34 +199,21 @@ local function UpdatePowerFull(frame)
     if color == nil then
         color = PowerBarColor["MAELSTROM"]
     end
-    frame.Container.PowerBar:SetStatusBarColor(color.r, color.g, color.b, 1)
+    frame.PowerBar:SetStatusBarColor(color.r, color.g, color.b, 1)
 
     local v = 0.2
-    frame.Container.PowerBar.Background:SetColorTexture(color.r*v, color.g*v, color.b*v, 1)
-end
-
-local function UpdateLeaderAssist(frame)
-    local unit = frame.unit
-    if UnitIsGroupLeader(unit) then
-        frame.Container.Overlay.Leader:SetTexture("Interface/AddOns/CalippoUI/Media/GroupLeader.blp")
-        frame.Container.Overlay.Leader:Show()
-    elseif UnitIsGroupAssistant(unit) then
-        frame.Container.Overlay.Leader:SetTexture("Interface/AddOns/CalippoUI/Media/GroupAssist.blp")
-        frame.Container.Overlay.Leader:Show()
-    else
-        frame.Container.Overlay.Leader:Hide()
-    end
+    frame.PowerBar.Background:SetColorTexture(color.r*v, color.g*v, color.b*v, 1)
 end
 
 local function UpdateNameText(frame)
-    frame.Container.Overlay.UnitName:SetText(UnitName(frame.unit))
+    frame.Overlay.UnitName:SetText(UnitName(frame.unit))
 end
 
 local function UpdateAll(frame)
     UpdateHealthFull(frame)
     UpdatePowerFull(frame)
-    UpdateLeaderAssist(frame)
     UpdateNameText(frame)
+    UF.UpdateLeaderAssist(frame)
     UF.UpdateAlpha(frame)
 end
 
@@ -296,7 +302,7 @@ function SetupCastBar(unitFrame, blizzardCastBar)
     castBar:SetHeight(13)
 
     Util.AddStatusBarBackground(castBar)
-    Util.AddBorder(castBar, 1, CUI_BACKDROP_DS_3)
+    Util.AddBorder(castBar)
 
     castBar.isCasting = false
     castBar.unit = unit
@@ -334,49 +340,49 @@ end
 
 -------------------------------------------------------------------------------------------------
 
-function SetupUnitFrame(frame)
-    local unit = frame.unit
+function SetupUnitFrame(frameName, unit)
+    local dbEntry = CUI.DB.profile.UnitFrames[frameName]
 
-    local containerFrame = CreateFrame("Frame", nil, frame)
-    containerFrame:SetParentKey("Container")
-    containerFrame:SetPoint("CENTER", frame, "CENTER", CalippoDB.UnitFrames[frame:GetName()].OffsetX, CalippoDB.UnitFrames[frame:GetName()].OffsetY)
-    containerFrame:SetSize(CalippoDB.UnitFrames[frame:GetName()].SizeX, CalippoDB.UnitFrames[frame:GetName()].SizeY)
+    local frame = CreateFrame("Button", "CUI_"..frameName, UIParent, "CUI_UnitFrameTemplate")
+    frame:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
+    frame:SetSize(dbEntry.Width, dbEntry.Height)
 
-    local healthBar = CreateFrame("StatusBar", nil, containerFrame)
+    frame:SetAttribute("unit", unit)
+    frame:RegisterForClicks("AnyDown")
+    frame:SetAttribute("*type1", "target")
+    frame:SetAttribute("*type2", "togglemenu")
+
+    frame.unit = unit
+    frame.name = frameName
+
+    local healthBar = CreateFrame("StatusBar", nil, frame)
     healthBar:SetParentKey("HealthBar")
-    healthBar:SetPoint("TOPLEFT", containerFrame, "TOPLEFT")
+    healthBar:SetPoint("TOPLEFT", frame, "TOPLEFT")
     if unit == "player" then
-        healthBar:SetPoint("BOTTOMRIGHT", containerFrame, "BOTTOMRIGHT")
-    elseif unit ~= "player" then
-        healthBar:SetPoint("BOTTOMRIGHT", containerFrame, "BOTTOMRIGHT", 0, 5)
+        healthBar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT")
+    else
+        healthBar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 5)
         frame:RegisterEvent("PLAYER_TARGET_CHANGED")
         frame:RegisterUnitEvent("UNIT_POWER_UPDATE", unit)
         frame:RegisterUnitEvent("UNIT_MAXPOWER", unit)
         if unit == "focus" then
             frame:RegisterEvent("PLAYER_FOCUS_CHANGED")
         end
-        local powerBar = CreateFrame("StatusBar", nil, containerFrame)
+        local powerBar = CreateFrame("StatusBar", nil, frame)
         powerBar:SetParentKey("PowerBar")
         powerBar:SetPoint("TOPLEFT", healthBar, "BOTTOMLEFT")
-        powerBar:SetPoint("BOTTOMRIGHT", containerFrame, "BOTTOMRIGHT")
+        powerBar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT")
         powerBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
         Util.AddStatusBarBackground(powerBar)
-        Util.AddBorder(powerBar, 1, CUI_BACKDROP_DS_3)
+        Util.AddBorder(powerBar)
     end
     healthBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
     Util.AddStatusBarBackground(healthBar)
-    Util.AddBorder(healthBar, 1, CUI_BACKDROP_DS_3)
+    Util.AddBorder(healthBar)
 
-    local clickFrame = CreateFrame("Button", nil, containerFrame, "SecureUnitButtonTemplate")
-    clickFrame:SetAttribute("unit", unit)
-    clickFrame:RegisterForClicks("AnyDown")
-    clickFrame:SetAttribute("*type1", "target")
-    clickFrame:SetAttribute("*type2", "togglemenu")
-    clickFrame:SetAllPoints(containerFrame)
-
-    local overlayFrame = CreateFrame("Frame", nil, containerFrame)
+    local overlayFrame = CreateFrame("Frame", nil, frame)
     overlayFrame:SetParentKey("Overlay")
-    overlayFrame:SetAllPoints(containerFrame)
+    overlayFrame:SetAllPoints(frame)
 
     local unitName = overlayFrame:CreateFontString(nil, "OVERLAY")
     unitName:SetParentKey("UnitName")
@@ -432,6 +438,7 @@ function SetupUnitFrame(frame)
     end)
 
     UpdateAll(frame)
+    RegisterUnitWatch(frame, false)
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -439,12 +446,12 @@ end
 function UF.Load()
     HideBlizzard()
 
-    SetupUnitFrame(PlayerFrame)
-    SetupUnitFrame(TargetFrame)
-    SetupUnitFrame(FocusFrame)
-    SetupUnitFrame(PetFrame)
+    SetupUnitFrame("PlayerFrame", "player")
+    SetupUnitFrame("TargetFrame", "target")
+    SetupUnitFrame("FocusFrame", "focus")
+    SetupUnitFrame("PetFrame", "pet")
 
-    SetupCastBar(FocusFrame, FocusFrameSpellBar)
+    --SetupCastBar(FocusFrame, FocusFrameSpellBar)
 
     hooksecurefunc(TargetFrame, "UpdateAuras", function(self)
         UF.UpdateAuras(self)

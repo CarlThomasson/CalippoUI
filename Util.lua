@@ -5,23 +5,24 @@ local Util = CUI.Util
 
 ---------------------------------------------------------------------------------------------------
 
-function Util.AddBorder(frame, offset, backdropInfo)
-    if frame.Borders then return end
+function Util.AddBorder(frame)
     frame.Borders = {}
+    local pixel = PixelUtil.GetNearestPixelSize(1, UIParent:GetEffectiveScale(), 1)
+
     for i=1, 4 do
         frame.Borders[i] = frame:CreateLine(nil, "OVERLAY", nil, 0)
         local l = frame.Borders[i]
-        l:SetThickness(PixelUtil.GetNearestPixelSize(1, UIParent:GetEffectiveScale(), 1))
+        l:SetThickness(pixel)
         l:SetColorTexture(0, 0, 0, 1)
         if i==1 then
-            l:SetStartPoint("TOPLEFT")
-            l:SetEndPoint("TOPRIGHT")
+            l:SetStartPoint("TOPLEFT", frame, -pixel/2, 0)
+            l:SetEndPoint("TOPRIGHT", frame, pixel/2, 0)
         elseif i==2 then
             l:SetStartPoint("TOPRIGHT")
             l:SetEndPoint("BOTTOMRIGHT")
         elseif i==3 then
-            l:SetStartPoint("BOTTOMRIGHT")
-            l:SetEndPoint("BOTTOMLEFT")
+            l:SetStartPoint("BOTTOMRIGHT", frame, pixel/2, 0)
+            l:SetEndPoint("BOTTOMLEFT", frame, -pixel/2, 0)
         else
             l:SetStartPoint("BOTTOMLEFT")
             l:SetEndPoint("TOPLEFT")
@@ -75,7 +76,7 @@ function Util.GetUnitColor(unit)
 end
 
 function Util.UnitHealthPercent(unit)
-    return string.format("%0.0f", UnitHealthPercent(unit, true, true)).."%"
+    return string.format("%0.0f", UnitHealthPercent(unit, true, CurveConstants.ScaleTo100)).."%"
 end
 
 function Util.UnitHealthText(unit)
@@ -103,7 +104,7 @@ local function UIFrameFadeContains(frame)
 end
 
 function Util.FadeFrame(frame, inOut, endAlpha, fadeTime)
-    if not fadeTime then fadeTime = 0.8 end
+    if not fadeTime then fadeTime = 0.5 end
 	local fadeInfo = {}
 	fadeInfo.mode = inOut -- "IN" or "OUT"
 	fadeInfo.timeToFade = fadeTime
@@ -117,4 +118,24 @@ function Util.FadeFrame(frame, inOut, endAlpha, fadeTime)
 	end
 	tinsert(FADEFRAMES, frame)
 	frameFadeManager:SetScript("OnUpdate", UIFrameFade_OnUpdate)
+end
+
+function Util.PositionFromIndex(index, frame, anchorFrame, point, relativePoint, dirH, dirV, frameSize, padding, offsetX, offsetY, rowLength)
+    local x, y
+    local level = math.floor(index/rowLength)
+    
+    if dirH == "LEFT" then
+        x = -(index*(frameSize+padding))+(level*rowLength*(frameSize+padding))+offsetX
+    elseif dirH == "RIGHT" then
+        x = (index*(frameSize+padding))+(level*rowLength*(frameSize+padding))+offsetX
+    end
+    
+    if dirV == "UP" then
+        y = (level*(frameSize+padding))+offsetY
+    elseif dirV == "DOWN" then
+        y = -(level*(frameSize+padding))+offsetY
+    end
+    
+    frame:ClearAllPoints()
+    frame:SetPoint(point, anchorFrame, relativePoint, x, y)
 end
