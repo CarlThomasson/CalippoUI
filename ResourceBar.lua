@@ -158,7 +158,8 @@ function RB.Load()
 
     local f = CreateFrame("Frame")
     f:RegisterEvent("PLAYER_ENTERING_WORLD")
+    f:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
     f:SetScript("OnEvent", function()
-        RB.UpdatePersonalBar(PersonalResourceDisplayFrame)
+        C_Timer.After(0.5, function() RB.UpdatePersonalBar(PersonalResourceDisplayFrame) end)
     end)
 end

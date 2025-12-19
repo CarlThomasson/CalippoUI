@@ -49,7 +49,7 @@ local defaults = {
                     Size = 10,
                 },
             },
-
+            
             MainActionBar = {
                 
             },

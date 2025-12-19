@@ -4,6 +4,12 @@ CUI.CDM = {}
 local CDM = CUI.CDM
 local Util = CUI.Util
 
+local cooldownViewers = {
+    EssentialCooldownViewer,
+    UtilityCooldownViewer,
+    BuffIconCooldownViewer,
+}
+
 ---------------------------------------------------------------------------------------------------
 
 function CDM.UpdateAlpha(frame, inCombat)
@@ -79,11 +85,13 @@ local function UpdatePositions(viewer)
 
     local frameSize
     if viewerName == "EssentialCooldownViewer" then
-        frameSize = 50 * viewer.iconScale        
+        frameSize = 50 * viewer.iconScale
+        viewer.frameSize = frameSize  
     elseif viewerName == "UtilityCooldownViewer" then
-        frameSize = 30 * viewer.iconScale 
+        frameSize = 30 * viewer.iconScale
+        viewer.frameSize = frameSize
     elseif viewerName == "BuffIconCooldownViewer" then
-        frameSize = 40 * viewer.iconScale 
+        frameSize = 40 * viewer.iconScale
     end
 
     local frames = {}
@@ -92,6 +100,7 @@ local function UpdatePositions(viewer)
             table.insert(frames, frame)
         end
     end
+    viewer.frameCount = #frames
 
     table.sort(frames, function(a, b)
         local a2 = a.layoutIndex or 1000
@@ -128,17 +137,7 @@ local function UpdatePositions(viewer)
         
         frame:SetSize(frameSize, frameSize)
     end
-
-    if not InCombatLockdown() and viewerName ~= "BuffIconCooldownViewer" then
-        viewer:SetWidth(iconScale * ((math.min(#frames, rowSize) * (frameSize + padding) - padding)))
-    end
 end
-
-local cooldownViewers = {
-    EssentialCooldownViewer,
-    UtilityCooldownViewer,
-    BuffIconCooldownViewer,
-}
 
 local function HookScripts(viewer)
     viewer:HookScript("OnShow", function(self)
@@ -174,6 +173,9 @@ function CDM.Load()
             CDM.UpdateAlpha(self)
         end)
 
+        if viewer:GetName() ~= "BuffIconCooldownViewer" then
+            viewer:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
+        end
         viewer:RegisterEvent("PLAYER_REGEN_ENABLED")
         viewer:RegisterEvent("PLAYER_REGEN_DISABLED")
         viewer:HookScript("OnEvent", function(self, event)
@@ -181,7 +183,9 @@ function CDM.Load()
                 CDM.UpdateAlpha(self)
             elseif event == "PLAYER_REGEN_DISABLED" then
                 CDM.UpdateAlpha(self, true)
-            end
+            elseif event == "ACTIVE_TALENT_GROUP_CHANGED" then
+                viewer:SetWidth(viewer.iconScale * ((math.min(viewer.frameCount, viewer.iconLimit) * (viewer.frameSize + viewer.iconPadding) - viewer.iconPadding)))
+            end 
         end)
 
         CDM.UpdateAlpha(viewer)
