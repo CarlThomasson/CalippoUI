@@ -19,9 +19,18 @@ local defaults = {
         ActionBars = {
             Enabled = true,
 
-            MainActionBar = {
+            ["**"] = {
                 Alpha = 1,
                 CombatAlpha = 1,
+
+                ShouldAnchor = false,
+                AnchorFrame = "UIParent",
+                AnchorPoint = "CENTER",
+                AnchorRelativePoint = "CENTER",
+                PosX = 0,
+                PosY = 0,
+
+                Padding = 0,
 
                 Keybind = {
                     Enabled = true,
@@ -39,249 +48,37 @@ local defaults = {
                     Enabled = true,
                     Size = 10,
                 },
+            },
 
-                ShouldAnchor = false,
-                AnchorFrame = "UIParent",
-                AnchorPoint = "CENTER",
-                AnchorRelativePoint = "CENTER",
-                PosX = 0,
-                PosY = 0,
+            MainActionBar = {
                 
             },
             MultiBarBottomLeft = {
-                Alpha = 1,
-                CombatAlpha = 1,
 
-                Keybind = {
-                    Enabled = true,
-                    Size = 10,
-                },
-                Cooldown = {
-                    Enabled = true,
-                    Size = 16,
-                },
-                Charges = {
-                    Enabled = true,
-                    Size = 16,
-                },
-                Macro = {
-                    Enabled = true,
-                    Size = 10,
-                },
-
-                ShouldAnchor = false,
-                AnchorFrame = "UIParent",
-                AnchorPoint = "CENTER",
-                AnchorRelativePoint = "CENTER",
-                PosX = 0,
-                PosY = 0,
             },
             MultiBarBottomRight = {
-                Alpha = 1,
-                CombatAlpha = 1,
 
-                Keybind = {
-                    Enabled = true,
-                    Size = 10,
-                },
-                Cooldown = {
-                    Enabled = true,
-                    Size = 16,
-                },
-                Charges = {
-                    Enabled = true,
-                    Size = 16,
-                },
-                Macro = {
-                    Enabled = true,
-                    Size = 10,
-                },
-
-                ShouldAnchor = false,
-                AnchorFrame = "UIParent",
-                AnchorPoint = "CENTER",
-                AnchorRelativePoint = "CENTER",
-                PosX = 0,
-                PosY = 0,
             },
             MultiBarLeft = {
-                Alpha = 1,
-                CombatAlpha = 1,
 
-                Keybind = {
-                    Enabled = true,
-                    Size = 10,
-                },
-                Cooldown = {
-                    Enabled = true,
-                    Size = 16,
-                },
-                Charges = {
-                    Enabled = true,
-                    Size = 16,
-                },
-                Macro = {
-                    Enabled = true,
-                    Size = 10,
-                },
-
-                ShouldAnchor = false,
-                AnchorFrame = "UIParent",
-                AnchorPoint = "CENTER",
-                AnchorRelativePoint = "CENTER",
-                PosX = 0,
-                PosY = 0,
             },
             MultiBarRight = {
-                Alpha = 1,
-                CombatAlpha = 1,
 
-                Keybind = {
-                    Enabled = true,
-                    Size = 10,
-                },
-                Cooldown = {
-                    Enabled = true,
-                    Size = 16,
-                },
-                Charges = {
-                    Enabled = true,
-                    Size = 16,
-                },
-                Macro = {
-                    Enabled = true,
-                    Size = 10,
-                },
-
-                ShouldAnchor = false,
-                AnchorFrame = "UIParent",
-                AnchorPoint = "CENTER",
-                AnchorRelativePoint = "CENTER",
-                PosX = 0,
-                PosY = 0,
             },
             MultiBar5 = {
-                Alpha = 1,
-                CombatAlpha = 1,
 
-                Keybind = {
-                    Enabled = true,
-                    Size = 10,
-                },
-                Cooldown = {
-                    Enabled = true,
-                    Size = 16,
-                },
-                Charges = {
-                    Enabled = true,
-                    Size = 16,
-                },
-                Macro = {
-                    Enabled = true,
-                    Size = 10,
-                },
-
-                ShouldAnchor = false,
-                AnchorFrame = "UIParent",
-                AnchorPoint = "CENTER",
-                AnchorRelativePoint = "CENTER",
-                PosX = 0,
-                PosY = 0,
             },
             MultiBar6 = {
-                Alpha = 1,
-                CombatAlpha = 1,
 
-                Keybind = {
-                    Enabled = true,
-                    Size = 10,
-                },
-                Cooldown = {
-                    Enabled = true,
-                    Size = 16,
-                },
-                Charges = {
-                    Enabled = true,
-                    Size = 16,
-                },
-                Macro = {
-                    Enabled = true,
-                    Size = 10,
-                },
-
-                ShouldAnchor = false,
-                AnchorFrame = "UIParent",
-                AnchorPoint = "CENTER",
-                AnchorRelativePoint = "CENTER",
-                PosX = 0,
-                PosY = 0,
             },
             MultiBar7 = {
-                Alpha = 1,
-                CombatAlpha = 1,
 
-                Keybind = {
-                    Enabled = true,
-                    Size = 10,
-                },
-                Cooldown = {
-                    Enabled = true,
-                    Size = 16,
-                },
-                Charges = {
-                    Enabled = true,
-                    Size = 16,
-                },
-                Macro = {
-                    Enabled = true,
-                    Size = 10,
-                },
-
-                ShouldAnchor = false,
-                AnchorFrame = "UIParent",
-                AnchorPoint = "CENTER",
-                AnchorRelativePoint = "CENTER",
-                PosX = 0,
-                PosY = 0,
             },
             PetActionBar = {
-                Alpha = 1,
-                CombatAlpha = 1,
 
-                Keybind = {
-                    Enabled = true,
-                    Size = 10,
-                },
-                Cooldown = {
-                    Enabled = true,
-                    Size = 16,
-                },
-                Charges = {
-                    Enabled = true,
-                    Size = 16,
-                },
-                Macro = {
-                    Enabled = true,
-                    Size = 10,
-                },
-
-                ShouldAnchor = false,
-                AnchorFrame = "UIParent",
-                AnchorPoint = "CENTER",
-                AnchorRelativePoint = "CENTER",
-                PosX = 0,
-                PosY = 0,
             },
             MicroMenu = {
-                Alpha = 1,
-                CombatAlpha = 1,
 
-                ShouldAnchor = false,
-                AnchorFrame = "UIParent",
-                AnchorPoint = "CENTER",
-                AnchorRelativePoint = "CENTER",
-                PosX = 0,
-                PosY = 0,
             },
         },
         UnitFrames = {
@@ -293,6 +90,12 @@ local defaults = {
 
                 Width = 200,
                 Height = 50,
+
+                AnchorFrame = "UIParent",
+                AnchorPoint = "CENTER",
+                AnchorRelativePoint = "CENTER",
+                PosX = -200,
+                PosY = 0,
 
                 Name = {
                     Enabled = true,
@@ -324,11 +127,10 @@ local defaults = {
                     PosY = 0,   
                 },
 
-                AnchorFrame = "UIParent",
-                AnchorPoint = "CENTER",
-                AnchorRelativePoint = "CENTER",
-                PosX = -200,
-                PosY = 0,
+                PowerBar = {
+                    Enabled = true,
+                    Height = 5,
+                },
             },
             TargetFrame = {
                 Alpha = 1,
@@ -404,6 +206,11 @@ local defaults = {
                     PosX = 0,
                     PosY = 0,
                 },
+
+                PowerBar = {
+                    Enabled = true,
+                    Height = 5,
+                },
             },
             FocusFrame = {
                 Alpha = 1,
@@ -478,6 +285,11 @@ local defaults = {
                     PosX = 0,
                     PosY = 0,
                 },
+
+                PowerBar = {
+                    Enabled = true,
+                    Height = 5,
+                },
             },
             PetFrame = {
                 Alpha = 1,
@@ -485,6 +297,12 @@ local defaults = {
 
                 Width = 200,
                 Height = 25,
+
+                AnchorFrame = "UIParent",
+                AnchorPoint = "CENTER",
+                AnchorRelativePoint = "CENTER",
+                PosX = 0,
+                PosY = 0,
 
                 Name = {
                     Enabled = true,
@@ -506,21 +324,10 @@ local defaults = {
                     PosY = 0,
                 },
 
-                LeaderIcon = {
+                PowerBar = {
                     Enabled = true,
-                    Size = 16,
-
-                    AnchorPoint = "TOPLEFT",
-                    AnchorRelativePoint = "TOPLEFT",
-                    PosX = 0,
-                    PosY = 0,   
+                    Height = 5,
                 },
-
-                AnchorFrame = "UIParent",
-                AnchorPoint = "CENTER",
-                AnchorRelativePoint = "CENTER",
-                PosX = 0,
-                PosY = 0,
             },
             BossFrame = {
                 Alpha = 1,
@@ -528,6 +335,12 @@ local defaults = {
 
                 Width = 200,
                 Height = 25,
+
+                AnchorFrame = "UIParent",
+                AnchorPoint = "CENTER",
+                AnchorRelativePoint = "CENTER",
+                PosX = 0,
+                PosY = 0,
 
                 Name = {
                     Enabled = true,
@@ -549,21 +362,10 @@ local defaults = {
                     PosY = 0,
                 },
 
-                LeaderIcon = {
+                PowerBar = {
                     Enabled = true,
-                    Size = 16,
-
-                    AnchorPoint = "TOPLEFT",
-                    AnchorRelativePoint = "TOPLEFT",
-                    PosX = 0,
-                    PosY = 0,   
+                    Height = 5,
                 },
-
-                AnchorFrame = "UIParent",
-                AnchorPoint = "CENTER",
-                AnchorRelativePoint = "CENTER",
-                PosX = 0,
-                PosY = 0,
             },
         },
         GroupFrames = {
@@ -572,10 +374,20 @@ local defaults = {
         PlayerCastBar = {
             Enabled = true,
 
+            Alpha = 1,
+            CombatAlpha = 1,
+
             Width = 200,
             Height = 20,
 
-            Color = {0, 1, 0, 1},
+            Color = {
+                ["r"] = 0, 
+                ["g"] = 0.8, 
+                ["b"] = 0, 
+                ["a"] = 1
+            },
+            
+            MatchWidth = false,
 
             AnchorFrame = "UIParent",
             AnchorPoint = "CENTER",
@@ -608,10 +420,16 @@ local defaults = {
             CombatAlpha = 1,
 
             Width = 200,
-            Height = 25,
+            Height = 12,
 
             Text = {
-                Size = 16,
+                Enabled = true,
+                Size = 10,
+
+                AnchorPoint = "CENTER",
+                AnchorRelativePoint = "CENTER",
+                PosX = 0,
+                PosY = 0,
             },
 
             MatchWidth = true,
@@ -621,6 +439,14 @@ local defaults = {
             AnchorRelativePoint = "CENTER",
             PosX = 0,
             PosY = 0,
+
+            PersonalResourceBar = {
+                AnchorFrame = "CUI_PowerBar",
+                AnchorPoint = "BOTTOM",
+                AnchorRelativePoint = "TOP",
+                PosX = 0,
+                PosY = 2,
+            }
         },
         CooldownManager = {
             Enabled = true,
@@ -658,7 +484,7 @@ local defaults = {
                     Size = 12,
                 },
             },
-        }
+        },
     }
 }
 

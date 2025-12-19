@@ -32,6 +32,15 @@ function UF.UpdateSizePos(frame)
     frame:ClearAllPoints()
     frame:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
     frame:SetSize(dbEntry.Width, dbEntry.Height)
+
+    if dbEntry.PowerBar.Enabled then
+        frame.PowerBar:Show()
+        frame.PowerBar:SetHeight(dbEntry.PowerBar.Height)
+        frame.HealthBar:SetPoint("BOTTOMRIGHT", frame.PowerBar, "TOPRIGHT")
+    else
+        frame.PowerBar:Hide()
+        frame.HealthBar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT")
+    end
 end
 
 function UF.UpdateTexts(frame)
@@ -61,6 +70,8 @@ function UF.UpdateTexts(frame)
 end
 
 function UF.UpdateLeaderAssist(frame)
+    if frame.name == "PetFrame" or frame.name == "BossFrame" then return end
+
     local unit = frame.unit
     local dbEntry = CUI.DB.profile.UnitFrames[frame.name].LeaderIcon
     local leaderFrame = frame.Overlay.Leader
@@ -344,8 +355,9 @@ function SetupUnitFrame(frameName, unit)
     local dbEntry = CUI.DB.profile.UnitFrames[frameName]
 
     local frame = CreateFrame("Button", "CUI_"..frameName, UIParent, "CUI_UnitFrameTemplate")
-    frame:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
     frame:SetSize(dbEntry.Width, dbEntry.Height)
+
+    frame:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
 
     frame:SetAttribute("unit", unit)
     frame:RegisterForClicks("AnyDown")
@@ -355,27 +367,29 @@ function SetupUnitFrame(frameName, unit)
     frame.unit = unit
     frame.name = frameName
 
+    if unit == "target" then
+        frame:RegisterEvent("PLAYER_TARGET_CHANGED")
+    elseif unit == "focus" then
+        frame:RegisterEvent("PLAYER_FOCUS_CHANGED")
+    elseif unit == "pet" then
+        frame:HookScript("OnShow", function(self)
+            UpdateAll(self)
+        end)
+    end
+
+    local powerBar = CreateFrame("StatusBar", nil, frame)
+    powerBar:SetParentKey("PowerBar")
+    powerBar:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT")
+    powerBar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT")
+    powerBar:SetHeight(dbEntry.PowerBar.Height)
+    powerBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
+    Util.AddStatusBarBackground(powerBar)
+    Util.AddBorder(powerBar)
+
     local healthBar = CreateFrame("StatusBar", nil, frame)
     healthBar:SetParentKey("HealthBar")
     healthBar:SetPoint("TOPLEFT", frame, "TOPLEFT")
-    if unit == "player" then
-        healthBar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT")
-    else
-        healthBar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 5)
-        frame:RegisterEvent("PLAYER_TARGET_CHANGED")
-        frame:RegisterUnitEvent("UNIT_POWER_UPDATE", unit)
-        frame:RegisterUnitEvent("UNIT_MAXPOWER", unit)
-        if unit == "focus" then
-            frame:RegisterEvent("PLAYER_FOCUS_CHANGED")
-        end
-        local powerBar = CreateFrame("StatusBar", nil, frame)
-        powerBar:SetParentKey("PowerBar")
-        powerBar:SetPoint("TOPLEFT", healthBar, "BOTTOMLEFT")
-        powerBar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT")
-        powerBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
-        Util.AddStatusBarBackground(powerBar)
-        Util.AddBorder(powerBar)
-    end
+    healthBar:SetPoint("BOTTOMRIGHT", powerBar, "TOPRIGHT")
     healthBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
     Util.AddStatusBarBackground(healthBar)
     Util.AddBorder(healthBar)
@@ -405,10 +419,10 @@ function SetupUnitFrame(frameName, unit)
     leaderFrame:SetSize(15, 15)
     leaderFrame:Hide()
     
-    UF.UpdateTexts(frame)
-
     frame:RegisterUnitEvent("UNIT_HEALTH", unit)
     frame:RegisterUnitEvent("UNIT_MAXHEALTH", unit)
+    frame:RegisterUnitEvent("UNIT_POWER_UPDATE", unit)
+    frame:RegisterUnitEvent("UNIT_MAXPOWER", unit)
     frame:RegisterEvent("PLAYER_REGEN_ENABLED")
     frame:RegisterEvent("PLAYER_REGEN_DISABLED")
     frame:RegisterEvent("PARTY_LEADER_CHANGED")
@@ -433,11 +447,13 @@ function SetupUnitFrame(frameName, unit)
         elseif event == "PLAYER_REGEN_DISABLED" then
             UF.UpdateAlpha(self, true)
         elseif event == "PARTY_LEADER_CHANGED" or event == "GROUP_FORMED" or event == "GROUP_LEFT" then
-            UpdateLeaderAssist(self)
+            UF.UpdateLeaderAssist(self)
         end
     end)
 
     UpdateAll(frame)
+    UF.UpdateTexts(frame)
+    UF.UpdateSizePos(frame)
     RegisterUnitWatch(frame, false)
 end
 
@@ -450,6 +466,8 @@ function UF.Load()
     SetupUnitFrame("TargetFrame", "target")
     SetupUnitFrame("FocusFrame", "focus")
     SetupUnitFrame("PetFrame", "pet")
+
+    SetupUnitFrame("BossFrame", "boss1")
 
     --SetupCastBar(FocusFrame, FocusFrameSpellBar)
 

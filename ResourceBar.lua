@@ -2,6 +2,7 @@ local addonName, CUI = ...
 
 CUI.RB = {}
 local RB = CUI.RB
+local Hide = CUI.Hide
 local Util = CUI.Util
 
 ---------------------------------------------------------------------------------------------------
@@ -19,7 +20,16 @@ function RB.UpdateAlpha(frame, inCombat)
 end
 
 function RB.UpdateText(frame)
-    frame.Text:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", CUI.DB.profile.ResourceBar.Text.Size, "")
+    local dbEntry = CUI.DB.profile.ResourceBar.Text
+
+    if dbEntry.Enabled then
+        frame.Text:Show()
+        frame.Text:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", dbEntry.Size, "")
+        frame.Text:ClearAllPoints()
+        frame.Text:SetPoint(dbEntry.AnchorPoint, frame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
+    else
+        frame.Text:Hide()
+    end
 end
 
 function RB.UpdateFrame(frame)
@@ -34,6 +44,13 @@ function RB.UpdateFrame(frame)
     else
         frame:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
     end
+end
+
+function RB.UpdatePersonalBar(frame)
+    local dbEntry = CUI.DB.profile.ResourceBar.PersonalResourceBar
+
+    frame:ClearAllPoints()
+    frame:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -66,12 +83,11 @@ end
 
 ---------------------------------------------------------------------------------------------------
 
+local powerBar = CreateFrame("Statusbar", "CUI_PowerBar", UIParent)
 local function SetupPowerBar()
-    local powerBar = CreateFrame("Statusbar", "CUI_PowerBar", UIParent)
     powerBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
 
-    RB.UpdateFrame(powerBar)
-
+    RB.UpdateFrame(powerBar) 
     UpdatePowerColor(powerBar)
     Util.AddStatusBarBackground(powerBar)
     Util.AddBorder(powerBar)
@@ -87,6 +103,7 @@ local function SetupPowerBar()
     powerBar:RegisterUnitEvent("UNIT_MAXPOWER", "player")
     powerBar:RegisterEvent("PLAYER_REGEN_ENABLED")
     powerBar:RegisterEvent("PLAYER_REGEN_DISABLED")
+    powerBar:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
     powerBar:SetScript("OnEvent", function(self, event, ...)
         if event == "UNIT_POWER_UPDATE" then
             UpdatePower(self)
@@ -98,6 +115,8 @@ local function SetupPowerBar()
         elseif event == "PLAYER_REGEN_DISABLED" then
             RB.UpdateAlpha(self, true)
             RB.UpdateAlpha(PersonalResourceDisplayFrame, true)
+        elseif event == "ACTIVE_TALENT_GROUP_CHANGED" then
+            C_Timer.After(0.5, function() UpdatePowerColor(self) end)
         end
     end)
 
@@ -107,15 +126,27 @@ end
 
 local function SetupPersonalResourceBar()
     if not prdClassFrame then return end
+    SetCVar("nameplateShowSelf", 1)
+    SetCVar("nameplateHideHealthAndPower", 1)
+    SetCVar("NameplatePersonalShowAlways", 1)
 
-    local _, class = UnitClass("player")
+    Hide.HideFrame(PersonalResourceDisplayFrame.PowerBar)
+    Hide.HideFrame(PersonalResourceDisplayFrame.HealthBarsContainer)
+    
+    RB.UpdatePersonalBar(PersonalResourceDisplayFrame)
 
+    EditModeManagerFrame:HookScript("OnHide", function(self)
+        RB.UpdatePersonalBar(PersonalResourceDisplayFrame)
+    end)
+
+    PersonalResourceDisplayFrame:SetSize(8, 8)
+    
     prdClassFrame:ClearAllPoints()
-
+    local _, class = UnitClass("player")
     if class == "PALADIN" then
-        prdClassFrame:SetPoint("BOTTOM", PersonalResourceDisplayFrame, "BOTTOM", 0, -5)
+        prdClassFrame:SetPoint("BOTTOM", PersonalResourceDisplayFrame, "BOTTOM", 0, -7)
     else
-        prdClassFrame:SetPoint("BOTTOM", PersonalResourceDisplayFrame, "BOTTOM", 0, 5)
+        prdClassFrame:SetPoint("BOTTOM", PersonalResourceDisplayFrame, "BOTTOM", 0, 1)
     end
 end
 
@@ -124,4 +155,10 @@ end
 function RB.Load()
     SetupPowerBar()
     SetupPersonalResourceBar()
+
+    local f = CreateFrame("Frame")
+    f:RegisterEvent("PLAYER_ENTERING_WORLD")
+    f:SetScript("OnEvent", function()
+        RB.UpdatePersonalBar(PersonalResourceDisplayFrame)
+    end)
 end

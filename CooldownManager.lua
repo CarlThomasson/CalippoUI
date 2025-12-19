@@ -75,12 +75,14 @@ local function UpdatePositions(viewer)
     local padding = viewer.iconPadding
     local rowSize = viewer.iconLimit
 
+    local viewerName = viewer:GetName()
+
     local frameSize
-    if viewer:GetName() == "EssentialCooldownViewer" then
-        frameSize = 50 * viewer.iconScale 
-    elseif viewer:GetName() == "UtilityCooldownViewer" then
+    if viewerName == "EssentialCooldownViewer" then
+        frameSize = 50 * viewer.iconScale        
+    elseif viewerName == "UtilityCooldownViewer" then
         frameSize = 30 * viewer.iconScale 
-    elseif viewer:GetName() == "BuffIconCooldownViewer" then
+    elseif viewerName == "BuffIconCooldownViewer" then
         frameSize = 40 * viewer.iconScale 
     end
 
@@ -101,7 +103,7 @@ local function UpdatePositions(viewer)
     local lastRowSize
     local lastRowOffest
 
-    if viewer:GetName() == "BuffIconCooldownViewer" then
+    if viewerName == "BuffIconCooldownViewer" then
         lastRowOffest = ((frameSize + padding) * (#frames - 1)) / 2 + padding
     else
         lastRow = math.ceil(#frames / rowSize) - 1
@@ -116,7 +118,7 @@ local function UpdatePositions(viewer)
 
         frame:ClearAllPoints()
 
-        if viewer:GetName() == "BuffIconCooldownViewer" then
+        if viewerName == "BuffIconCooldownViewer" then
             frame:SetPoint("CENTER", viewer, "CENTER", (index*(frameSize+padding))-lastRowOffest, 0)
         elseif row == lastRow and row ~= 0 and lastRowSize ~= rowSize then
             frame:SetPoint("TOPLEFT", viewer, "TOPLEFT", (index*(frameSize+padding))-(row*rowSize*(frameSize+padding))+lastRowOffest, -(row*(frameSize+padding)))
@@ -125,6 +127,10 @@ local function UpdatePositions(viewer)
         end
         
         frame:SetSize(frameSize, frameSize)
+    end
+
+    if not InCombatLockdown() and viewerName ~= "BuffIconCooldownViewer" then
+        viewer:SetWidth(iconScale * ((math.min(#frames, rowSize) * (frameSize + padding) - padding)))
     end
 end
 

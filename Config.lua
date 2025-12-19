@@ -8,6 +8,7 @@ local CDM = CUI.CDM
 local PA = CUI.PA
 local RB = CUI.RB
 local MM = CUI.MM
+local CB = CUI.CB
 
 local AceGUI = LibStub("AceGUI-3.0")
 
@@ -83,7 +84,6 @@ local function CreateAnchorGroup(container, dbEntry, func, frame)
 
     CreateEditBox(anchorGroup, "Anchor Frame", dbEntry.AnchorFrame,
         function(self, event, value)
-            -- TODO : Gör så att "X.Y" fungerar
             local frameExists = _G[value]
             if frameExists then
                 dbEntry.AnchorFrame = value
@@ -106,13 +106,13 @@ local function CreateAnchorGroup(container, dbEntry, func, frame)
             func(frame)
         end, 0.33)
         
-    CreateSlider(anchorGroup, "Position X", -500, 500, 1, dbEntry.PosX,
+    CreateSlider(anchorGroup, "Position X", -1000, 1000, 0.1, dbEntry.PosX,
         function(self, event, value)
             dbEntry.PosX = value
             func(frame)
         end, 0.5)
 
-    CreateSlider(anchorGroup, "Position Y", -500, 500, 1, dbEntry.PosY,
+    CreateSlider(anchorGroup, "Position Y", -1000, 1000, 0.1, dbEntry.PosY,
         function(self, event, value)
             dbEntry.PosY = value
             func(frame)
@@ -155,6 +155,67 @@ local function CreateSizeGroup(container, dbEntry, func, frame)
         end, 0.5)
 
     return sizeGroup
+end
+
+local function CreateColorGroup(container, dbEntry, func, frame)
+    local colorGroup = CreateInlineGroup(container, "Color")
+
+    local colorPicker = AceGUI:Create("ColorPicker")
+    colorPicker:SetColor(dbEntry.Color.r, dbEntry.Color.g, dbEntry.Color.b, dbEntry.Color.a)
+    colorPicker:SetCallback("OnValueConfirmed", 
+        function(self, event, r, g, b, a)
+            print(r, g, b, a)
+            print("ASDASD")
+            dbEntry.Color.r = r
+            dbEntry.Color.g = g
+            dbEntry.Color.b = b
+            dbEntry.Color.a = a
+
+            func(frame)
+        end)
+    colorGroup:AddChild(colorPicker)
+
+    return colorGroup
+end
+
+local function CreateTextPositionGroup(container, dbEntry, func, frame, text)
+    local textGroup = CreateInlineGroup(container, text)
+
+    CreateCheckBox(textGroup, "Toggle "..text, dbEntry.Enabled,
+        function(self, event, value)
+            dbEntry.Enabled = value
+            func(frame)
+        end, 0.5)
+
+    CreateSlider(textGroup, text.." Font Size", 1, 50, 1, dbEntry.Size, 
+        function(self, event, value)
+            dbEntry.Size = value
+            func(frame)
+        end, 0.5)
+
+    CreateDropDown(textGroup, "Anchor Point", dbEntry.AnchorPoint, anchorPoints,
+        function(self, event, value)
+            dbEntry.AnchorPoint = value
+            func(frame)
+        end, 0.5)
+        
+    CreateDropDown(textGroup, "Relative Anchor Point", dbEntry.AnchorRelativePoint, anchorPoints,
+        function(self, event, value)
+            dbEntry.AnchorRelativePoint = value
+            func(frame)
+        end, 0.5)
+        
+    CreateSlider(textGroup, "Position X", -1000, 1000, 0.1, dbEntry.PosX,
+        function(self, event, value)
+            dbEntry.PosX = value
+            func(frame)
+        end, 0.5)
+
+    CreateSlider(textGroup, "Position Y", -1000, 1000, 0.1, dbEntry.PosY,
+        function(self, event, value)
+            dbEntry.PosY = value
+            func(frame)
+        end, 0.5)
 end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
@@ -231,7 +292,6 @@ local function CreateActionBarPage(container, actionBar)
     container:AddChild(scrollFrame)
 
     if actionBar ~= "MicroMenu" then
-        ----------------------------------------------------------------------------------------------------
         local textGroup = CreateInlineGroup(scrollFrame, "Text")
 
         CreateCheckBox(textGroup, "Toggle Keybind Text", dbEntry.Keybind.Enabled,
@@ -281,13 +341,18 @@ local function CreateActionBarPage(container, actionBar)
                 dbEntry.Macro.Size = value
                 AB.UpdateBar(frame)
             end, 0.25)
+
+        local paddingGroup = CreateInlineGroup(scrollFrame, "Padding")
+
+        CreateSlider(paddingGroup, "Padding", 0, 15, 1, dbEntry.Padding, 
+            function(self, event, value)
+                dbEntry.Padding = value
+                AB.UpdateBar(frame)
+            end, 1)
     end
     
-    ----------------------------------------------------------------------------------------------------
-
     CreateAlphaGroup(scrollFrame, dbEntry, AB.UpdateAlpha, frame)
 
-    ----------------------------------------------------------------------------------------------------
     local anchorGroup = CreateInlineGroup(scrollFrame, "Anchor")
 
     CreateCheckBox(anchorGroup, "Toggle Anchoring", dbEntry.ShouldAnchor,
@@ -298,7 +363,6 @@ local function CreateActionBarPage(container, actionBar)
 
     CreateEditBox(anchorGroup, "Anchor Frame", dbEntry.AnchorFrame,
         function(self, event, value)
-            -- TODO : Gör så att "X.Y" fungerar
             local frameExists = _G[value]
             if frameExists then
                 dbEntry.AnchorFrame = value
@@ -321,13 +385,13 @@ local function CreateActionBarPage(container, actionBar)
             AB.UpdateBarAnchor(frame)
         end, 0.5)
         
-    CreateSlider(anchorGroup, "Position X", -500, 500, 1, dbEntry.PosX,
+    CreateSlider(anchorGroup, "Position X", -1000, 1000, 0.1, dbEntry.PosX,
         function(self, event, value)
             dbEntry.PosX = value
             AB.UpdateBarAnchor(frame)
         end, 0.5)
 
-    CreateSlider(anchorGroup, "Position Y", -500, 500, 1, dbEntry.PosY,
+    CreateSlider(anchorGroup, "Position Y", -1000, 1000, 0.1, dbEntry.PosY,
         function(self, event, value)
             dbEntry.PosY = value
             AB.UpdateBarAnchor(frame)
@@ -370,17 +434,25 @@ local function CreateUnitFrameFramePage(container, unitFrame)
     scrollFrame:SetLayout("List")
     container:AddChild(scrollFrame)
 
-    ----------------------------------------------------------------------------------------------------
-
     CreateSizeGroup(scrollFrame, dbEntry, UF.UpdateSizePos, frame)
-
-    ----------------------------------------------------------------------------------------------------
 
     CreateAlphaGroup(scrollFrame, dbEntry, UF.UpdateAlpha, frame)
 
-    ----------------------------------------------------------------------------------------------------
-
     CreateAnchorGroup(scrollFrame, dbEntry, UF.UpdateSizePos, frame)
+
+    local powerBarGroup = CreateInlineGroup(scrollFrame, "Power Bar")
+
+    CreateCheckBox(powerBarGroup, "Enable", dbEntry.PowerBar.Enabled,
+        function(self, event, value)
+            dbEntry.PowerBar.Enabled = value
+            UF.UpdateSizePos(frame)
+        end, 0.5)
+
+    CreateSlider(powerBarGroup, "Height", 1, 50, 1, dbEntry.PowerBar.Height, 
+        function(self, event, value)
+            dbEntry.PowerBar.Height = value
+            UF.UpdateSizePos(frame)
+        end, 0.5)
 
     scrollFrame:DoLayout()
 end
@@ -424,13 +496,13 @@ local function CreateUnitFrameTextPage(container, unitFrame)
             UF.UpdateTexts(frame)
         end, 0.5)
         
-    CreateSlider(nameGroup, "Position X", -500, 500, 1, dbEntry.Name.PosX,
+    CreateSlider(nameGroup, "Position X", -1000, 1000, 0.1, dbEntry.Name.PosX,
         function(self, event, value)
             dbEntry.Name.PosX = value
             UF.UpdateTexts(frame)
         end, 0.5)
 
-    CreateSlider(nameGroup, "Position Y", -500, 500, 1, dbEntry.Name.PosY,
+    CreateSlider(nameGroup, "Position Y", -1000, 1000, 0.1, dbEntry.Name.PosY,
         function(self, event, value)
             dbEntry.Name.PosY = value
             UF.UpdateTexts(frame)
@@ -469,13 +541,13 @@ local function CreateUnitFrameTextPage(container, unitFrame)
             UF.UpdateTexts(frame)
         end, 0.5)
         
-    CreateSlider(healthGroup, "Position X", -500, 500, 1, dbEntry.HealthText.PosX,
+    CreateSlider(healthGroup, "Position X", -1000, 1000, 0.1, dbEntry.HealthText.PosX,
         function(self, event, value)
             dbEntry.HealthText.PosX = value
             UF.UpdateTexts(frame)
         end, 0.5)
 
-    CreateSlider(healthGroup, "Position Y", -500, 500, 1, dbEntry.HealthText.PosY,
+    CreateSlider(healthGroup, "Position Y", -1000, 1000, 0.1, dbEntry.HealthText.PosY,
         function(self, event, value)
             dbEntry.HealthText.PosY = value
             UF.UpdateTexts(frame)
@@ -492,31 +564,33 @@ local function CreateUnitFrameMiscPage(container, unitFrame)
     scrollFrame:SetLayout("List")
     container:AddChild(scrollFrame)
 
-    local leaderGroup = CreateInlineGroup(scrollFrame, "Leader / Assist Icon")
+    if unitFrame ~= "PetFrame" or unitFrame ~= "BossFrame" then
+        local leaderGroup = CreateInlineGroup(scrollFrame, "Leader / Assist Icon")
 
-    CreateDropDown(leaderGroup, "Anchor Point", dbEntry.LeaderIcon.AnchorPoint, anchorPoints,
-        function(self, event, value)
-            dbEntry.LeaderIcon.AnchorPoint = value
-            UF.UpdateLeaderAssist(frame)
-        end, 0.5)
-        
-    CreateDropDown(leaderGroup, "Relative Anchor Point", dbEntry.LeaderIcon.AnchorRelativePoint, anchorPoints,
-        function(self, event, value)
-            dbEntry.LeaderIcon.AnchorRelativePoint = value
-            UF.UpdateLeaderAssist(frame)
-        end, 0.5)
-        
-    CreateSlider(leaderGroup, "Position X", -500, 500, 1, dbEntry.LeaderIcon.PosX,
-        function(self, event, value)
-            dbEntry.LeaderIcon.PosX = value
-            UF.UpdateLeaderAssist(frame)
-        end, 0.5)
+        CreateDropDown(leaderGroup, "Anchor Point", dbEntry.LeaderIcon.AnchorPoint, anchorPoints,
+            function(self, event, value)
+                dbEntry.LeaderIcon.AnchorPoint = value
+                UF.UpdateLeaderAssist(frame)
+            end, 0.5)
+            
+        CreateDropDown(leaderGroup, "Relative Anchor Point", dbEntry.LeaderIcon.AnchorRelativePoint, anchorPoints,
+            function(self, event, value)
+                dbEntry.LeaderIcon.AnchorRelativePoint = value
+                UF.UpdateLeaderAssist(frame)
+            end, 0.5)
+            
+        CreateSlider(leaderGroup, "Position X", -500, 500, 0.1, dbEntry.LeaderIcon.PosX,
+            function(self, event, value)
+                dbEntry.LeaderIcon.PosX = value
+                UF.UpdateLeaderAssist(frame)
+            end, 0.5)
 
-    CreateSlider(leaderGroup, "Position Y", -500, 500, 1, dbEntry.LeaderIcon.PosY,
-        function(self, event, value)
-            dbEntry.LeaderIcon.PosY = value
-            UF.UpdateLeaderAssist(frame)
-        end, 0.5)
+        CreateSlider(leaderGroup, "Position Y", -500, 500, 0.1, dbEntry.LeaderIcon.PosY,
+            function(self, event, value)
+                dbEntry.LeaderIcon.PosY = value
+                UF.UpdateLeaderAssist(frame)
+            end, 0.5)
+    end
 
     scrollFrame:DoLayout()
 end
@@ -545,6 +619,7 @@ local function CreateUnitFrameTabs(container, unitFrame)
     tabGroup:SelectTab("Frame")
 
     container:AddChild(tabGroup)
+    container:DoLayout()
 end
 
 local function CreateUnitFrameSettings(container)
@@ -557,7 +632,8 @@ local function CreateUnitFrameSettings(container)
     tabGroup:SetLayout("Fill")
     tabGroup:SetTabs({{text="Player Frame", value="PlayerFrame"}, 
                     {text="Target Frame", value="TargetFrame"},
-                    {text="Focus Frame", value="FocusFrame"},})
+                    {text="Focus Frame", value="FocusFrame"},
+                    {text="Pet Frame", value="PetFrame"},})
     tabGroup:SetCallback("OnGroupSelected", SelectGroup)
     tabGroup:SelectTab("PlayerFrame")
 
@@ -615,12 +691,9 @@ end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
 
-local function CreateResourceBarPage(container, resource)
+local function CreatePrimaryResourceBarPage(container)
     local dbEntry = CUI.DB.profile.ResourceBar
-    local frame
-    if resource == "Main" then
-        frame = CUI_PowerBar
-    end
+    local frame = CUI_PowerBar
     
     local scrollFrame = AceGUI:Create("ScrollFrame")
     scrollFrame:SetLayout("List")
@@ -628,23 +701,30 @@ local function CreateResourceBarPage(container, resource)
 
     local sizeGroup = CreateSizeGroup(scrollFrame, dbEntry, RB.UpdateFrame, frame)
 
-    CreateCheckBox(sizeGroup, "Match width to anchored frame", dbEntry.MatchWidth,
+    CreateCheckBox(sizeGroup, "Match width to anchored frame (also forces anchor to top of frame)", dbEntry.MatchWidth,
         function(self, event, value)
             dbEntry.MatchWidth = value
             RB.UpdateFrame(frame)
-        end)
-
-    local textGroup = CreateInlineGroup(scrollFrame, "Text")
-
-    CreateSlider(textGroup, "Font Size", 1, 50, 1, dbEntry.Text.Size, 
-        function(self, event, value)
-            dbEntry.Text.Size = value
-            RB.UpdateText(frame)
         end, 1)
 
     CreateAlphaGroup(scrollFrame, dbEntry, RB.UpdateAlpha, frame)
 
     CreateAnchorGroup(scrollFrame, dbEntry, RB.UpdateFrame, frame)
+
+    CreateTextPositionGroup(scrollFrame, dbEntry.Text, RB.UpdateText, frame, "Text")
+
+    scrollFrame:DoLayout()
+end
+
+local function CreateSecondaryResourceBarPage(container)
+    local dbEntry = CUI.DB.profile.ResourceBar.PersonalResourceBar
+    local frame = PersonalResourceDisplayFrame
+    
+    local scrollFrame = AceGUI:Create("ScrollFrame")
+    scrollFrame:SetLayout("List")
+    container:AddChild(scrollFrame) 
+
+    CreateAnchorGroup(scrollFrame, dbEntry, RB.UpdatePersonalBar, frame)
 
     scrollFrame:DoLayout()
 end
@@ -652,14 +732,19 @@ end
 local function CreateResourceBarSettings(container)
     local function SelectGroup(container, event, resource)
         container:ReleaseChildren()
-        CreateResourceBarPage(container, resource)
+        if resource == "Primary" then
+            CreatePrimaryResourceBarPage(container)
+        elseif resource == "Secondary" then
+            CreateSecondaryResourceBarPage(container)
+        end
     end
 
     local tabGroup = AceGUI:Create("TabGroup")
     tabGroup:SetLayout("Fill")
-    tabGroup:SetTabs({{text="Main", value="Main"},})
+    tabGroup:SetTabs({{text="Primary", value="Primary"},
+                    {text="Secondary", value="Secondary"},})
     tabGroup:SetCallback("OnGroupSelected", SelectGroup)
-    tabGroup:SelectTab("Main")
+    tabGroup:SelectTab("Primary")
 
     container:AddChild(tabGroup)
 end
@@ -708,6 +793,30 @@ end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
 
+local function CreatePlayerCastBarSettings(container)
+    local dbEntry = CUI.DB.profile.PlayerCastBar
+
+    local scrollFrame = AceGUI:Create("ScrollFrame")
+    scrollFrame:SetLayout("List")
+    container:AddChild(scrollFrame)
+
+    local sizeGroup = CreateSizeGroup(scrollFrame, dbEntry, CB.UpdateFrame, CUI_CastBar)
+
+    CreateCheckBox(sizeGroup, "Match width to anchored frame (also forces anchor to top of frame)", dbEntry.MatchWidth,
+        function(self, event, value)
+            dbEntry.MatchWidth = value
+            CB.UpdateFrame(CUI_CastBar)
+        end, 1)
+
+    CreateColorGroup(scrollFrame, dbEntry, CB.UpdateFrame, CUI_CastBar)
+
+    CreateAnchorGroup(scrollFrame, dbEntry, CB.UpdateFrame, CUI_CastBar)
+
+    scrollFrame:DoLayout()
+end
+
+---------------------------------------------------------------------------------------------------------------------------------------
+
 local function SetupMainTabs(frame)
     local function SelectGroup(container, event, group)
         container:ReleaseChildren()
@@ -725,8 +834,8 @@ local function SetupMainTabs(frame)
             CreateMinimapSettings(container)
         elseif group == "PlayerAuras" then
             CreatePlayerAuraSettings(container)
-        elseif group == "" then
-
+        elseif group == "PlayerCastBar" then
+            CreatePlayerCastBarSettings(container)
         elseif group == "" then
 
         elseif group == "" then

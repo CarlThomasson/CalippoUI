@@ -52,6 +52,8 @@ end
 function Util.GetUnitColor(unit)
     local r, g, b = 0, 0, 0
 
+    if unit == "pet" then unit = "player" end
+
     if UnitIsPlayer(unit) then
         local _, class = UnitClass(unit)
         if class then

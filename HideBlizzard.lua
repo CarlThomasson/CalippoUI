@@ -13,6 +13,8 @@ function Hide.HideFrame(frame)
     if frame.UnregisterAllEvents then
         frame:UnregisterAllEvents()
     end
+
+    frame:SetScript("OnShow", function(self) self:Hide() end)
     
     frame:Hide()
     frame:SetParent(hiddenParent)

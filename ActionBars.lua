@@ -56,9 +56,14 @@ function AB.UpdateBar(bar)
     local button = AB.ActionBars[bar]
     local dbEntry = CUI.DB.profile.ActionBars[bar:GetName()]
 
+    bar:SetWidth(_G[bar:GetName().."ButtonContainer1"]:GetScale() * (bar.numButtonsShowable * ((_G[bar:GetName().."ButtonContainer1"]:GetWidth() + dbEntry.Padding)) - dbEntry.Padding))
+
     for i=1, 12 do
         local frame = _G[button..i]
         if not frame then break end
+
+        local container = _G[bar:GetName().."ButtonContainer"..i]
+        Util.PositionFromIndex(i-1, container, bar, "TOPLEFT", "TOPLEFT", "RIGHT", "DOWN", container:GetWidth(), dbEntry.Padding, 0, 0, 123)
 
         if dbEntry.Keybind.Enabled then
             frame.TextOverlayContainer.HotKey:SetAlpha(1)
