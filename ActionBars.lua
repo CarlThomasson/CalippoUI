@@ -157,9 +157,7 @@ function AB.UpdateBarAnchor(bar)
     local dbEntry = CUI.DB.profile.ActionBars[bar:GetName()]
 
     if dbEntry.ShouldAnchor then
-        if not _G[dbEntry.AnchorFrame] then
-            dbEntry.AnchorFrame = "UIParent"
-        end
+        Util.CheckAnchorFrame(bar, dbEntry)
 
         if not InCombatLockdown() then
             bar:ClearAllPoints()
@@ -215,20 +213,8 @@ local function AddHooks()
     EditModeManagerFrame:HookScript("OnHide", function(self)
         if InCombatLockdown() then return end
         for bar, _ in pairs(AB.ActionBars) do
-            local dbEntry = CUI.DB.profile.ActionBars[bar:GetName()]
-
             AB.UpdateBar(bar)
-
-            if dbEntry.ShouldAnchor then
-                local anchorFrame = dbEntry.AnchorFrame
-                local anchorPoint = dbEntry.AnchorPoint
-                local anchorRelativePoint = dbEntry.AnchorRelativePoint
-                local posX = dbEntry.PosX
-                local posY = dbEntry.PosY
-
-                bar:ClearAllPoints()
-                bar:SetPoint(anchorPoint, anchorFrame, anchorRelativePoint, posX, posY)
-            end
+            AB.UpdateBarAnchor(bar)
         end
     end)
 end

@@ -154,3 +154,14 @@ function Util.PositionFromIndex(index, frame, anchorFrame, point, relativePoint,
     frame:ClearAllPoints()
     frame:SetPoint(point, anchorFrame, relativePoint, x, y)
 end
+
+function Util.CheckAnchorFrame(frame, dbEntry)
+    if not _G[dbEntry.AnchorFrame] then
+        print(frame:GetName().." could not anchor to "..dbEntry.AnchorFrame.." because it does not exist, resetting anchor to center of UIParent")
+        dbEntry.AnchorFrame = "UIParent"
+        dbEntry.AnchorPoint = "CENTER"
+        dbEntry.AnchorRelativePoint = "CENTER"
+        dbEntry.PosX = 0
+        dbEntry.PosY = 0
+    end
+end

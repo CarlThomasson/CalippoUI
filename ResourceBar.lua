@@ -44,6 +44,8 @@ function RB.UpdateFrame(frame)
     frame:SetSize(dbEntry.Width, dbEntry.Height)
     frame:SetStatusBarTexture(dbEntry.Texture)
 
+    Util.CheckAnchorFrame(frame, dbEntry)
+
     frame:ClearAllPoints()
     if dbEntry.MatchWidth then
         frame:SetPoint("BOTTOMLEFT", dbEntry.AnchorFrame, "TOPLEFT", 0, dbEntry.PosY)
@@ -55,6 +57,8 @@ end
 
 function RB.UpdatePersonalBar(frame)
     local dbEntry = CUI.DB.profile.ResourceBar.PersonalResourceBar
+
+    Util.CheckAnchorFrame(frame, dbEntry)
 
     frame:ClearAllPoints()
     frame:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)

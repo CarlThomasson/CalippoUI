@@ -50,7 +50,9 @@ local function SetupMinimap()
     GameTimeFrame:SetAlpha(0)
 
     Minimap:SetMaskTexture("Interface\\ChatFrame\\ChatFrameBackground")
-    Util.AddBorder(Minimap)
+    if not Minimap.Borders then
+        Util.AddBorder(Minimap)
+    end
 
     Minimap:ClearAllPoints()
     Minimap:SetPoint("TOPRIGHT", MinimapCluster.MinimapContainer, "TOPRIGHT")

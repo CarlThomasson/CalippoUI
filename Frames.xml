@@ -117,15 +117,13 @@
         <Size x="20" y="20"/>
         <Scripts>
 			<OnUpdate>
-				if ( GameTooltip:IsOwned(self) ) then
+				if GameTooltip:IsOwned(self) then
 					GameTooltip:SetUnitBuff(self.unit, self.index);
 				end
 			</OnUpdate>
 			<OnEnter>
-                if not InCombatLockdown() then
-                    GameTooltip:SetOwner(self, "ANCHOR_BOTTOMRIGHT", 15, -25);
-                    GameTooltip:SetUnitBuff(self.unit, self.index);
-                end
+                GameTooltip:SetOwner(self, "ANCHOR_BOTTOMRIGHT", 15, -25);
+                GameTooltip:SetUnitBuff(self.unit, self.index);
 			</OnEnter>
 			<OnLeave>
 				GameTooltip:Hide();

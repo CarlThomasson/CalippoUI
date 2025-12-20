@@ -29,6 +29,8 @@ end
 function UF.UpdateFrame(frame)
     local dbEntry = CUI.DB.profile.UnitFrames[frame.name]
 
+    Util.CheckAnchorFrame(frame, dbEntry)
+
     frame:ClearAllPoints()
     frame:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
     frame:SetSize(dbEntry.Width, dbEntry.Height)
@@ -71,6 +73,7 @@ function UF.UpdateTexts(frame)
         frame.Overlay.UnitHealth:Hide()
     end
 end
+
 function UF.UpdateLeaderAssist(frame)
     if not CUI.DB.profile.UnitFrames[frame.name].LeaderIcon then return end
 
@@ -99,6 +102,8 @@ function UF.UpdateCastBarFrame(unitFrame)
     castBar:SetSize(dbEntry.Width, dbEntry.Height)
     castBar:SetStatusBarTexture(dbEntry.Texture)
     castBar:SetStatusBarColor(dbEntry.Color.r, dbEntry.Color.g, dbEntry.Color.b, dbEntry.Color.a)
+
+    Util.CheckAnchorFrame(unitFrame, dbEntry)
 
     castBar:ClearAllPoints()
     if dbEntry.MatchWidth then
@@ -406,6 +411,8 @@ function SetupUnitFrame(frameName, unit)
 
     local frame = CreateFrame("Button", "CUI_"..frameName, UIParent, "CUI_UnitFrameTemplate")
     frame:SetSize(dbEntry.Width, dbEntry.Height)
+
+    Util.CheckAnchorFrame(frame, dbEntry)
     frame:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
 
     frame:SetAttribute("unit", unit)
