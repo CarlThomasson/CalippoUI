@@ -27,6 +27,12 @@ function RB.UpdateText(frame)
         frame.Text:SetFont(dbEntry.Font, dbEntry.Size, dbEntry.Outline)
         frame.Text:ClearAllPoints()
         frame.Text:SetPoint(dbEntry.AnchorPoint, frame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
+
+        if frame.powerType == "MANA" and CUI.DB.profile.ResourceBar.Text.ShowManaPercent then
+            frame.Text:SetText(Util.UnitPowerPercent("player", frame.powerType))
+        else
+            frame.Text:SetText(Util.UnitPowerText("player"))
+        end
     else
         frame.Text:Hide()
     end
@@ -60,7 +66,11 @@ local function UpdatePower(frame)
     local value = UnitPower("player")
 
     frame:SetValue(value)
-    frame.Text:SetText(Util.UnitPowerText("player"))
+    if frame.powerType == "MANA" and CUI.DB.profile.ResourceBar.Text.ShowManaPercent then
+        frame.Text:SetText(Util.UnitPowerPercent("player", frame.powerType))
+    else
+        frame.Text:SetText(Util.UnitPowerText("player"))
+    end
 end
 
 local function UpdateMaxPower(frame)
@@ -68,11 +78,17 @@ local function UpdateMaxPower(frame)
 
     frame:SetMinMaxValues(0, UnitPowerMax("player"))
     frame:SetValue(value)
-    frame.Text:SetText(Util.UnitPowerText("player"))
+
+    if frame.powerType == "MANA" and CUI.DB.profile.ResourceBar.Text.ShowManaPercent then
+        frame.Text:SetText(Util.UnitPowerPercent("player", frame.powerType))
+    else
+        frame.Text:SetText(Util.UnitPowerText("player"))
+    end
 end
 
 local function UpdatePowerColor(frame)
     local _, powerType = UnitPowerType("player")
+    frame.powerType = powerType
     if powerType == "MANA" or powerType == nil then powerType = "MAELSTROM" end
 
     local color = PowerBarColor[powerType]
@@ -88,7 +104,7 @@ local function SetupPowerBar()
     local powerBar = CreateFrame("Statusbar", "CUI_PowerBar", UIParent)
     powerBar:SetStatusBarTexture(CUI.DB.profile.ResourceBar.Texture)
 
-    RB.UpdateFrame(powerBar) 
+    RB.UpdateFrame(powerBar)
     UpdatePowerColor(powerBar)
     Util.AddStatusBarBackground(powerBar)
     Util.AddBorder(powerBar)

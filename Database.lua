@@ -54,26 +54,46 @@ local defaults = {
                 Keybind = {
                     Enabled = true,
                     Font = defaultFont,
-                    Outline = "",
+                    Outline = "OUTLINE",
                     Size = 10,
+
+                    AnchorPoint = "TOPLEFT",
+                    AnchorRelativePoint = "TOPLEFT",
+                    PosX = 8,
+                    PosY = -1,
                 },
                 Cooldown = {
                     Enabled = true,
                     Font = defaultFont,
-                    Outline = "",
+                    Outline = "OUTLINE",
                     Size = 16,
+
+                    AnchorPoint = "CENTER",
+                    AnchorRelativePoint = "CENTER",
+                    PosX = 0,
+                    PosY = 0,
                 },
                 Charges = {
                     Enabled = true,
                     Font = defaultFont,
-                    Outline = "",
+                    Outline = "OUTLINE",
                     Size = 16,
+
+                    AnchorPoint = "BOTTOMRIGHT",
+                    AnchorRelativePoint = "BOTTOMRIGHT",
+                    PosX = 0,
+                    PosY = 0,
                 },
                 Macro = {
                     Enabled = true,
                     Font = defaultFont,
-                    Outline = "",
+                    Outline = "OUTLINE",
                     Size = 10,
+
+                    AnchorPoint = "BOTTOM",
+                    AnchorRelativePoint = "BOTTOM",
+                    PosX = 0,
+                    PosY = 0,
                 },
             },
 
@@ -124,7 +144,7 @@ local defaults = {
                     Font = defaultFont,
                     Outline = "",
                     Size = 16,
-                    Width = 130,
+                    Width = 115,
 
                     AnchorPoint = "LEFT",
                     AnchorRelativePoint = "LEFT",
@@ -156,6 +176,18 @@ local defaults = {
                     AnchorRelativePoint = "TOPRIGHT",
                     PosX = 0,
                     PosY = 2,
+
+                    Stacks = {
+                        Enabled = true,
+                        Font = defaultFont,
+                        Outline = "OUTLINE",
+                        Size = 10,
+
+                        AnchorPoint = "BOTTOMRIGHT",
+                        AnchorRelativePoint = "BOTTOMRIGHT",
+                        PosX = 0,
+                        PosY = 1,
+                    },
                 },
                 Debuffs = {
                     Enabled = true,
@@ -170,6 +202,18 @@ local defaults = {
                     AnchorRelativePoint = "BOTTOMLEFT",
                     PosX = 0,
                     PosY = -2,
+
+                    Stacks = {
+                        Enabled = true,
+                        Font = defaultFont,
+                        Outline = "OUTLINE",
+                        Size = 10,
+
+                        AnchorPoint = "BOTTOMRIGHT",
+                        AnchorRelativePoint = "BOTTOMRIGHT",
+                        PosX = 0,
+                        PosY = 1,
+                    },
                 },
 
                 HealthBar = {
@@ -232,11 +276,14 @@ local defaults = {
             },
 
             PlayerFrame = {
-                Width = 200,
+                Width = 174,
                 Height = 50,
 
-                PosX = -300,
-                PosY = -200,
+                AnchorFrame = "EssentialCooldownViewer",
+                AnchorPoint = "TOPRIGHT",
+                AnchorRelativePoint = "TOPLEFT",
+                PosX = -2,
+                PosY = 0,
 
                 LeaderIcon = {
                     Enabled = true,
@@ -253,11 +300,14 @@ local defaults = {
                 },
             },
             TargetFrame = {
-                Width = 200,
+                Width = 174,
                 Height = 50,
 
-                PosX = 300,
-                PosY = -200,
+                AnchorFrame = "EssentialCooldownViewer",
+                AnchorPoint = "TOPLEFT",
+                AnchorRelativePoint = "TOPRIGHT",
+                PosX = 2,
+                PosY = 0,
 
                 LeaderIcon = {
                     Enabled = true,
@@ -342,7 +392,7 @@ local defaults = {
             },
         },
         GroupFrames = {
-            Enabled = true,
+            Enabled = false,
         },
         PlayerCastBar = {
             Enabled = true,
@@ -388,7 +438,7 @@ local defaults = {
             Outline = "",
         },
         Nameplates = {
-            Enabled = true,
+            Enabled = false,
         },
         ResourceBar = {
             Enabled = true,
@@ -401,21 +451,23 @@ local defaults = {
             Height = 15,
 
             AnchorFrame = "EssentialCooldownViewer",
-            AnchorPoint = "CENTER",
-            AnchorRelativePoint = "CENTER",
+            AnchorPoint = "BOTTOM",
+            AnchorRelativePoint = "TOP",
             PosX = 0,
             PosY = 2,
-
+            
             Text = {
                 Enabled = true,
                 Font = defaultFont,
                 Outline = "",
                 Size = 14,
-
+                
+                ShowManaPercent = true,
+                
                 AnchorPoint = "CENTER",
                 AnchorRelativePoint = "CENTER",
                 PosX = 0,
-                PosY = 0,
+                PosY = -1,
             },
 
             Texture = defaultTexture,
@@ -434,6 +486,27 @@ local defaults = {
             ["**"] = {
                 Alpha = 1,
                 CombatAlpha = 1,
+
+                Cooldown = {
+                    Font = defaultFont,
+                    Outline = "OUTLINE",
+                    Size = 16,
+
+                    AnchorPoint = "CENTER",
+                    AnchorRelativePoint = "CENTER",
+                    PosX = 0,
+                    PosY = 0,
+                },
+                Charges = {
+                    Font = defaultFont,
+                    Outline = "OUTLINE",
+                    Size = 16,
+
+                    AnchorPoint = "BOTTOMRIGHT",
+                    AnchorRelativePoint = "BOTTOMRIGHT",
+                    PosX = 0,
+                    PosY = 0,
+                },
             },
 
             EssentialCooldownViewer = {

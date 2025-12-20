@@ -164,6 +164,15 @@ local function UpdateAuras(unitFrame, type)
     local posY = dbEntry.PosY
     local rowLength = dbEntry.RowLength
 
+    local stacksEnabled = dbEntry.Stacks.Enabled
+    local stacksAP = dbEntry.Stacks.AnchorPoint
+    local stacksARP = dbEntry.Stacks.AnchorRelativePoint
+    local stacksPX = dbEntry.Stacks.PosX
+    local stacksPY = dbEntry.Stacks.PosY
+    local stacksFont = dbEntry.Stacks.Font
+    local stacksOutline = dbEntry.Stacks.Outline
+    local stacksSize = dbEntry.Stacks.Size
+
     local index = 0
 	local function HandleAura(aura)
         local auraFrame = unitFrame.pool:Acquire()
@@ -187,9 +196,19 @@ local function UpdateAuras(unitFrame, type)
         end
 
         auraFrame.Icon:SetTexture(aura.icon)
+        -- TODO : Flytta till Frames.XML vvvvvvvvvvvv
         auraFrame.Icon:SetTexCoord(.08, .92, .08, .92)
 
-        auraFrame.Overlay.Count:SetText(C_StringUtil.TruncateWhenZero(aura.applications))
+        local stacksFrame = auraFrame.Overlay.Count
+        if stacksEnabled then
+            stacksFrame:Show()
+            stacksFrame:ClearAllPoints()
+            stacksFrame:SetPoint(stacksAP, auraFrame.Overlay, stacksARP, stacksPX, stacksPY)
+            stacksFrame:SetFont(stacksFont, stacksSize, stacksOutline)
+            stacksFrame:SetText(C_StringUtil.TruncateWhenZero(aura.applications))
+        else
+            stacksFrame:Hide()
+        end
 
         auraFrame.Cooldown:SetCooldownFromExpirationTime(aura.expirationTime, aura.duration)
 
@@ -262,8 +281,6 @@ local function UpdateMaxPower(frame)
 end
 
 local function UpdatePowerFull(frame)
-    if not frame.PowerBar then return end
-
     local unit = frame.unit
 
     UpdateMaxPower(frame)
@@ -297,17 +314,17 @@ end
 
 local function GetCastOrChannelDuration(unit)
     local castingDuration = UnitCastingDuration(unit)
-    if castingDuration then return castingDuration, UnitCastingInfo(unit) end
+    if castingDuration then return false, castingDuration, UnitCastingInfo(unit) end
 
     local channelDuration = UnitChannelDuration(unit)
-    if channelDuration then return channelDuration, UnitChannelInfo(unit) end
+    if channelDuration then return true, channelDuration, UnitChannelInfo(unit) end
 
     return nil
 end
 
 local function UpdateCastBar(castBar, unitFrame)
     local dbEntry = CUI.DB.profile.UnitFrames[unitFrame.name].CastBar
-    local duration, name, _, icon = GetCastOrChannelDuration(castBar.unit)
+    local isChannel, duration, name, _, icon = GetCastOrChannelDuration(castBar.unit)
 
     if not duration then
         castBar.isCasting = false
@@ -399,8 +416,6 @@ function SetupUnitFrame(frameName, unit)
 
     frame.unit = unit
     frame.name = frameName
-
-    frame:RegisterUnitEvent("UNIT_AURA", unit)
     frame.pool = CreateFramePool("Frame", frame, "CUI_UnitFrameBuff")
 
     if unit == "target" then
@@ -457,6 +472,7 @@ function SetupUnitFrame(frameName, unit)
         leaderFrame:Hide()
     end
 
+    frame:RegisterUnitEvent("UNIT_AURA", unit)
     frame:RegisterUnitEvent("UNIT_HEALTH", unit)
     frame:RegisterUnitEvent("UNIT_MAXHEALTH", unit)
     frame:RegisterUnitEvent("UNIT_POWER_UPDATE", unit)
@@ -466,35 +482,38 @@ function SetupUnitFrame(frameName, unit)
     frame:RegisterEvent("PARTY_LEADER_CHANGED")
     frame:RegisterEvent("GROUP_FORMED")
     frame:RegisterEvent("GROUP_LEFT")
+    frame:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
     frame:HookScript("OnEvent", function(self, event, ...)
-        if event == "UNIT_HEALTH" then
+        if event == "UNIT_AURA" then
+            UF.SetupAuras(self)
+        elseif event == "UNIT_HEALTH" then
             UpdateHealth(self)
         elseif event == "UNIT_MAXHEALTH" then
             UpdateMaxHealth(self)
         elseif event == "UNIT_POWER_UPDATE" then
-            if self.unit == "player" then return end
             UpdatePower(self)
         elseif event == "UNIT_MAXPOWER" then
-            if self.unit == "player" then return end
             UpdateMaxPower(self)
         elseif event == "PLAYER_TARGET_CHANGED" or event == "PLAYER_FOCUS_CHANGED" then
             if not UnitExists(self.unit) then return end
             UpdateAll(self)
-            UF.SetupAuras(self)
+            if EditModeManagerFrame:IsShown() then return end
+             UF.SetupAuras(self)
         elseif event == "PLAYER_REGEN_ENABLED" then
             UF.UpdateAlpha(self)
         elseif event == "PLAYER_REGEN_DISABLED" then
             UF.UpdateAlpha(self, true)
         elseif event == "PARTY_LEADER_CHANGED" or event == "GROUP_FORMED" or event == "GROUP_LEFT" then
             UF.UpdateLeaderAssist(self)
-        elseif event == "UNIT_AURA" then
-            UF.SetupAuras(self)
+        elseif event == "ACTIVE_TALENT_GROUP_CHANGED" then
+            C_Timer.After(0.5, function() UpdatePowerFull(self) end)
         end
     end)
 
     SetupCastBar(frame)
 
     UpdateAll(frame)
+    UF.SetupAuras(frame)
     UF.UpdateFrame(frame)
     RegisterUnitWatch(frame, false)
 end

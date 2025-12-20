@@ -40,15 +40,15 @@ function CDM.UpdateStyle(viewer)
         end
 
         if frame.Applications then
-            frame.Applications.Applications:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf",
-                dbEntry.Charges.Size, "OUTLINE")
-            frame.Applications.Applications:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
+            frame.Applications.Applications:SetFont(dbEntry.Charges.Font, dbEntry.Charges.Size, dbEntry.Charges.Outline)
+            frame.Applications.Applications:ClearAllPoints()
+            frame.Applications.Applications:SetPoint(dbEntry.Charges.AnchorPoint, frame, dbEntry.Charges.AnchorRelativePoint, dbEntry.Charges.PosX, dbEntry.Charges.PosY)
         end
 
         if frame.ChargeCount then
-            frame.ChargeCount.Current:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf",
-                dbEntry.Charges.Size, "OUTLINE")
-            frame.ChargeCount.Current:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
+            frame.ChargeCount.Current:SetFont(dbEntry.Charges.Font, dbEntry.Charges.Size, dbEntry.Charges.Outline)
+            frame.ChargeCount.Current:ClearAllPoints()
+            frame.ChargeCount.Current:SetPoint(dbEntry.Charges.AnchorPoint, frame, dbEntry.Charges.AnchorRelativePoint, dbEntry.Charges.PosX, dbEntry.Charges.PosY)
         end
 
         if frame.Cooldown then
@@ -56,8 +56,9 @@ function CDM.UpdateStyle(viewer)
             frame.Cooldown:SetSwipeTexture("", 0, 0, 0, 1)
 
             local text = frame.Cooldown:GetRegions()
-            text:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf",
-                dbEntry.Cooldown.Size, "OUTLINE")
+            text:SetFont(dbEntry.Cooldown.Font, dbEntry.Cooldown.Size, dbEntry.Cooldown.Outline)
+            text:ClearAllPoints()
+            text:SetPoint(dbEntry.Cooldown.AnchorPoint, frame, dbEntry.Cooldown.AnchorRelativePoint, dbEntry.Cooldown.PosX, dbEntry.Cooldown.PosY)
         end
 
         if frame.OutOfRange then

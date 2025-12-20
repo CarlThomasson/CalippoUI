@@ -90,6 +90,10 @@ function Util.UnitHealthPercent(unit)
     return string.format("%0.0f", UnitHealthPercent(unit, true, CurveConstants.ScaleTo100)).."%"
 end
 
+function Util.UnitPowerPercent(unit, powerType)
+    return string.format("%0.0f", UnitPowerPercent(unit, 0, true, CurveConstants.ScaleTo100)).."%"
+end
+
 function Util.UnitHealthText(unit)
     local health = UnitHealth(unit)
     local rounded = AbbreviateLargeNumbers(health)

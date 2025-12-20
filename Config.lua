@@ -247,7 +247,54 @@ local function CreateTextGroup(container, dbEntry, func, frame, text)
     CreateDropDown(textGroup, "Font", dbEntry.Font, fonts,
         function(self, event, value)
             dbEntry.Font = value
-            dbEntry.FontName = fonts[value]
+            func(frame)
+        end, 0.5)
+
+    CreateDropDown(textGroup, "Outline", dbEntry.Outline, outlines,
+        function(self, event, value)
+            dbEntry.Outline = value
+            func(frame)
+        end, 0.5)
+
+    return textGroup
+end
+
+local function CreateTextGroupWithoutToggle(container, dbEntry, func, frame, text)
+    local textGroup = CreateInlineGroup(container, text)
+
+    CreateSlider(textGroup, text.." Font Size", 1, 50, 1, dbEntry.Size, 
+        function(self, event, value)
+            dbEntry.Size = value
+            func(frame)
+        end, 1)
+
+    CreateDropDown(textGroup, "Anchor Point", dbEntry.AnchorPoint, anchorPoints,
+        function(self, event, value)
+            dbEntry.AnchorPoint = value
+            func(frame)
+        end, 0.5)
+
+    CreateDropDown(textGroup, "Relative Anchor Point", dbEntry.AnchorRelativePoint, anchorPoints,
+        function(self, event, value)
+            dbEntry.AnchorRelativePoint = value
+            func(frame)
+        end, 0.5)
+
+    CreateSlider(textGroup, "Position X", -100, 100, 1, dbEntry.PosX,
+        function(self, event, value)
+            dbEntry.PosX = value
+            func(frame)
+        end, 0.5)
+
+    CreateSlider(textGroup, "Position Y", -100, 100, 1, dbEntry.PosY,
+        function(self, event, value)
+            dbEntry.PosY = value
+            func(frame)
+        end, 0.5)
+
+    CreateDropDown(textGroup, "Font", dbEntry.Font, fonts,
+        function(self, event, value)
+            dbEntry.Font = value
             func(frame)
         end, 0.5)
 
@@ -337,7 +384,7 @@ end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
 
-local function CreateActionBarPage(container, actionBar)
+local function CreateActionBarFramePage(container, actionBar)
     local dbEntry = CUI.DB.profile.ActionBars[actionBar]
     local frame = _G[actionBar]
 
@@ -346,56 +393,6 @@ local function CreateActionBarPage(container, actionBar)
     container:AddChild(scrollFrame)
 
     if actionBar ~= "MicroMenu" then
-        local textGroup = CreateInlineGroup(scrollFrame, "Text")
-
-        CreateCheckBox(textGroup, "Toggle Keybind Text", dbEntry.Keybind.Enabled,
-            function(self, event, value)
-                dbEntry.Keybind.Enabled = value
-                AB.UpdateBar(frame)
-            end, 0.25)
-
-        CreateCheckBox(textGroup, "Toggle Cooldown Text", dbEntry.Cooldown.Enabled,
-            function(self, event, value)
-                dbEntry.Cooldown.Enabled = value
-                AB.UpdateBar(frame)
-            end, 0.25)
-
-        CreateCheckBox(textGroup, "Toggle Charges Text", dbEntry.Charges.Enabled,
-            function(self, event, value)
-                dbEntry.Charges.Enabled = value
-                AB.UpdateBar(frame)
-            end, 0.25)
-
-        CreateCheckBox(textGroup, "Toggle Macro Text", dbEntry.Macro.Enabled,
-            function(self, event, value)
-                dbEntry.Macro.Enabled = value
-                AB.UpdateBar(frame)
-            end, 0.25)
-
-        CreateSlider(textGroup, "Bind Font Size", 1, 50, 1, dbEntry.Keybind.Size,
-            function(self, event, value)
-                dbEntry.Keybind.Size = value
-                AB.UpdateBar(frame)
-            end, 0.25)
-
-        CreateSlider(textGroup, "Cooldown Font Size", 1, 50, 1, dbEntry.Cooldown.Size,
-            function(self, event, value)
-                dbEntry.Cooldown.Size = value
-                AB.UpdateBar(frame)
-            end, 0.25)
-
-        CreateSlider(textGroup, "Charge Font Size", 1, 50, 1, dbEntry.Charges.Size,
-            function(self, event, value)
-                dbEntry.Charges.Size = value
-                AB.UpdateBar(frame)
-            end, 0.25)
-
-        CreateSlider(textGroup, "Macro Font Size", 1, 50, 1, dbEntry.Macro.Size,
-            function(self, event, value)
-                dbEntry.Macro.Size = value
-                AB.UpdateBar(frame)
-            end, 0.25)
-
         local paddingGroup = CreateInlineGroup(scrollFrame, "Padding")
 
         CreateSlider(paddingGroup, "Padding (Overrides padding from edit mode)", 0, 15, 1, dbEntry.Padding,
@@ -454,10 +451,45 @@ local function CreateActionBarPage(container, actionBar)
     scrollFrame:DoLayout()
 end
 
+local function CreateActionBarTextPage(container, actionBar, type)
+    local dbEntry = CUI.DB.profile.ActionBars[actionBar][type]
+    local frame = _G[actionBar]
+
+    local scrollFrame = AceGUI:Create("ScrollFrame")
+    scrollFrame:SetLayout("List")
+    container:AddChild(scrollFrame)
+
+    CreateTextGroup(scrollFrame, dbEntry, AB.UpdateBar, frame, type)
+end
+
+local function CreateActionBarTabs(container, actionBar)
+    local function SelectGroup(container, event, type)
+        container:ReleaseChildren()
+        if type == "Frame" then
+            CreateActionBarFramePage(container, actionBar)
+        else
+            if actionBar == "MicroMenu" then return end
+            CreateActionBarTextPage(container, actionBar, type)
+        end
+    end
+
+    local tabGroup = AceGUI:Create("TabGroup")
+    tabGroup:SetLayout("Fill")
+    tabGroup:SetTabs({{text="Frame", value="Frame"}, 
+                    {text="Cooldown", value="Cooldown"},
+                    {text="Charges", value="Charges"},
+                    {text="Keybind", value="Keybind"},
+                    {text="Macro", value="Macro"},})
+    tabGroup:SetCallback("OnGroupSelected", SelectGroup)
+    tabGroup:SelectTab("Frame")
+
+    container:AddChild(tabGroup)
+end
+
 local function CreateActionBarSettings(container)
     local function SelectGroup(container, event, actionBar)
         container:ReleaseChildren()
-        CreateActionBarPage(container, actionBar)
+        CreateActionBarTabs(container, actionBar)
     end
 
     local tabGroup = AceGUI:Create("TabGroup")
@@ -519,7 +551,11 @@ local function CreateUnitFramAuraSettings(container, unitFrame, type)
     local dbEntry = CUI.DB.profile.UnitFrames[unitFrame][type]
     local frame = _G["CUI_"..unitFrame]
 
-    local group = CreateInlineGroup(container, type)
+    local scrollFrame = AceGUI:Create("ScrollFrame")
+    scrollFrame:SetLayout("List")
+    container:AddChild(scrollFrame)
+
+    local group = CreateInlineGroup(scrollFrame, type)
 
     CreateCheckBox(group, "Toggle "..type, dbEntry.Enabled,
         function(self, event, value)
@@ -550,7 +586,7 @@ local function CreateUnitFramAuraSettings(container, unitFrame, type)
             dbEntry.DirH = value
             UF.SetupAuras(frame)
         end, 0.5)
-        
+
     CreateDropDown(group, "Vertical Growth Direction", dbEntry.DirV, directionsVertical,
         function(self, event, value)
             dbEntry.DirV = value
@@ -581,40 +617,72 @@ local function CreateUnitFramAuraSettings(container, unitFrame, type)
             UF.SetupAuras(frame)
         end, 0.5)
 
+    CreateTextGroup(scrollFrame, dbEntry.Stacks, UF.SetupAuras, frame, "Stacks")
+
     group:DoLayout()
 end
 
 local function CreateUnitFrameAuraPage(container, unitFrame)
-    local scrollFrame = AceGUI:Create("ScrollFrame")
-    scrollFrame:SetLayout("List")
-    container:AddChild(scrollFrame)
+    local function SelectGroup(container, event, tab)
+        container:ReleaseChildren()
+        if tab == "Buffs" then
+            CreateUnitFramAuraSettings(container, unitFrame, "Buffs")
+        elseif tab == "Debuffs" then
+            CreateUnitFramAuraSettings(container, unitFrame, "Debuffs")
+        end
+    end
 
-    CreateUnitFramAuraSettings(scrollFrame, unitFrame, "Buffs")
+    local tabGroup = AceGUI:Create("TabGroup")
+    tabGroup:SetLayout("Fill")
+    tabGroup:SetTabs({{text="Buffs", value="Buffs"}, 
+                    {text="Debuffs", value="Debuffs"},})
+    tabGroup:SetCallback("OnGroupSelected", SelectGroup)
+    tabGroup:SelectTab("Buffs")
 
-    CreateUnitFramAuraSettings(scrollFrame, unitFrame, "Debuffs")
-
-    scrollFrame:DoLayout()
+    container:AddChild(tabGroup)
+    container:DoLayout()
 end
 
-local function CreateUnitFrameTextPage(container, unitFrame)
-    local dbEntry = CUI.DB.profile.UnitFrames[unitFrame]
+local function CreateUnitFrameTextPage(container, unitFrame, type)
+    local dbEntry = CUI.DB.profile.UnitFrames[unitFrame][type]
     local frame = _G["CUI_"..unitFrame]
 
     local scrollFrame = AceGUI:Create("ScrollFrame")
     scrollFrame:SetLayout("List")
     container:AddChild(scrollFrame)
 
-    local nameGroup = CreateTextGroup(scrollFrame, dbEntry.Name, UF.UpdateTexts, frame, "Name")
+    local nameGroup = CreateTextGroup(scrollFrame, dbEntry, UF.UpdateTexts, frame, type)
 
-    CreateSlider(nameGroup, "Width", 1, 500, 1, dbEntry.Name.Width,
-        function(self, event, value)
-            dbEntry.Name.Width = value
-            UF.UpdateTexts(frame)
-        end, 1)
-
-    CreateTextGroup(scrollFrame, dbEntry.HealthText, UF.UpdateTexts, frame, "Health")
+    if type == "Name" then
+        CreateSlider(nameGroup, "Width", 1, 500, 1, dbEntry.Width,
+            function(self, event, value)
+                dbEntry.Width = value
+                UF.UpdateTexts(frame)
+            end, 1)
+    end
 
     scrollFrame:DoLayout()
+end
+
+local function CreateUnitFrameTextTabs(container, unitFrame)
+    local function SelectGroup(container, event, type)
+        container:ReleaseChildren()
+        if type == "Name" then
+            CreateUnitFrameTextPage(container, unitFrame, type)
+        elseif type == "HealthText" then
+            CreateUnitFrameTextPage(container, unitFrame, type)
+        end
+    end
+
+    local tabGroup = AceGUI:Create("TabGroup")
+    tabGroup:SetLayout("Fill")
+    tabGroup:SetTabs({{text="Name", value="Name"}, 
+                    {text="Health", value="HealthText"},})
+    tabGroup:SetCallback("OnGroupSelected", SelectGroup)
+    tabGroup:SelectTab("Name")
+
+    container:AddChild(tabGroup)
+    container:DoLayout()
 end
 
 local function CreateUnitFrameCastBarPage(container, unitFrame)
@@ -701,7 +769,7 @@ local function CreateUnitFrameTabs(container, unitFrame)
         elseif tab == "Aura" then
             CreateUnitFrameAuraPage(container, unitFrame)
         elseif tab == "Text" then
-            CreateUnitFrameTextPage(container, unitFrame)
+            CreateUnitFrameTextTabs(container, unitFrame)
         elseif tab == "CastBar" then
             CreateUnitFrameCastBarPage(container, unitFrame)
         elseif tab == "Misc" then
@@ -751,24 +819,11 @@ local function CreateCDMPage(container, viewer)
     scrollFrame:SetLayout("List")
     container:AddChild(scrollFrame)
 
-    ----------------------------------------------------------------------------------------------------
-    local textGroup = CreateInlineGroup(scrollFrame, "Text")
-
-    CreateSlider(textGroup, "Cooldown Font Size", 1, 50, 1, dbEntry.Cooldown.Size, 
-        function(self, event, value)
-            dbEntry.Cooldown.Size = value
-            CDM.UpdateStyle(frame)
-        end, 0.5)
-
-    CreateSlider(textGroup, "Charges Font Size", 1, 50, 1, dbEntry.Charges.Size, 
-        function(self, event, value)
-            dbEntry.Charges.Size = value
-            CDM.UpdateStyle(frame)
-        end, 0.5)
-
-    ----------------------------------------------------------------------------------------------------
-
     CreateAlphaGroup(scrollFrame, dbEntry, CDM.UpdateAlpha, frame)
+
+    CreateTextGroupWithoutToggle(scrollFrame, dbEntry.Cooldown, CDM.UpdateStyle, frame, "Cooldown")
+
+    CreateTextGroupWithoutToggle(scrollFrame, dbEntry.Charges, CDM.UpdateStyle, frame, "Charges")
 
     scrollFrame:DoLayout()
 end
@@ -814,7 +869,13 @@ local function CreatePrimaryResourceBarPage(container)
 
     CreateAnchorGroup(scrollFrame, dbEntry, RB.UpdateFrame, frame)
 
-    CreateTextGroup(scrollFrame, dbEntry.Text, RB.UpdateText, frame, "Text")
+    local textGroup = CreateTextGroup(scrollFrame, dbEntry.Text, RB.UpdateText, frame, "Text")
+
+    CreateCheckBox(textGroup, "Show mana as percent", dbEntry.Text.ShowManaPercent,
+        function(self, event, value)
+            dbEntry.Text.ShowManaPercent = value
+            RB.UpdateText(frame)
+        end, 1)
 
     scrollFrame:DoLayout()
 end
@@ -945,7 +1006,7 @@ local function SetupMainTabs(frame)
         elseif group == "" then
 
         elseif group == "" then
-            
+
         end
     end
 

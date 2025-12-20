@@ -79,33 +79,43 @@ function AB.UpdateBar(bar)
             Util.PositionFromIndex(i-1, container, bar, "TOPLEFT", "TOPLEFT", "RIGHT", "DOWN", container:GetWidth(), dbEntry.Padding, 0, 0, bar.numRows)
         end
 
-        if dbEntry.Keybind.Enabled then
+        local kb = dbEntry.Keybind
+        if kb.Enabled then
             frame.TextOverlayContainer.HotKey:SetAlpha(1)
-            frame.TextOverlayContainer.HotKey:SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", dbEntry.Keybind.Size, "OUTLINE")
-            frame.TextOverlayContainer.HotKey:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -1, -1)
+            frame.TextOverlayContainer.HotKey:SetFont(kb.Font, kb.Size, kb.Outline)
+            frame.TextOverlayContainer.HotKey:ClearAllPoints()
+            frame.TextOverlayContainer.HotKey:SetPoint(kb.AnchorPoint, frame, kb.AnchorRelativePoint, kb.PosX, kb.PosY)
         else
             frame.TextOverlayContainer.HotKey:SetAlpha(0)
         end
 
-        if dbEntry.Macro.Enabled then
+        local m = dbEntry.Macro
+        if m.Enabled then
             frame.Name:SetAlpha(1)
-            frame.Name:SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", dbEntry.Macro.Size, "OUTLINE")
-            frame.Name:SetPoint("BOTTOM", frame, "BOTTOM", 0, 1)
+            frame.Name:SetFont(m.Font, m.Size, m.Outline)
+            frame.Name:ClearAllPoints()
+            frame.Name:SetPoint(m.AnchorPoint, frame, m.AnchorRelativePoint, m.PosX, m.PosY)
         else
             frame.Name:SetAlpha(0)
         end
 
-        if dbEntry.Charges.Enabled then
+        local ch = dbEntry.Charges
+        if ch.Enabled then
             frame.Count:SetAlpha(1)
-            frame.Count:SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", dbEntry.Charges.Size, "OUTLINE")
-            frame.Count:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -1, 1)
+            frame.Count:SetFont(ch.Font, ch.Size, ch.Outline)
+            frame.Count:ClearAllPoints()
+            frame.Count:SetPoint(ch.AnchorPoint, frame, ch.AnchorRelativePoint, ch.PosX, ch.PosY)
         else
             frame.Count:SetAlpha(0)
         end
 
-        if dbEntry.Cooldown.Enabled then
+        local cd = dbEntry.Cooldown
+        if cd.Enabled then
             frame.cooldown:GetRegions():SetAlpha(1)
-            frame.cooldown:GetRegions():SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", dbEntry.Cooldown.Size, "OUTLINE")
+            local cooldown = frame.cooldown:GetRegions()
+            cooldown:SetFont(cd.Font, cd.Size, cd.Outline)
+            cooldown:ClearAllPoints()
+            cooldown:SetPoint(cd.AnchorPoint, frame, cd.AnchorRelativePoint, cd.PosX, cd.PosY)
         else
             frame.cooldown:GetRegions():SetAlpha(0)
         end
