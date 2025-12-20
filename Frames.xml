@@ -1,4 +1,7 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+<!-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
+
     <Frame name="CUI_BuffFrameTemplate" virtual="true" enableMouse="true">
 		<Layers>
 			<Layer level="BACKGROUND">
@@ -40,17 +43,28 @@
                 <Frames>
                     <Frame parentKey="Backdrop" inherits="BackdropTemplate">
                         <Anchors>
+                            <Anchor point="TOPLEFT" x="-1" y="1"/>
+                            <Anchor point="BOTTOMRIGHT" x="1" y="-1"/>
+                        </Anchors>
+                        <KeyValues>
+                            <KeyValue key="backdropInfo" value="CUI_BACKDROP_DS" type="global"/>
+                        </KeyValues>
+                    </Frame>
+                    <Frame parentKey="DispelBackdrop" inherits="BackdropTemplate">
+                        <Anchors>
                             <Anchor point="TOPLEFT" x="0" y="0"/>
                             <Anchor point="BOTTOMRIGHT" x="0" y="0"/>
                         </Anchors>
                         <KeyValues>
-                            <KeyValue key="backdropInfo" value="CUI_BACKDROP_B_06" type="global"/>
+                            <KeyValue key="backdropInfo" value="CUI_BACKDROP_WHITE" type="global"/>
                         </KeyValues>
                     </Frame>
                 </Frames>
             </Frame>
 		</Frames>
 	</Frame>
+
+<!-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
 
     <Frame name="CUI_DebuffFrameTemplate" virtual="true" enableMouse="true">
 		<Layers>
@@ -89,13 +103,15 @@
                             <Anchor point="BOTTOMRIGHT" x="0" y="0"/>
                         </Anchors>
                         <KeyValues>
-                            <KeyValue key="backdropInfo" value="CUI_BACKDROP_W_1" type="global"/>
+                            <KeyValue key="backdropInfo" value="CUI_BACKDROP" type="global"/>
                         </KeyValues>
                     </Frame>
                 </Frames>
             </Frame>
 		</Frames>
 	</Frame>
+
+<!-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
 
     <Frame name="CUI_UnitFrameBuff" inherits="CUI_BuffFrameTemplate" virtual="true" enableMouse="true">
         <Size x="20" y="20"/>
@@ -117,6 +133,8 @@
 		</Scripts>
     </Frame>
 
+<!-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
+
     <Frame name="CUI_UnitFrameDebuff" inherits="CUI_DebuffFrameTemplate" virtual="true" enableMouse="true">
         <Size x="20" y="20"/>
         <Scripts>
@@ -137,6 +155,8 @@
 		</Scripts>
     </Frame>
 
+<!-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
+
     <Frame name="CUI_PartyFrameBuff" inherits="CUI_BuffFrameTemplate" virtual="true" enableMouse="true">
         <Size x="17" y="17"/>
     </Frame>
@@ -152,6 +172,8 @@
     <Frame name="CUI_RaidFrameDebuff" inherits="CUI_DebuffFrameTemplate" virtual="true" enableMouse="true">
         <Size x="15" y="15"/>
     </Frame>
+
+<!-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
 
     <Button name="CUI_UnitFrameTemplate" inherits="BackdropTemplate, SecureUnitButtonTemplate" mixin="PingableType_UnitFrameMixin" hidden="true" virtual="true">
         <Scripts>

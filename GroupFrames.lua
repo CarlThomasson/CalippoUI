@@ -128,19 +128,19 @@ end
 ---------------------------------------------------------------------------------------------------
 
 function GF.Load()
-    HideBlizzard()
+    -- HideBlizzard()
 
-    SetupFrames()
+    -- SetupFrames()
 
-    local frame = CreateFrame("Frame", "CUI_GroupFrameUpdater", UIParent)
-    frame:RegisterEvent("GROUP_ROSTER_UPDATE")
-    frame:RegisterEvent("PLAYER_ROLES_ASSIGNED")
-    frame:SetScript("OnEvent", function(self, event)
-        if event == "GROUP_ROSTER_UPDATE" or 
-            event == "PLAYER_ROLES_ASSIGNED" then
-            UpdateFrames()
-        end
-    end)
+    -- local frame = CreateFrame("Frame", "CUI_GroupFrameUpdater", UIParent)
+    -- frame:RegisterEvent("GROUP_ROSTER_UPDATE")
+    -- frame:RegisterEvent("PLAYER_ROLES_ASSIGNED")
+    -- frame:SetScript("OnEvent", function(self, event)
+    --     if event == "GROUP_ROSTER_UPDATE" or 
+    --         event == "PLAYER_ROLES_ASSIGNED" then
+    --         UpdateFrames()
+    --     end
+    -- end)
 
-    UpdateFrames()
+    -- UpdateFrames()
 end

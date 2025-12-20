@@ -18,6 +18,7 @@ function CB.UpdateFrame(frame)
 
     frame:ClearAllPoints()
     frame:SetSize(dbEntry.Width, dbEntry.Height)
+    frame:SetStatusBarTexture(dbEntry.Texture)
 
     if dbEntry.MatchWidth then
         frame:SetPoint("BOTTOMLEFT", dbEntry.AnchorFrame, "TOPLEFT", 0, dbEntry.PosY)
@@ -46,20 +47,20 @@ local function UpdateCastBar(castBar)
     local name, isChannel, startTime, endTime = GetCastOrChannelInfo("player")
     local dbEntry = CUI.DB.profile.PlayerCastBar
 
-    if not startTime then 
-        castBar:Hide() 
+    if not startTime then
+        castBar:Hide()
         return
     end
 
     if isChannel then
-        local r, g, b = dbEntry.Color.r, dbEntry.Color.g, dbEntry.Color.b, dbEntry.Color.a
+        local r, g, b, a = dbEntry.Color.r, dbEntry.Color.g, dbEntry.Color.b, dbEntry.Color.a
         castBar.Background:SetVertexColor(r, g, b, a, 1)
-        
+
         local v = 0.2
         castBar:SetStatusBarColor(r*v, g*v, b*v)
         castBar:SetReverseFill(true)
     else
-        local r, g, b = dbEntry.Color.r, dbEntry.Color.g, dbEntry.Color.b, dbEntry.Color.a
+        local r, g, b, a = dbEntry.Color.r, dbEntry.Color.g, dbEntry.Color.b, dbEntry.Color.a
         castBar:SetStatusBarColor(r, g, b, a)
 
         local v = 0.2
@@ -69,20 +70,20 @@ local function UpdateCastBar(castBar)
 
     castBar:SetTimerDuration(castBar.duration)
     castBar.duration:SetTimeSpan(startTime/1000, endTime/1000)
-    
+
     castBar.startTime = startTime
     castBar.endTime = endTime
     castBar:Show()
 end
 
+---------------------------------------------------------------------------------------------------
+
 local function SetupCastBar()
     local castBar = CreateFrame("Statusbar", "CUI_CastBar", UIParent)
-    castBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
+    castBar:SetStatusBarTexture(CUI.DB.profile.PlayerCastBar.Texture)
     castBar:Hide()
-    
-    C_Timer.After(1, function()
-        CB.UpdateFrame(castBar)
-    end)
+
+    CB.UpdateFrame(castBar)
 
     Util.AddStatusBarBackground(castBar)
     Util.AddBorder(castBar)

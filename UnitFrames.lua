@@ -26,16 +26,19 @@ function UF.UpdateAlpha(frame, inCombat)
     end
 end
 
-function UF.UpdateSizePos(frame)
+function UF.UpdateFrame(frame)
     local dbEntry = CUI.DB.profile.UnitFrames[frame.name]
 
     frame:ClearAllPoints()
     frame:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
     frame:SetSize(dbEntry.Width, dbEntry.Height)
 
+    frame.HealthBar:SetStatusBarTexture(dbEntry.HealthBar.Texture)
+
     if dbEntry.PowerBar.Enabled then
         frame.PowerBar:Show()
         frame.PowerBar:SetHeight(dbEntry.PowerBar.Height)
+        frame.PowerBar:SetStatusBarTexture(dbEntry.PowerBar.Texture)
         frame.HealthBar:SetPoint("BOTTOMRIGHT", frame.PowerBar, "TOPRIGHT")
     else
         frame.PowerBar:Hide()
@@ -50,9 +53,9 @@ function UF.UpdateTexts(frame)
 
     if dbEntry.Name.Enabled then
         frame.Overlay.UnitName:Show()
-        frame.Overlay.UnitName:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", dbEntry.Name.Size, "")
+        frame.Overlay.UnitName:SetFont(dbEntry.Name.Font, dbEntry.Name.Size, dbEntry.Name.Outline)
         frame.Overlay.UnitName:ClearAllPoints()
-        frame.Overlay.UnitName:SetPoint(dbEntry.Name.AnchorPoint, frame.Overlay, dbEntry.Name.AnchorRelativePoint, 
+        frame.Overlay.UnitName:SetPoint(dbEntry.Name.AnchorPoint, frame.Overlay, dbEntry.Name.AnchorRelativePoint,
             dbEntry.Name.PosX, dbEntry.Name.PosY)
     else
         frame.Overlay.UnitName:Hide()
@@ -60,22 +63,20 @@ function UF.UpdateTexts(frame)
 
     if dbEntry.HealthText.Enabled then
         frame.Overlay.UnitHealth:Show()
-        frame.Overlay.UnitHealth:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", dbEntry.HealthText.Size, "")
+        frame.Overlay.UnitHealth:SetFont(dbEntry.HealthText.Font, dbEntry.HealthText.Size, dbEntry.HealthText.Outline)
         frame.Overlay.UnitHealth:ClearAllPoints()
-        frame.Overlay.UnitHealth:SetPoint(dbEntry.HealthText.AnchorPoint, frame.Overlay, dbEntry.HealthText.AnchorRelativePoint, 
+        frame.Overlay.UnitHealth:SetPoint(dbEntry.HealthText.AnchorPoint, frame.Overlay, dbEntry.HealthText.AnchorRelativePoint,
             dbEntry.HealthText.PosX, dbEntry.HealthText.PosY)
     else
-        frame.Overlay.UnitHealth:Hide()    
+        frame.Overlay.UnitHealth:Hide()
     end
 end
-
 function UF.UpdateLeaderAssist(frame)
-    if frame.name == "PetFrame" or frame.name == "BossFrame" then return end
+    if not CUI.DB.profile.UnitFrames[frame.name].LeaderIcon then return end
 
     local unit = frame.unit
     local dbEntry = CUI.DB.profile.UnitFrames[frame.name].LeaderIcon
     local leaderFrame = frame.Overlay.Leader
-
 
     leaderFrame:ClearAllPoints()
     leaderFrame:SetPoint(dbEntry.AnchorPoint, frame.Overlay, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
@@ -91,65 +92,129 @@ function UF.UpdateLeaderAssist(frame)
     end
 end
 
-function UF.UpdateAuras(unitFrame)
-    if true then
-        return -- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+function UF.UpdateCastBarFrame(unitFrame)
+    local dbEntry = CUI.DB.profile.UnitFrames[unitFrame.name].CastBar
+    local castBar = unitFrame.CastBar
+
+    castBar:SetSize(dbEntry.Width, dbEntry.Height)
+    castBar:SetStatusBarTexture(dbEntry.Texture)
+    castBar:SetStatusBarColor(dbEntry.Color.r, dbEntry.Color.g, dbEntry.Color.b, dbEntry.Color.a)
+
+    castBar:ClearAllPoints()
+    if dbEntry.MatchWidth then
+        castBar:SetPoint("TOPLEFT", dbEntry.AnchorFrame, "BOTTOMLEFT", 0, dbEntry.PosY)
+        castBar:SetPoint("TOPRIGHT", dbEntry.AnchorFrame, "BOTTOMRIGHT", 0, dbEntry.PosY)
+    else
+        castBar:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
     end
+
+    if dbEntry.Enabled then
+        local unit = unitFrame.unit
+        castBar:RegisterUnitEvent("UNIT_SPELLCAST_START", unit)
+        castBar:RegisterUnitEvent("UNIT_SPELLCAST_STOP", unit)
+        castBar:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_START", unit)
+        castBar:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_UPDATE", unit)
+        castBar:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP", unit)
+        castBar:RegisterEvent("PLAYER_FOCUS_CHANGED")
+        castBar:RegisterEvent("PLAYER_TARGET_CHANGED")
+    else
+        castBar:UnregisterAllEvents()
+    end
+end
+
+function UF.UpdateCastBarTexts(unitFrame)
+    local dbEntry = CUI.DB.profile.UnitFrames[unitFrame.name].CastBar
+    local name = unitFrame.CastBar.Name
+    local time = unitFrame.CastBar.Time
+
+    name:SetFont(dbEntry.Name.Font, dbEntry.Name.Size, dbEntry.Name.Outline)
+    name:SetPoint(dbEntry.Name.AnchorPoint, unitFrame.CastBar, dbEntry.Name.AnchorRelativePoint, dbEntry.Name.PosX, dbEntry.Name.PosY)
+
+    time:SetFont(dbEntry.Time.Font, dbEntry.Time.Size, dbEntry.Time.Outline)
+    time:SetPoint(dbEntry.Time.AnchorPoint, unitFrame.CastBar, dbEntry.Time.AnchorRelativePoint, dbEntry.Time.PosX, dbEntry.Time.PosY)
+end
+
+---------------------------------------------------------------------------------------------------
+
+local DEBUFF_DISPLAY_COLOR_INFO = {
+    [0] = CreateColor(0, 0, 0, 0),
+    [1] = DEBUFF_TYPE_MAGIC_COLOR,
+    [2] = DEBUFF_TYPE_CURSE_COLOR,
+    [3] = DEBUFF_TYPE_DISEASE_COLOR,
+    [4] = DEBUFF_TYPE_POISON_COLOR,
+    [9] = DEBUFF_TYPE_BLEED_COLOR, -- enrage
+    [11] = DEBUFF_TYPE_BLEED_COLOR,
+}
+local dispelColorCurve = C_CurveUtil.CreateColorCurve()
+
+dispelColorCurve:SetType(Enum.LuaCurveType.Step)
+for i, c in pairs(DEBUFF_DISPLAY_COLOR_INFO) do
+    dispelColorCurve:AddPoint(i, c)
+end
+
+local function UpdateAuras(unitFrame, type)
+    local dbEntry = CUI.DB.profile.UnitFrames[unitFrame.name][type]
+    local anchorPoint = dbEntry.AnchorPoint
+    local anchorRelativePoint = dbEntry.AnchorRelativePoint
+    local dirH = dbEntry.DirH
+    local dirV = dbEntry.DirV
+    local size = dbEntry.Size
+    local padding = dbEntry.Padding
+    local posX = dbEntry.PosX
+    local posY = dbEntry.PosY
+    local rowLength = dbEntry.RowLength
+
+    local index = 0
+	local function HandleAura(aura)
+        local auraFrame = unitFrame.pool:Acquire()
+        auraFrame:Show()
+
+        auraFrame.unit = unitFrame.unit
+        auraFrame.index = index + 1
+
+        auraFrame:SetSize(size, size)
+
+        local color = C_UnitAuras.GetAuraDispelTypeColor(unitFrame.unit, aura.auraInstanceID, dispelColorCurve)
+        if color then
+            if aura.dispelName then
+                auraFrame.Overlay.Backdrop:Hide()
+                auraFrame.Overlay.DispelBackdrop:Show()
+            else
+                auraFrame.Overlay.Backdrop:Show()
+                auraFrame.Overlay.DispelBackdrop:Hide()
+            end
+            auraFrame.Overlay.DispelBackdrop:SetBackdropBorderColor(color.r, color.g, color.b, color.a)
+        end
+
+        auraFrame.Icon:SetTexture(aura.icon)
+        auraFrame.Icon:SetTexCoord(.08, .92, .08, .92)
+
+        auraFrame.Overlay.Count:SetText(C_StringUtil.TruncateWhenZero(aura.applications))
+
+        auraFrame.Cooldown:SetCooldownFromExpirationTime(aura.expirationTime, aura.duration)
+
+        Util.PositionFromIndex(index, auraFrame, unitFrame, anchorPoint, anchorRelativePoint, dirH, dirV, size, padding, posX, posY, rowLength)
+
+        index = index + 1
+	end
+
+    if type == "Buffs" then
+	    AuraUtil.ForEachAura(unitFrame.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Helpful), nil, HandleAura, true)
+    elseif type == "Debuffs" then
+        AuraUtil.ForEachAura(unitFrame.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Harmful), nil, HandleAura, true)
+    end
+end
+
+function UF.SetupAuras(unitFrame)
     local dbEntry = CUI.DB.profile.UnitFrames[unitFrame.name]
 
-    local auraFrames = {}
-    local rowLength = dbEntry.Buffs.RowLength
-    local frameSize = dbEntry.Buffs.Size
-    local padding = dbEntry.Buffs.Padding
-    local index = 0
-
-    for frame in unitFrame.auraPools:EnumerateActive() do
-        auraFrames[frame.auraInstanceID] = frame
+    unitFrame.pool:ReleaseAll()
+    if dbEntry.Buffs.Enabled then
+        UpdateAuras(unitFrame, "Buffs")
     end
-
-    unitFrame.activeBuffs:Iterate(function(id, aura)
-        local frame = auraFrames[id]
-        if not frame then return end
-        frame:ClearAllPoints()
-        frame:SetSize(frameSize, frameSize)
-        frame.Icon:SetTexCoord(.08, .92, .08, .92)
-        frame.Count:SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", 12, "")
-        frame.Count:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -1, 0)
-
-        if not frame.Borders then
-            Util.AddBorder(frame)
-        end
-
-        Util.PositionFromIndex(index, frame, unitFrame, "BOTTOMRIGHT", "TOPRIGHT", "LEFT", "UP", frameSize, padding, 0, 2, rowLength)
-        
-        index = index + 1
-    end)
-
-    rowLength = dbEntry.Debuffs.RowLength
-    frameSize = dbEntry.Debuffs.Size
-    padding = dbEntry.Debuffs.Padding
-    index = 0
-
-    unitFrame.activeDebuffs:Iterate(function(id, aura)
-        local frame = auraFrames[id]
-        if not frame then return end
-        frame:SetSize(frameSize, frameSize)
-        frame.Icon:SetTexCoord(.08, .92, .08, .92)
-        frame.Count:SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", 12, "")
-        frame.Count:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -1, 0)
-
-        if frame.Border then
-            frame.Border:Hide()
-        end
-
-        if not frame.Borders then
-            Util.AddBorder(frame)
-        end
-
-        Util.PositionFromIndex(index, frame, unitFrame, "TOPLEFT", "BOTTOMLEFT", "RIGHT", "DOWN", frameSize, padding, 0, -2, rowLength)
-
-        index = index + 1
-    end)
+    if dbEntry.Debuffs.Enabled then
+        UpdateAuras(unitFrame, "Debuffs")
+    end
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -230,121 +295,89 @@ end
 
 -------------------------------------------------------------------------------------------------
 
-local function GetCastBarColor(castBar)
-    local color = {}
+local function GetCastOrChannelDuration(unit)
+    local castingDuration = UnitCastingDuration(unit)
+    if castingDuration then return castingDuration, UnitCastingInfo(unit) end
 
-    if castBar.barType == "uninterruptable" then
-        color.r = 0.9
-        color.g = 0.9
-        color.b = 0.9
-        color.a = 1
-        return color
-    else
-        color.r = 0.9
-        color.g = 0.9
-        color.b = 0
-        color.a = 1
-        return color
-    end
+    local channelDuration = UnitChannelDuration(unit)
+    if channelDuration then return channelDuration, UnitChannelInfo(unit) end
+
+    return nil
 end
 
-local function GetCastOrChannelInfo(unit)
-    local nameCast, _, _, startTimeMSCast, endTimeMSCast = UnitCastingInfo(unit)
-    local nameChannel, _, _, startTimeMSChannel, endTimeMSChannel = UnitChannelInfo(unit)
+local function UpdateCastBar(castBar, unitFrame)
+    local dbEntry = CUI.DB.profile.UnitFrames[unitFrame.name].CastBar
+    local duration, name, _, icon = GetCastOrChannelDuration(castBar.unit)
 
-    if startTimeMSCast then
-        return nameCast, false, startTimeMSCast, endTimeMSCast
-    elseif startTimeMSChannel then
-        return nameChannel, true, startTimeMSChannel, endTimeMSChannel
-    else
-        return nil, nil
-    end
-end
-
-local function UpdateCastBar(castBar, blizzardCastBar)
-    local name, isChannel, startTime, endTime = GetCastOrChannelInfo(castBar.unit)
-
-    if not startTime then 
+    if not duration then
         castBar.isCasting = false
-        castBar:Hide() 
+        castBar:Hide()
         return
     end
-    
+
     if isChannel then
-        local castBarColor = GetCastBarColor(blizzardCastBar)
-        castBar.Background:SetVertexColor(castBarColor.r, castBarColor.g, castBarColor.b, castBarColor.a, 1)
-        
-        local v = 0.2
-        castBar:SetStatusBarColor(castBarColor.r*v, castBarColor.g*v, castBarColor.b*v)
-        castBar:SetReverseFill(true)
-    else
-        local castBarColor = GetCastBarColor(blizzardCastBar)
-        castBar:SetStatusBarColor(castBarColor.r, castBarColor.g, castBarColor.b, castBarColor.a)
+        local c = dbEntry.Color
+        castBar.Background:SetVertexColor(c.r, c.g, c.b, c.a, 1)
 
         local v = 0.2
-        castBar.Background:SetVertexColor(castBarColor.r*v, castBarColor.g*v, castBarColor.b*v, 1)
+        castBar:SetStatusBarColor(c.r*v, c.g*v, c.b*v)
+        castBar:SetReverseFill(true)
+    else
+        local c = dbEntry.Color
+        castBar:SetStatusBarColor(c.r, c.g, c.b, c.a)
+
+        local v = 0.2
+        castBar.Background:SetVertexColor(c.r*v, c.g*v, c.b*v, 1)
         castBar:SetReverseFill(false)
     end
 
-    castBar.Text:SetText(name)
+    castBar.Name:SetText(name)
 
-    local currentTime = GetTime()
-    castBar:SetMinMaxValues(startTime, endTime)
-    castBar:SetValue(currentTime)
-    
+    castBar:SetTimerDuration(duration, 0)
+
+    castBar:SetScript("OnUpdate", function(self)
+        local castTime = duration:GetRemainingDuration()
+        self.Time:SetText(string.format("%.1f", castTime))
+    end)
+
     castBar.isCasting = true
     castBar:Show()
 end
 
-function SetupCastBar(unitFrame, blizzardCastBar)
+function SetupCastBar(unitFrame)
+    local dbEntry = CUI.DB.profile.UnitFrames[unitFrame.name].CastBar
     local unit = unitFrame.unit
 
-    blizzardCastBar:Hide()
-    blizzardCastBar:HookScript("OnShow", function(self)
-        self:Hide()
-    end)
-
     local castBar = CreateFrame("Statusbar", nil, unitFrame)
-    castBar:SetParentKey("CUI_CastBar")
-    castBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
-    castBar:SetStatusBarColor(0.8, 0.8, 0, 1)
-    castBar:SetPoint("BOTTOMLEFT", unitFrame.HealthBar, "TOPLEFT", 0, 2)
-    castBar:SetPoint("BOTTOMRIGHT", unitFrame.HealthBar, "TOPRIGHT", 0, 2)
-    castBar:SetHeight(13)
+    castBar:SetParentKey("CastBar")
+    castBar:Hide()
+
+    UF.UpdateCastBarFrame(unitFrame)
 
     Util.AddStatusBarBackground(castBar)
     Util.AddBorder(castBar)
 
+    castBar.duration = C_DurationUtil.CreateDuration()
     castBar.isCasting = false
     castBar.unit = unit
 
-    local castBarText = castBar:CreateFontString(nil, "OVERLAY")
-    castBarText:SetParentKey("Text")
-    castBarText:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 8, "")
-    castBarText:SetPoint("LEFT", castBar, "LEFT", 3, 0)
+    local castBarName = castBar:CreateFontString(nil, "OVERLAY")
+    castBarName:SetParentKey("Name")
 
-    UpdateCastBar(castBar, blizzardCastBar)
+    local castBarTime = castBar:CreateFontString(nil, "OVERLAY")
+    castBarTime:SetParentKey("Time")
 
-    castBar:SetScript("OnUpdate", function(self)
-        if not self.isCasting then return end
-        self:SetValue(GetTime() * 1000)
-    end)
+    UF.UpdateCastBarTexts(unitFrame)
 
-    castBar:RegisterUnitEvent("UNIT_SPELLCAST_START", unit)
-    castBar:RegisterUnitEvent("UNIT_SPELLCAST_STOP", unit)
-    castBar:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_START", unit)
-    castBar:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_UPDATE", unit)
-    castBar:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP", unit)
-    castBar:RegisterEvent("PLAYER_FOCUS_CHANGED")
-    castBar:HookScript("OnEvent", function(self, event)            
-        if event == "UNIT_SPELLCAST_START" or 
-                event == "UNIT_SPELLCAST_CHANNEL_START" or
-                event == "UNIT_SPELLCAST_STOP" or
-                event == "UNIT_SPELLCAST_CHANNEL_STOP" or
-                event == "UNIT_SPELLCAST_CHANNEL_UPDATE" then
-            UpdateCastBar(self, blizzardCastBar)
-        elseif event == "PLAYER_FOCUS_CHANGED" then
-            UpdateCastBar(self, blizzardCastBar)
+    castBar:SetScript("OnEvent", function(self, event)            
+        if event == "UNIT_SPELLCAST_START" or
+            event == "UNIT_SPELLCAST_CHANNEL_START" or
+            event == "UNIT_SPELLCAST_STOP" or
+            event == "UNIT_SPELLCAST_CHANNEL_STOP" or
+            event == "UNIT_SPELLCAST_CHANNEL_UPDATE" then
+            UpdateCastBar(self, unitFrame)
+        elseif event == "PLAYER_FOCUS_CHANGED" or event == "PLAYER_TARGET_CHANGED" then
+            UpdateCastBar(self, unitFrame)
         end
     end)
 end
@@ -356,16 +389,19 @@ function SetupUnitFrame(frameName, unit)
 
     local frame = CreateFrame("Button", "CUI_"..frameName, UIParent, "CUI_UnitFrameTemplate")
     frame:SetSize(dbEntry.Width, dbEntry.Height)
-
     frame:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
 
     frame:SetAttribute("unit", unit)
     frame:RegisterForClicks("AnyDown")
     frame:SetAttribute("*type1", "target")
     frame:SetAttribute("*type2", "togglemenu")
+    frame:SetAttribute("ping-receiver", true)
 
     frame.unit = unit
     frame.name = frameName
+
+    frame:RegisterUnitEvent("UNIT_AURA", unit)
+    frame.pool = CreateFramePool("Frame", frame, "CUI_UnitFrameBuff")
 
     if unit == "target" then
         frame:RegisterEvent("PLAYER_TARGET_CHANGED")
@@ -382,7 +418,7 @@ function SetupUnitFrame(frameName, unit)
     powerBar:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT")
     powerBar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT")
     powerBar:SetHeight(dbEntry.PowerBar.Height)
-    powerBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
+    powerBar:SetStatusBarTexture(dbEntry.PowerBar.Texture)
     Util.AddStatusBarBackground(powerBar)
     Util.AddBorder(powerBar)
 
@@ -390,7 +426,7 @@ function SetupUnitFrame(frameName, unit)
     healthBar:SetParentKey("HealthBar")
     healthBar:SetPoint("TOPLEFT", frame, "TOPLEFT")
     healthBar:SetPoint("BOTTOMRIGHT", powerBar, "TOPRIGHT")
-    healthBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
+    healthBar:SetStatusBarTexture(dbEntry.HealthBar.Texture)
     Util.AddStatusBarBackground(healthBar)
     Util.AddBorder(healthBar)
 
@@ -400,25 +436,27 @@ function SetupUnitFrame(frameName, unit)
 
     local unitName = overlayFrame:CreateFontString(nil, "OVERLAY")
     unitName:SetParentKey("UnitName")
-    unitName:SetPoint("LEFT", overlayFrame, "LEFT", 5, 0)
-    unitName:SetWidth(overlayFrame:GetWidth() - 60)
+    unitName:SetPoint(dbEntry.Name.AnchorPoint, frame.Overlay, dbEntry.Name.AnchorRelativePoint, dbEntry.Name.PosX, dbEntry.Name.PosY)
+    unitName:SetFont(dbEntry.Name.Font, dbEntry.Name.Size, dbEntry.Name.Outline)
+    unitName:SetWidth(dbEntry.Name.Width)
     unitName:SetJustifyH("LEFT")
-    unitName:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 12, "")
-    unitName:SetText(UnitName(unit))
     unitName:SetWordWrap(false)
-    
+    unitName:SetText(UnitName(unit))
+
     local unitHealth = overlayFrame:CreateFontString(nil, "OVERLAY")
     unitHealth:SetParentKey("UnitHealth")
-    unitHealth:SetPoint("RIGHT", overlayFrame, "RIGHT", -5, 0)
-    unitHealth:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 12, "")
+    unitHealth:SetPoint(dbEntry.HealthText.AnchorPoint, frame.Overlay, dbEntry.HealthText.AnchorRelativePoint, dbEntry.HealthText.PosX, dbEntry.HealthText.PosY)
+    unitHealth:SetFont(dbEntry.HealthText.Font, dbEntry.HealthText.Size, dbEntry.HealthText.Outline)
     unitHealth:SetText(Util.UnitHealthText(unit))
-    
-    local leaderFrame = overlayFrame:CreateTexture(nil, "OVERLAY")
-    leaderFrame:SetParentKey("Leader")
-    leaderFrame:SetPoint("TOPLEFT", overlayFrame, "TOPLEFT", 3, -3)
-    leaderFrame:SetSize(15, 15)
-    leaderFrame:Hide()
-    
+
+    if dbEntry.LeaderIcon then
+        local leaderFrame = overlayFrame:CreateTexture(nil, "OVERLAY")
+        leaderFrame:SetParentKey("Leader")
+        leaderFrame:SetPoint(dbEntry.LeaderIcon.AnchorPoint, overlayFrame, dbEntry.LeaderIcon.AnchorRelativePoint, dbEntry.LeaderIcon.PosX, dbEntry.LeaderIcon.PosY)
+        leaderFrame:SetSize(15, 15)
+        leaderFrame:Hide()
+    end
+
     frame:RegisterUnitEvent("UNIT_HEALTH", unit)
     frame:RegisterUnitEvent("UNIT_MAXHEALTH", unit)
     frame:RegisterUnitEvent("UNIT_POWER_UPDATE", unit)
@@ -441,19 +479,23 @@ function SetupUnitFrame(frameName, unit)
             UpdateMaxPower(self)
         elseif event == "PLAYER_TARGET_CHANGED" or event == "PLAYER_FOCUS_CHANGED" then
             if not UnitExists(self.unit) then return end
-            UpdateAll(frame)
+            UpdateAll(self)
+            UF.SetupAuras(self)
         elseif event == "PLAYER_REGEN_ENABLED" then
             UF.UpdateAlpha(self)
         elseif event == "PLAYER_REGEN_DISABLED" then
             UF.UpdateAlpha(self, true)
         elseif event == "PARTY_LEADER_CHANGED" or event == "GROUP_FORMED" or event == "GROUP_LEFT" then
             UF.UpdateLeaderAssist(self)
+        elseif event == "UNIT_AURA" then
+            UF.SetupAuras(self)
         end
     end)
 
+    SetupCastBar(frame)
+
     UpdateAll(frame)
-    UF.UpdateTexts(frame)
-    UF.UpdateSizePos(frame)
+    UF.UpdateFrame(frame)
     RegisterUnitWatch(frame, false)
 end
 
@@ -467,15 +509,5 @@ function UF.Load()
     SetupUnitFrame("FocusFrame", "focus")
     SetupUnitFrame("PetFrame", "pet")
 
-    SetupUnitFrame("BossFrame", "boss1")
-
-    --SetupCastBar(FocusFrame, FocusFrameSpellBar)
-
-    hooksecurefunc(TargetFrame, "UpdateAuras", function(self)
-        UF.UpdateAuras(self)
-    end)
-
-    hooksecurefunc(FocusFrame, "UpdateAuras", function(self)
-        UF.UpdateAuras(self)
-    end)
+    -- SetupUnitFrame("BossFrame", "boss1")
 end

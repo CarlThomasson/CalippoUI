@@ -23,7 +23,7 @@ local function StyleFrame(frame)
         local overlay = CreateFrame("Frame", nil, frame)
         overlay:SetParentKey("Overlay")
         overlay:SetAllPoints(frame.Icon)
-        Util.AddBorder(overlay)
+        Util.AddBorder(overlay, true)
     end
 
     frame.Count:SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", 12, "")

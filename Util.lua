@@ -5,28 +5,37 @@ local Util = CUI.Util
 
 ---------------------------------------------------------------------------------------------------
 
-function Util.AddBorder(frame)
+function Util.AddBorder(frame, useLines)
     frame.Borders = {}
-    local pixel = PixelUtil.GetNearestPixelSize(1, UIParent:GetEffectiveScale(), 1)
+    if useLines then
+        local pixel = PixelUtil.GetNearestPixelSize(1, UIParent:GetEffectiveScale(), 1)
 
-    for i=1, 4 do
-        frame.Borders[i] = frame:CreateLine(nil, "OVERLAY", nil, 0)
-        local l = frame.Borders[i]
-        l:SetThickness(pixel)
-        l:SetColorTexture(0, 0, 0, 1)
-        if i==1 then
-            l:SetStartPoint("TOPLEFT", frame, -pixel/2, 0)
-            l:SetEndPoint("TOPRIGHT", frame, pixel/2, 0)
-        elseif i==2 then
-            l:SetStartPoint("TOPRIGHT")
-            l:SetEndPoint("BOTTOMRIGHT")
-        elseif i==3 then
-            l:SetStartPoint("BOTTOMRIGHT", frame, pixel/2, 0)
-            l:SetEndPoint("BOTTOMLEFT", frame, -pixel/2, 0)
-        else
-            l:SetStartPoint("BOTTOMLEFT")
-            l:SetEndPoint("TOPLEFT")
+        for i=1, 4 do
+            frame.Borders[i] = frame:CreateLine(nil, "OVERLAY", nil, 0)
+            local l = frame.Borders[i]
+            l:SetThickness(pixel)
+            l:SetColorTexture(0, 0, 0, 1)
+            if i==1 then
+                l:SetStartPoint("TOPLEFT", frame, -pixel/2, 0)
+                l:SetEndPoint("TOPRIGHT", frame, pixel/2, 0)
+            elseif i==2 then
+                l:SetStartPoint("TOPRIGHT")
+                l:SetEndPoint("BOTTOMRIGHT")
+            elseif i==3 then
+                l:SetStartPoint("BOTTOMRIGHT", frame, pixel/2, 0)
+                l:SetEndPoint("BOTTOMLEFT", frame, -pixel/2, 0)
+            else
+                l:SetStartPoint("BOTTOMLEFT")
+                l:SetEndPoint("TOPLEFT")
+            end
         end
+    else
+        local offset = 1
+        local backdrop = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+        backdrop:SetParentKey("BackdropBorder")
+        backdrop:SetPoint("TOPLEFT", frame, "TOPLEFT", -offset, offset)
+        backdrop:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", offset, -offset)
+        backdrop:SetBackdrop(CUI_BACKDROP_DS)
     end
 end
 
@@ -125,19 +134,19 @@ end
 function Util.PositionFromIndex(index, frame, anchorFrame, point, relativePoint, dirH, dirV, frameSize, padding, offsetX, offsetY, rowLength)
     local x, y
     local level = math.floor(index/rowLength)
-    
+
     if dirH == "LEFT" then
         x = -(index*(frameSize+padding))+(level*rowLength*(frameSize+padding))+offsetX
     elseif dirH == "RIGHT" then
-        x = (index*(frameSize+padding))+(level*rowLength*(frameSize+padding))+offsetX
+        x = (index*(frameSize+padding))-(level*rowLength*(frameSize+padding))+offsetX
     end
-    
+
     if dirV == "UP" then
         y = (level*(frameSize+padding))+offsetY
     elseif dirV == "DOWN" then
         y = -(level*(frameSize+padding))+offsetY
     end
-    
+
     frame:ClearAllPoints()
     frame:SetPoint(point, anchorFrame, relativePoint, x, y)
 end

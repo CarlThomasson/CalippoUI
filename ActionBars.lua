@@ -56,14 +56,28 @@ function AB.UpdateBar(bar)
     local button = AB.ActionBars[bar]
     local dbEntry = CUI.DB.profile.ActionBars[bar:GetName()]
 
-    bar:SetWidth(_G[bar:GetName().."ButtonContainer1"]:GetScale() * (bar.numButtonsShowable * ((_G[bar:GetName().."ButtonContainer1"]:GetWidth() + dbEntry.Padding)) - dbEntry.Padding))
+    local scale = _G[bar:GetName().."ButtonContainer1"]:GetScale()
+    local width = _G[bar:GetName().."ButtonContainer1"]:GetWidth()
+    local padding = dbEntry.Padding
+    if bar.isHorizontal then
+        bar:SetWidth(scale * ((math.ceil(bar.numButtonsShowable / bar.numRows) * (width + padding)) - padding))
+        bar:SetHeight(scale * ((width + padding) * bar.numRows - padding))
+    else
+        bar:SetHeight(scale * ((math.ceil(bar.numButtonsShowable / bar.numRows) * (width + padding)) - padding))
+        bar:SetWidth(scale * ((width + padding) * bar.numRows - padding))
+    end
 
     for i=1, 12 do
         local frame = _G[button..i]
         if not frame then break end
 
         local container = _G[bar:GetName().."ButtonContainer"..i]
-        Util.PositionFromIndex(i-1, container, bar, "TOPLEFT", "TOPLEFT", "RIGHT", "DOWN", container:GetWidth(), dbEntry.Padding, 0, 0, 123)
+
+        if bar.isHorizontal then
+            Util.PositionFromIndex(i-1, container, bar, "TOPLEFT", "TOPLEFT", "RIGHT", "DOWN", container:GetWidth(), dbEntry.Padding, 0, 0, math.ceil(bar.numButtonsShowable / bar.numRows))
+        else
+            Util.PositionFromIndex(i-1, container, bar, "TOPLEFT", "TOPLEFT", "RIGHT", "DOWN", container:GetWidth(), dbEntry.Padding, 0, 0, bar.numRows)
+        end
 
         if dbEntry.Keybind.Enabled then
             frame.TextOverlayContainer.HotKey:SetAlpha(1)
@@ -105,6 +119,10 @@ function AB.UpdateBar(bar)
         frame.SlotBackground:HookScript("OnShow", function(self)
             self:Hide()
         end)
+
+        if frame.Arrow then
+            frame.Arrow:SetDrawLayer("HIGHLIGHT")
+        end
 
         if not frame.Background then
             local background = frame:CreateTexture(nil, "BACKGROUND", nil, -8)
@@ -184,24 +202,12 @@ local function AddHooks()
     end
     AB.UpdateAlpha(MicroMenu)
 
-    FramerateFrame:ClearAllPoints()
-    FramerateFrame:SetPoint("TOP", Minimap, "BOTTOM", 0, -5)
-    hooksecurefunc(FramerateFrame, "UpdatePosition", function(self) 
-        self:ClearAllPoints()
-        self:SetPoint("TOP", Minimap, "BOTTOM", 0, -5)
-    end)
-
-    QueueStatusButton:ClearAllPoints()
-    QueueStatusButton:SetPoint("CENTER", Minimap, "BOTTOMLEFT")
-    hooksecurefunc(QueueStatusButton, "UpdatePosition", function(self) 
-        self:ClearAllPoints()
-        self:SetPoint("CENTER", Minimap, "BOTTOMLEFT")
-    end)
-
     EditModeManagerFrame:HookScript("OnHide", function(self)
         if InCombatLockdown() then return end
         for bar, _ in pairs(AB.ActionBars) do
             local dbEntry = CUI.DB.profile.ActionBars[bar:GetName()]
+
+            AB.UpdateBar(bar)
 
             if dbEntry.ShouldAnchor then
                 local anchorFrame = dbEntry.AnchorFrame
@@ -223,7 +229,7 @@ local function StyleXPBar()
     for _, frame in pairs({MainStatusTrackingBarContainer:GetChildren()}) do
         if frame.StatusBar then
             frame.StatusBar:SetAllPoints(MainStatusTrackingBarContainer)
-            
+
             local r, g, b = 0.6, 0.2, 0.9
             local v = 0.2
 

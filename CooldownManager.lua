@@ -40,13 +40,13 @@ function CDM.UpdateStyle(viewer)
         end
 
         if frame.Applications then
-            frame.Applications.Applications:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 
+            frame.Applications.Applications:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf",
                 dbEntry.Charges.Size, "OUTLINE")
             frame.Applications.Applications:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
         end
 
         if frame.ChargeCount then
-            frame.ChargeCount.Current:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 
+            frame.ChargeCount.Current:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf",
                 dbEntry.Charges.Size, "OUTLINE")
             frame.ChargeCount.Current:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
         end
@@ -56,7 +56,7 @@ function CDM.UpdateStyle(viewer)
             frame.Cooldown:SetSwipeTexture("", 0, 0, 0, 1)
 
             local text = frame.Cooldown:GetRegions()
-            text:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", 
+            text:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf",
                 dbEntry.Cooldown.Size, "OUTLINE")
         end
 
@@ -76,6 +76,10 @@ end
 
 ---------------------------------------------------------------------------------------------------
 
+local function FixWidth(viewer)
+    viewer:SetWidth(viewer.iconScale * ((math.min(viewer.frameCount, viewer.iconLimit) * (viewer.frameSize + viewer.iconPadding) - viewer.iconPadding)))
+end
+
 local function UpdatePositions(viewer)
     local iconScale = viewer.iconScale
     local padding = viewer.iconPadding
@@ -85,13 +89,13 @@ local function UpdatePositions(viewer)
 
     local frameSize
     if viewerName == "EssentialCooldownViewer" then
-        frameSize = 50 * viewer.iconScale
-        viewer.frameSize = frameSize  
+        frameSize = 50 * iconScale
+        viewer.frameSize = frameSize
     elseif viewerName == "UtilityCooldownViewer" then
-        frameSize = 30 * viewer.iconScale
+        frameSize = 30 * iconScale
         viewer.frameSize = frameSize
     elseif viewerName == "BuffIconCooldownViewer" then
-        frameSize = 40 * viewer.iconScale
+        frameSize = 40 * iconScale
     end
 
     local frames = {}
@@ -134,7 +138,7 @@ local function UpdatePositions(viewer)
         else
             frame:SetPoint("TOPLEFT", viewer, "TOPLEFT", (index*(frameSize+padding))-(row*rowSize*(frameSize+padding)), -(row*(frameSize+padding)))
         end
-        
+
         frame:SetSize(frameSize, frameSize)
     end
 end
@@ -165,10 +169,15 @@ end
 ---------------------------------------------------------------------------------------------------
 
 function CDM.Load()
+    C_CVar.SetCVar("cooldownViewerEnabled", 1)
+
     for _, viewer in pairs(cooldownViewers) do
         HookScripts(viewer)
 
         viewer:HookScript("OnShow", function(self)
+            if self:GetName() ~= "BuffIconCooldownViewer" then
+                FixWidth(self)
+            end
             UpdatePositions(self)
             CDM.UpdateAlpha(self)
         end)
@@ -184,8 +193,8 @@ function CDM.Load()
             elseif event == "PLAYER_REGEN_DISABLED" then
                 CDM.UpdateAlpha(self, true)
             elseif event == "ACTIVE_TALENT_GROUP_CHANGED" then
-                viewer:SetWidth(viewer.iconScale * ((math.min(viewer.frameCount, viewer.iconLimit) * (viewer.frameSize + viewer.iconPadding) - viewer.iconPadding)))
-            end 
+                 FixWidth(self)
+            end
         end)
 
         CDM.UpdateAlpha(viewer)

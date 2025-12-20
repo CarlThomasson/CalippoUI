@@ -12,6 +12,10 @@ f:SetScript("OnEvent", function(self, event, isLogin, isReload)
             CUI.Chat.Load()
         end
 
+        if dbEntry.ResourceBar.Enabled then
+            CUI.RB.Load()
+        end
+
         if dbEntry.UnitFrames.Enabled then
             CUI.UF.Load()
         end
@@ -26,10 +30,6 @@ f:SetScript("OnEvent", function(self, event, isLogin, isReload)
 
         if dbEntry.CooldownManager.Enabled then
             CUI.CDM.Load()
-        end
-
-        if dbEntry.ResourceBar.Enabled then
-            CUI.RB.Load()
         end
 
         if dbEntry.PlayerCastBar.Enabled then
@@ -48,7 +48,7 @@ f:SetScript("OnEvent", function(self, event, isLogin, isReload)
             CUI.NP.Load()
         end
 
-        CUI.Conf.Load()
+        -- CUI.Conf.Load()
     end
 end)
 

@@ -75,6 +75,28 @@ local function SetupMinimap()
         MinimapCluster.Tracking.Button:SetAlpha(0)
         GameTimeFrame:SetAlpha(0)
     end)
+
+    ObjectiveTrackerFrame.Header.MinimizeButton:SetAlpha(0.5)
+    ObjectiveTrackerFrame.Header.Background:Hide()
+    ObjectiveTrackerFrame.Header.Text:Hide()
+
+    QuestObjectiveTracker.Header.MinimizeButton:SetAlpha(0.5)
+    QuestObjectiveTracker.Header.Background:Hide()
+    QuestObjectiveTracker.Header.Text:Hide()
+
+    FramerateFrame:ClearAllPoints()
+    FramerateFrame:SetPoint("TOP", Minimap, "BOTTOM", 0, -5)
+    hooksecurefunc(FramerateFrame, "UpdatePosition", function(self) 
+        self:ClearAllPoints()
+        self:SetPoint("TOP", Minimap, "BOTTOM", 0, -5)
+    end)
+
+    QueueStatusButton:ClearAllPoints()
+    QueueStatusButton:SetPoint("CENTER", Minimap, "BOTTOMLEFT")
+    hooksecurefunc(QueueStatusButton, "UpdatePosition", function(self)
+        self:ClearAllPoints()
+        self:SetPoint("CENTER", Minimap, "BOTTOMLEFT")
+    end)
 end
 
 ---------------------------------------------------------------------------------------------------

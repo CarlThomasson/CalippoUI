@@ -24,7 +24,7 @@ function RB.UpdateText(frame)
 
     if dbEntry.Enabled then
         frame.Text:Show()
-        frame.Text:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", dbEntry.Size, "")
+        frame.Text:SetFont(dbEntry.Font, dbEntry.Size, dbEntry.Outline)
         frame.Text:ClearAllPoints()
         frame.Text:SetPoint(dbEntry.AnchorPoint, frame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
     else
@@ -36,6 +36,7 @@ function RB.UpdateFrame(frame)
     local dbEntry = CUI.DB.profile.ResourceBar
 
     frame:SetSize(dbEntry.Width, dbEntry.Height)
+    frame:SetStatusBarTexture(dbEntry.Texture)
 
     frame:ClearAllPoints()
     if dbEntry.MatchWidth then
@@ -60,7 +61,7 @@ local function UpdatePower(frame)
 
     frame:SetValue(value)
     frame.Text:SetText(Util.UnitPowerText("player"))
-end 
+end
 
 local function UpdateMaxPower(frame)
     local value = UnitPower("player")
@@ -83,9 +84,9 @@ end
 
 ---------------------------------------------------------------------------------------------------
 
-local powerBar = CreateFrame("Statusbar", "CUI_PowerBar", UIParent)
 local function SetupPowerBar()
-    powerBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
+    local powerBar = CreateFrame("Statusbar", "CUI_PowerBar", UIParent)
+    powerBar:SetStatusBarTexture(CUI.DB.profile.ResourceBar.Texture)
 
     RB.UpdateFrame(powerBar) 
     UpdatePowerColor(powerBar)
@@ -94,8 +95,7 @@ local function SetupPowerBar()
 
     local text = powerBar:CreateFontString(nil, "OVERLAY")
     text:SetParentKey("Text")
-    text:SetFont("Interface\\AddOns\\CalippoUI\\Fonts\\FiraSans-Medium.ttf", CUI.DB.profile.ResourceBar.Text.Size, "")
-    text:SetPoint("CENTER", powerBar, "CENTER")
+    RB.UpdateText(powerBar)
 
     UpdateMaxPower(powerBar)
 
@@ -125,24 +125,25 @@ local function SetupPowerBar()
 end
 
 local function SetupPersonalResourceBar()
-    if not prdClassFrame then return end
+    PersonalResourceDisplayFrame:SetSize(10, 10)
+
     SetCVar("nameplateShowSelf", 1)
     SetCVar("nameplateHideHealthAndPower", 1)
     SetCVar("NameplatePersonalShowAlways", 1)
 
     Hide.HideFrame(PersonalResourceDisplayFrame.PowerBar)
     Hide.HideFrame(PersonalResourceDisplayFrame.HealthBarsContainer)
-    
+
     RB.UpdatePersonalBar(PersonalResourceDisplayFrame)
 
     EditModeManagerFrame:HookScript("OnHide", function(self)
         RB.UpdatePersonalBar(PersonalResourceDisplayFrame)
     end)
 
-    PersonalResourceDisplayFrame:SetSize(8, 8)
-    
-    prdClassFrame:ClearAllPoints()
+    if not prdClassFrame then return end
+
     local _, class = UnitClass("player")
+    prdClassFrame:ClearAllPoints()
     if class == "PALADIN" then
         prdClassFrame:SetPoint("BOTTOM", PersonalResourceDisplayFrame, "BOTTOM", 0, -7)
     else
