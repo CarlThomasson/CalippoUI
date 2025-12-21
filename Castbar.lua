@@ -20,10 +20,7 @@ function CB.UpdateFrame(frame)
     frame:SetSize(dbEntry.Width, dbEntry.Height)
     frame:SetStatusBarTexture(dbEntry.Texture)
 
-    if not _G[dbEntry.AnchorFrame] then
-        print(frame:GetName().." could not anchor to "..dbEntry.AnchorFrame.." because it does not exist, resetting anchor to UIParent")
-        dbEntry.AnchorFrame = "UIParent"
-    end
+    Util.CheckAnchorFrame(frame, dbEntry)
 
     if dbEntry.MatchWidth then
         frame:SetPoint("BOTTOMLEFT", dbEntry.AnchorFrame, "TOPLEFT", 0, dbEntry.PosY)

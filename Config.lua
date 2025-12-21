@@ -149,6 +149,36 @@ local function CreateAnchorGroup(container, dbEntry, func, frame)
     return anchorGroup
 end
 
+local function CreateAnchorGroupWithoutFrame(container, dbEntry, func, frame)
+    local anchorGroup = CreateInlineGroup(container, "Anchor")
+
+    CreateDropDown(anchorGroup, "Anchor Point", dbEntry.AnchorPoint, anchorPoints,
+        function(self, event, value)
+            dbEntry.AnchorPoint = value
+            func(frame)
+        end, 0.5)
+        
+    CreateDropDown(anchorGroup, "Relative Anchor Point", dbEntry.AnchorRelativePoint, anchorPoints,
+        function(self, event, value)
+            dbEntry.AnchorRelativePoint = value
+            func(frame)
+        end, 0.5)
+        
+    CreateSlider(anchorGroup, "Position X", -1000, 1000, 0.1, dbEntry.PosX,
+        function(self, event, value)
+            dbEntry.PosX = value
+            func(frame)
+        end, 0.5)
+
+    CreateSlider(anchorGroup, "Position Y", -1000, 1000, 0.1, dbEntry.PosY,
+        function(self, event, value)
+            dbEntry.PosY = value
+            func(frame)
+        end, 0.5)
+
+    return anchorGroup
+end
+
 local function CreateAlphaGroup(container, dbEntry, func, frame)
     local alphaGroup = CreateInlineGroup(container, "Alpha") 
 
@@ -355,12 +385,12 @@ local function CreateGeneralSettings(container)
             dbEntry.PlayerCastBar.Enabled = value
         end, 0.33)
 
-    CreateCheckBox(modulesGroup, "Nameplates", dbEntry.Nameplates.Enabled,
+    CreateCheckBox(modulesGroup, "Nameplates (WIP)", dbEntry.Nameplates.Enabled,
         function(self, event, value)
             dbEntry.Nameplates.Enabled = value
         end, 0.33)
 
-    CreateCheckBox(modulesGroup, "Group Frames", dbEntry.GroupFrames.Enabled,
+    CreateCheckBox(modulesGroup, "Group Frames (WIP)", dbEntry.GroupFrames.Enabled,
         function(self, event, value)
             dbEntry.GroupFrames.Enabled = value
         end, 0.33)
@@ -373,6 +403,11 @@ local function CreateGeneralSettings(container)
     CreateCheckBox(modulesGroup, "PlayerAuras", dbEntry.PlayerAuras.Enabled,
         function(self, event, value)
             dbEntry.PlayerAuras.Enabled = value
+        end, 0.33)
+
+    CreateCheckBox(modulesGroup, "Chat", dbEntry.Chat.Enabled,
+        function(self, event, value)
+            dbEntry.Chat.Enabled = value
         end, 0.33)
 
     local reloadButton = AceGUI:Create("Button")
@@ -512,13 +547,26 @@ end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
 
+local bossTestFrames = false
+
 local function CreateUnitFrameFramePage(container, unitFrame)
     local dbEntry = CUI.DB.profile.UnitFrames[unitFrame]
     local frame = _G["CUI_"..unitFrame]
+    if unitFrame == "BossFrame" then frame = "BossFrame" end
 
     local scrollFrame = AceGUI:Create("ScrollFrame")
     scrollFrame:SetLayout("List")
     container:AddChild(scrollFrame)
+
+    if unitFrame == "BossFrame" then
+        local testGroup = CreateInlineGroup(scrollFrame, "Test")
+
+        CreateCheckBox(testGroup, "Toggle test boss frames", bossTestFrames,
+            function(self, event, value)
+                bossTestFrames = value
+                UF.ToggleBossTest(value)
+            end, 1)
+    end
 
     CreateSizeGroup(scrollFrame, dbEntry, UF.UpdateFrame, frame)
 
@@ -550,6 +598,7 @@ end
 local function CreateUnitFramAuraSettings(container, unitFrame, type)
     local dbEntry = CUI.DB.profile.UnitFrames[unitFrame][type]
     local frame = _G["CUI_"..unitFrame]
+    if unitFrame == "BossFrame" then frame = "BossFrame" end
 
     local scrollFrame = AceGUI:Create("ScrollFrame")
     scrollFrame:SetLayout("List")
@@ -560,64 +609,70 @@ local function CreateUnitFramAuraSettings(container, unitFrame, type)
     CreateCheckBox(group, "Toggle "..type, dbEntry.Enabled,
         function(self, event, value)
             dbEntry.Enabled = value
-            UF.SetupAuras(frame)
+            UF.UpdateAuras(frame)
         end, 1)
 
     CreateSlider(group, "Size", 1, 50, 1, dbEntry.Size,
         function(self, event, value)
             dbEntry.Size = value
-            UF.SetupAuras(frame)
-        end, 0.33)
+            UF.UpdateAuras(frame)
+        end, 0.5)
 
     CreateSlider(group, "Padding", 0, 20, 1, dbEntry.Padding,
         function(self, event, value)
             dbEntry.Padding = value
-            UF.SetupAuras(frame)
-        end, 0.33)
+            UF.UpdateAuras(frame)
+        end, 0.5)
 
     CreateSlider(group, "Row length", 1, 20, 1, dbEntry.RowLength,
         function(self, event, value)
             dbEntry.RowLength = value
-            UF.SetupAuras(frame)
-        end, 0.33)
+            UF.UpdateAuras(frame)
+        end, 0.5)
+
+    CreateSlider(group, "Max Shown", 1, 30, 1, dbEntry.MaxShown,
+        function(self, event, value)
+            dbEntry.MaxShown = value
+            UF.UpdateAuras(frame)
+        end, 0.5)
 
     CreateDropDown(group, "Horizontal Growth Direction", dbEntry.DirH, directionsHorizontal,
         function(self, event, value)
             dbEntry.DirH = value
-            UF.SetupAuras(frame)
+            UF.UpdateAuras(frame)
         end, 0.5)
 
     CreateDropDown(group, "Vertical Growth Direction", dbEntry.DirV, directionsVertical,
         function(self, event, value)
             dbEntry.DirV = value
-            UF.SetupAuras(frame)
+            UF.UpdateAuras(frame)
         end, 0.5)
 
     CreateDropDown(group, "Anchor Point", dbEntry.AnchorPoint, anchorPoints,
         function(self, event, value)
             dbEntry.AnchorPoint = value
-            UF.SetupAuras(frame)
+            UF.UpdateAuras(frame)
         end, 0.5)
 
     CreateDropDown(group, "Relative Anchor Point", dbEntry.AnchorRelativePoint, anchorPoints,
         function(self, event, value)
             dbEntry.AnchorRelativePoint = value
-            UF.SetupAuras(frame)
+            UF.UpdateAuras(frame)
         end, 0.5)
 
     CreateSlider(group, "Position X", -500, 500, 0.1, dbEntry.PosX,
         function(self, event, value)
             dbEntry.PosX = value
-            UF.SetupAuras(frame)
+            UF.UpdateAuras(frame)
         end, 0.5)
 
     CreateSlider(group, "Position Y", -500, 500, 0.1, dbEntry.PosY,
         function(self, event, value)
             dbEntry.PosY = value
-            UF.SetupAuras(frame)
+            UF.UpdateAuras(frame)
         end, 0.5)
 
-    CreateTextGroup(scrollFrame, dbEntry.Stacks, UF.SetupAuras, frame, "Stacks")
+    CreateTextGroup(scrollFrame, dbEntry.Stacks, UF.UpdateAuras, frame, "Stacks")
 
     group:DoLayout()
 end
@@ -646,6 +701,7 @@ end
 local function CreateUnitFrameTextPage(container, unitFrame, type)
     local dbEntry = CUI.DB.profile.UnitFrames[unitFrame][type]
     local frame = _G["CUI_"..unitFrame]
+    if unitFrame == "BossFrame" then frame = "BossFrame" end
 
     local scrollFrame = AceGUI:Create("ScrollFrame")
     scrollFrame:SetLayout("List")
@@ -688,43 +744,83 @@ end
 local function CreateUnitFrameCastBarPage(container, unitFrame)
     local dbEntry = CUI.DB.profile.UnitFrames[unitFrame].CastBar
     local frame = _G["CUI_"..unitFrame]
+    if unitFrame == "BossFrame" then frame = "BossFrame" end
 
-    local scrollFrame = AceGUI:Create("ScrollFrame")
-    scrollFrame:SetLayout("List")
-    container:AddChild(scrollFrame)
+    local function CastBarFramePage(container)
+        local scrollFrame = AceGUI:Create("ScrollFrame")
+        scrollFrame:SetLayout("List")
+        container:AddChild(scrollFrame)
 
-    local toggleGroup = CreateInlineGroup(scrollFrame, "Toggle")
+        local toggleGroup = CreateInlineGroup(scrollFrame, "Toggle")
 
-    CreateCheckBox(toggleGroup, "Toggle Cast Bar", dbEntry.Enabled,
-        function(self, event, value)
-            dbEntry.Enabled = value
-            UF.UpdateCastBarFrame(frame)
-        end, 1)
+        CreateCheckBox(toggleGroup, "Toggle Cast Bar", dbEntry.Enabled,
+            function(self, event, value)
+                dbEntry.Enabled = value
+                UF.UpdateCastBarFrame(frame)
+            end, 1)
 
-    local sizeGroup = CreateSizeGroup(scrollFrame, dbEntry, UF.UpdateCastBarFrame, frame)
+        local sizeGroup = CreateSizeGroup(scrollFrame, dbEntry, UF.UpdateCastBarFrame, frame)
 
-    CreateCheckBox(sizeGroup, "Match width to anchored frame (also forces anchor to bottom of frame)", dbEntry.MatchWidth,
-        function(self, event, value)
-            dbEntry.MatchWidth = value
-            UF.UpdateCastBarFrame(frame)
-        end, 1)
+        CreateCheckBox(sizeGroup, "Match width to anchored frame (also forces anchor to bottom of frame)", dbEntry.MatchWidth,
+            function(self, event, value)
+                dbEntry.MatchWidth = value
+                UF.UpdateCastBarFrame(frame)
+            end, 1)
 
-    CreateColorGroup(scrollFrame, dbEntry, UF.UpdateCastBarFrame, frame)
+        CreateColorGroup(scrollFrame, dbEntry, UF.UpdateCastBarFrame, frame)
 
-    CreateTextureGroup(scrollFrame, dbEntry, UF.UpdateCastBarFrame, frame)
+        CreateTextureGroup(scrollFrame, dbEntry, UF.UpdateCastBarFrame, frame)
 
-    CreateAnchorGroup(scrollFrame, dbEntry, UF.UpdateCastBarFrame, frame)
+        if unitFrame == "BossFrame" then
+            CreateAnchorGroupWithoutFrame(scrollFrame, dbEntry, UF.UpdateCastBarFrame, frame)
+        else
+            CreateAnchorGroup(scrollFrame, dbEntry, UF.UpdateCastBarFrame, frame)
+        end
 
-    CreateTextGroup(scrollFrame, dbEntry.Name, UF.UpdateCastBarTexts, frame, "Spell Name")
+        scrollFrame:DoLayout()
+    end
 
-    CreateTextGroup(scrollFrame, dbEntry.Time, UF.UpdateCastBarTexts, frame, "Spell Time")
+    local function CastBarTextPage(container)
+        local scrollFrame = AceGUI:Create("ScrollFrame")
+        scrollFrame:SetLayout("List")
+        container:AddChild(scrollFrame)
 
-    scrollFrame:DoLayout()
+        local textGroup = CreateTextGroupWithoutToggle(scrollFrame, dbEntry.Name, UF.UpdateCastBarTexts, frame, "Spell Name")
+
+        CreateSlider(textGroup, "Width", 1, 500, 1, dbEntry.Name.Width,
+            function(self, event, value)
+                dbEntry.Name.Width = value
+                UF.UpdateCastBarTexts(frame)
+            end, 1)
+
+        CreateTextGroupWithoutToggle(scrollFrame, dbEntry.Time, UF.UpdateCastBarTexts, frame, "Spell Time")
+
+        scrollFrame:DoLayout()
+    end
+
+    local function SelectGroup(container, event, tab)
+        container:ReleaseChildren()
+        if tab == "Frame" then
+            CastBarFramePage(container)
+        elseif tab == "Text" then
+            CastBarTextPage(container)
+        end
+    end
+
+    local tabGroup = AceGUI:Create("TabGroup")
+    tabGroup:SetLayout("Fill")
+    tabGroup:SetTabs({{text="Frame", value="Frame"},
+                    {text="Text", value="Text"},})
+    tabGroup:SetCallback("OnGroupSelected", SelectGroup)
+    tabGroup:SelectTab("Frame")
+
+    container:AddChild(tabGroup)
 end
 
 local function CreateUnitFrameMiscPage(container, unitFrame)
     local dbEntry = CUI.DB.profile.UnitFrames[unitFrame]
     local frame = _G["CUI_"..unitFrame]
+    if unitFrame == "BossFrame" then frame = "BossFrame" end
 
     local scrollFrame = AceGUI:Create("ScrollFrame")
     scrollFrame:SetLayout("List")
@@ -802,7 +898,8 @@ local function CreateUnitFrameSettings(container)
     tabGroup:SetTabs({{text="Player Frame", value="PlayerFrame"}, 
                     {text="Target Frame", value="TargetFrame"},
                     {text="Focus Frame", value="FocusFrame"},
-                    {text="Pet Frame", value="PetFrame"},})
+                    {text="Pet Frame", value="PetFrame"},
+                    {text="Boss Frame", value="BossFrame"},})
     tabGroup:SetCallback("OnGroupSelected", SelectGroup)
     tabGroup:SelectTab("PlayerFrame")
 

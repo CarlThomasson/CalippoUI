@@ -8,31 +8,95 @@ local Hide = CUI.Hide
 ---------------------------------------------------------------------------------------------------
 
 function HideBlizzard()
-    -- TODO : Unregister events på blizzard frames
-
     Hide.HideFrame(PlayerFrame)
     Hide.HideFrame(TargetFrame)
     Hide.HideFrame(FocusFrame)
     Hide.HideFrame(PetFrame)
+
+    Hide.HideFrame(Boss1TargetFrame)
+    Hide.HideFrame(Boss2TargetFrame)
+    Hide.HideFrame(Boss3TargetFrame)
+    Hide.HideFrame(Boss4TargetFrame)
+    Hide.HideFrame(Boss5TargetFrame)
 end
 
 ---------------------------------------------------------------------------------------------------
 
+function UF.ToggleBossTest(active)
+    for i=1, 5 do
+        local frame = _G["CUI_BossFrame"..i]
+
+        local unit
+        if active then
+            unit = "player"
+            frame:SetAttribute("unit", unit)
+            frame.unit = unit
+            frame.CastBar.unit = unit
+        else
+            unit = "boss"..i
+            frame:SetAttribute("unit", unit)
+            frame.unit = unit
+            frame.CastBar.unit = unit
+        end
+
+        frame:RegisterUnitEvent("UNIT_AURA", unit)
+        frame:RegisterUnitEvent("UNIT_HEALTH", unit)
+        frame:RegisterUnitEvent("UNIT_MAXHEALTH", unit)
+        frame:RegisterUnitEvent("UNIT_POWER_UPDATE", unit)
+        frame:RegisterUnitEvent("UNIT_MAXPOWER", unit)
+
+        local castBar = frame.CastBar
+        if CUI.DB.profile.UnitFrames.BossFrame.CastBar.Enabled then
+            castBar:RegisterUnitEvent("UNIT_SPELLCAST_START", unit)
+            castBar:RegisterUnitEvent("UNIT_SPELLCAST_STOP", unit)
+            castBar:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_START", unit)
+            castBar:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_UPDATE", unit)
+            castBar:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP", unit)
+        else
+            castBar:UnregisterAllEvents()
+        end
+    end
+end
+
+local function UpdateBossFrameAlpha()
+    for i=1, 5 do
+        UF.UpdateAlpha(_G["CUI_BossFrame"..i])
+    end
+end
+
 function UF.UpdateAlpha(frame, inCombat)
-    if InCombatLockdown() or inCombat then 
+    if frame == "BossFrame" then UpdateBossFrameAlpha() return end
+
+    if InCombatLockdown() or inCombat then
         Util.FadeFrame(frame, "IN", CUI.DB.profile.UnitFrames[frame.name].CombatAlpha)
     else
         Util.FadeFrame(frame, "OUT", CUI.DB.profile.UnitFrames[frame.name].Alpha)
     end
 end
 
-function UF.UpdateFrame(frame)
+local function UpdateBossFrames()
+    for i=1, 5 do
+        UF.UpdateFrame(_G["CUI_BossFrame"..i], i)
+    end
+end
+
+function UF.UpdateFrame(frame, i)
+    if frame == "BossFrame" then UpdateBossFrames() return end
+
     local dbEntry = CUI.DB.profile.UnitFrames[frame.name]
 
     Util.CheckAnchorFrame(frame, dbEntry)
 
     frame:ClearAllPoints()
-    frame:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
+    if frame.name == "BossFrame" then
+        if i == 1 then
+            frame:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
+        else
+            frame:SetPoint("TOPLEFT", "CUI_BossFrame"..(i-1), "BOTTOMLEFT", 0, -dbEntry.Padding)
+        end
+    else
+        frame:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
+    end
     frame:SetSize(dbEntry.Width, dbEntry.Height)
 
     frame.HealthBar:SetStatusBarTexture(dbEntry.HealthBar.Texture)
@@ -48,9 +112,16 @@ function UF.UpdateFrame(frame)
     end
 end
 
-function UF.UpdateTexts(frame)
-    local dbEntry = CUI.DB.profile.UnitFrames[frame.name]
+local function UpdateBossFrameTexts()
+    for i=1, 5 do
+        UF.UpdateTexts(_G["CUI_BossFrame"..i])
+    end
+end
 
+function UF.UpdateTexts(frame)
+    if frame == "BossFrame" then UpdateBossFrameTexts() return end
+
+    local dbEntry = CUI.DB.profile.UnitFrames[frame.name]
     frame.Overlay.UnitName:SetWidth(dbEntry.Name.Width)
 
     if dbEntry.Name.Enabled then
@@ -95,9 +166,19 @@ function UF.UpdateLeaderAssist(frame)
     end
 end
 
+local function UpdateBossFrameCastBarFrame()
+    for i=1, 5 do
+        UF.UpdateCastBarFrame(_G["CUI_BossFrame"..i])
+    end
+end
+
 function UF.UpdateCastBarFrame(unitFrame)
+    if unitFrame == "BossFrame" then UpdateBossFrameCastBarFrame() return end
+
     local dbEntry = CUI.DB.profile.UnitFrames[unitFrame.name].CastBar
     local castBar = unitFrame.CastBar
+
+    if unitFrame.name == "BossFrame" then dbEntry.AnchorFrame = unitFrame:GetName() end
 
     castBar:SetSize(dbEntry.Width, dbEntry.Height)
     castBar:SetStatusBarTexture(dbEntry.Texture)
@@ -123,17 +204,27 @@ function UF.UpdateCastBarFrame(unitFrame)
         castBar:RegisterEvent("PLAYER_FOCUS_CHANGED")
         castBar:RegisterEvent("PLAYER_TARGET_CHANGED")
     else
+        castBar:Hide()
         castBar:UnregisterAllEvents()
     end
 end
 
+local function UpdateBossFrameCastBarTexts()
+    for i=1, 5 do
+        UF.UpdateCastBarTexts(_G["CUI_BossFrame"..i])
+    end
+end
+
 function UF.UpdateCastBarTexts(unitFrame)
+    if unitFrame == "BossFrame" then UpdateBossFrameCastBarTexts() return end
+
     local dbEntry = CUI.DB.profile.UnitFrames[unitFrame.name].CastBar
     local name = unitFrame.CastBar.Name
     local time = unitFrame.CastBar.Time
 
     name:SetFont(dbEntry.Name.Font, dbEntry.Name.Size, dbEntry.Name.Outline)
     name:SetPoint(dbEntry.Name.AnchorPoint, unitFrame.CastBar, dbEntry.Name.AnchorRelativePoint, dbEntry.Name.PosX, dbEntry.Name.PosY)
+    name:SetWidth(dbEntry.Name.Width)
 
     time:SetFont(dbEntry.Time.Font, dbEntry.Time.Size, dbEntry.Time.Outline)
     time:SetPoint(dbEntry.Time.AnchorPoint, unitFrame.CastBar, dbEntry.Time.AnchorRelativePoint, dbEntry.Time.PosX, dbEntry.Time.PosY)
@@ -168,6 +259,7 @@ local function UpdateAuras(unitFrame, type)
     local posX = dbEntry.PosX
     local posY = dbEntry.PosY
     local rowLength = dbEntry.RowLength
+    local maxShown = dbEntry.MaxShown
 
     local stacksEnabled = dbEntry.Stacks.Enabled
     local stacksAP = dbEntry.Stacks.AnchorPoint
@@ -180,6 +272,8 @@ local function UpdateAuras(unitFrame, type)
 
     local index = 0
 	local function HandleAura(aura)
+        if index >= maxShown then return end
+
         local auraFrame = unitFrame.pool:Acquire()
         auraFrame:Show()
 
@@ -225,11 +319,18 @@ local function UpdateAuras(unitFrame, type)
     if type == "Buffs" then
 	    AuraUtil.ForEachAura(unitFrame.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Helpful), nil, HandleAura, true)
     elseif type == "Debuffs" then
-        AuraUtil.ForEachAura(unitFrame.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Harmful), nil, HandleAura, true)
+        AuraUtil.ForEachAura(unitFrame.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Harmful, AuraUtil.AuraFilters.Player), nil, HandleAura, true)
     end
 end
 
-function UF.SetupAuras(unitFrame)
+local function UpdateBossFrameAuras()
+    for i=1, 5 do
+        UF.UpdateAuras(_G["CUI_BossFrame"..i])
+    end
+end
+
+function UF.UpdateAuras(unitFrame)
+    if unitFrame == "BossFrame" then UpdateBossFrameAuras() return end
     local dbEntry = CUI.DB.profile.UnitFrames[unitFrame.name]
 
     unitFrame.pool:ReleaseAll()
@@ -385,6 +486,8 @@ function SetupCastBar(unitFrame)
 
     local castBarName = castBar:CreateFontString(nil, "OVERLAY")
     castBarName:SetParentKey("Name")
+    castBarName:SetJustifyH("LEFT")
+    castBarName:SetWordWrap(false)
 
     local castBarTime = castBar:CreateFontString(nil, "OVERLAY")
     castBarTime:SetParentKey("Time")
@@ -406,15 +509,36 @@ end
 
 -------------------------------------------------------------------------------------------------
 
-function SetupUnitFrame(frameName, unit)
+function SetupUnitFrame(frameName, unit, number)
     local dbEntry = CUI.DB.profile.UnitFrames[frameName]
 
-    local frame = CreateFrame("Button", "CUI_"..frameName, UIParent, "CUI_UnitFrameTemplate")
+    local frame
+    if frameName == "BossFrame" then
+        frame = CreateFrame("Button", "CUI_"..frameName..number, UIParent, "CUI_UnitFrameTemplate")
+        dbEntry.CastBar.AnchorFrame = "CUI_"..frameName..number
+    else
+        frame = CreateFrame("Button", "CUI_"..frameName, UIParent, "CUI_UnitFrameTemplate")
+    end
     frame:SetSize(dbEntry.Width, dbEntry.Height)
 
     Util.CheckAnchorFrame(frame, dbEntry)
-    frame:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
+    if frameName == "BossFrame" then
+        if number == 1 then
+            frame:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
+        else
+            frame:SetPoint("TOPLEFT", "CUI_BossFrame"..(number-1), "BOTTOMLEFT", 0, -dbEntry.Padding)
+        end
+    else
+        frame:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
+    end
 
+    -- if frameName == "BossFrame" then
+    --     frame.unit = "player"
+    --     frame:SetAttribute("unit", "player")
+    -- else
+
+    -- end
+    
     frame:SetAttribute("unit", unit)
     frame:RegisterForClicks("AnyDown")
     frame:SetAttribute("*type1", "target")
@@ -423,13 +547,13 @@ function SetupUnitFrame(frameName, unit)
 
     frame.unit = unit
     frame.name = frameName
-    frame.pool = CreateFramePool("Frame", frame, "CUI_UnitFrameBuff")
+    frame.pool = CreateFramePool("Frame", frame, "CUI_AuraFrameTemplate")
 
     if unit == "target" then
         frame:RegisterEvent("PLAYER_TARGET_CHANGED")
     elseif unit == "focus" then
         frame:RegisterEvent("PLAYER_FOCUS_CHANGED")
-    elseif unit == "pet" then
+    elseif unit == "pet" or frameName == "BossFrame" then
         frame:HookScript("OnShow", function(self)
             UpdateAll(self)
         end)
@@ -492,7 +616,7 @@ function SetupUnitFrame(frameName, unit)
     frame:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
     frame:HookScript("OnEvent", function(self, event, ...)
         if event == "UNIT_AURA" then
-            UF.SetupAuras(self)
+            UF.UpdateAuras(self)
         elseif event == "UNIT_HEALTH" then
             UpdateHealth(self)
         elseif event == "UNIT_MAXHEALTH" then
@@ -505,7 +629,7 @@ function SetupUnitFrame(frameName, unit)
             if not UnitExists(self.unit) then return end
             UpdateAll(self)
             if EditModeManagerFrame:IsShown() then return end
-             UF.SetupAuras(self)
+             UF.UpdateAuras(self)
         elseif event == "PLAYER_REGEN_ENABLED" then
             UF.UpdateAlpha(self)
         elseif event == "PLAYER_REGEN_DISABLED" then
@@ -520,8 +644,7 @@ function SetupUnitFrame(frameName, unit)
     SetupCastBar(frame)
 
     UpdateAll(frame)
-    UF.SetupAuras(frame)
-    UF.UpdateFrame(frame)
+    UF.UpdateAuras(frame)
     RegisterUnitWatch(frame, false)
 end
 
@@ -535,5 +658,9 @@ function UF.Load()
     SetupUnitFrame("FocusFrame", "focus")
     SetupUnitFrame("PetFrame", "pet")
 
-    -- SetupUnitFrame("BossFrame", "boss1")
+    SetupUnitFrame("BossFrame", "boss1", 1)
+    SetupUnitFrame("BossFrame", "boss2", 2)
+    SetupUnitFrame("BossFrame", "boss3", 3)
+    SetupUnitFrame("BossFrame", "boss4", 4)
+    SetupUnitFrame("BossFrame", "boss5", 5)
 end

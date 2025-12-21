@@ -171,6 +171,7 @@ local defaults = {
                     DirH = "LEFT",
                     DirV = "UP",
                     Padding = 2,
+                    MaxShown = 20,
 
                     AnchorPoint = "BOTTOMRIGHT",
                     AnchorRelativePoint = "TOPRIGHT",
@@ -197,6 +198,7 @@ local defaults = {
                     DirH = "RIGHT",
                     DirV = "DOWN",
                     Padding = 2,
+                    MaxShown = 20,
 
                     AnchorPoint = "TOPLEFT",
                     AnchorRelativePoint = "BOTTOMLEFT",
@@ -243,10 +245,11 @@ local defaults = {
 
                     Name = {
                         Enabled = true,
-                        
+
                         Font = defaultFont,
                         Outline = "",
                         Size = 12,
+                        Width = 150,
 
                         AnchorPoint = "LEFT",
                         AnchorRelativePoint = "LEFT",
@@ -255,7 +258,7 @@ local defaults = {
                     },
                     Time = {
                         Enabled = true,
-                        
+
                         Font = defaultFont,
                         Outline = "",
                         Size = 12,
@@ -351,7 +354,11 @@ local defaults = {
                 },
 
                 CastBar = {
-                    AnchorFrame = "CUI_FocusFrame"
+                    AnchorFrame = "CUI_FocusFrame",
+
+                    Name = {
+                        Width = 100,
+                    },
                 },
             },
             PetFrame = {
@@ -384,8 +391,10 @@ local defaults = {
                 },
             },
             BossFrame = {
-                Width = 200,
-                Height = 25,
+                Width = 150,
+                Height = 40,
+
+                Padding = 30,
 
                 PosX = 0,
                 PosY = 0,
