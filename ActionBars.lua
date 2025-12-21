@@ -167,8 +167,10 @@ function AB.UpdateBarAnchor(bar)
         bar:RegisterEvent("PLAYER_ENTERING_WORLD")
         bar:HookScript("OnEvent", function(self, event)
             if event == "PLAYER_ENTERING_WORLD" then
-                self:ClearAllPoints()
-                self:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
+                C_Timer.After(0.5, function()
+                    self:ClearAllPoints()
+                    self:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
+                end)
             end
         end)
     else
