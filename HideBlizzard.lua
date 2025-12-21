@@ -7,7 +7,7 @@ local hiddenParent = CreateFrame("Frame", nil, UIParent)
 hiddenParent:SetAllPoints()
 hiddenParent:Hide()
 
-function Hide.HideFrame(frame)
+function Hide.HideFrame(frame, dontReparent)
     if not frame then return end
 
     if frame.UnregisterAllEvents then
@@ -15,7 +15,9 @@ function Hide.HideFrame(frame)
     end
 
     frame:Hide()
-    frame:SetParent(hiddenParent)
+
+    if dontReparent then return end
+    frame:SetParent(hiddenParent) 
 end
 
 function Hide.HideUnitFrameChildren(frame)

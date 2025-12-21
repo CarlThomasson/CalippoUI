@@ -13,11 +13,11 @@ function HideBlizzard()
     Hide.HideFrame(FocusFrame)
     Hide.HideFrame(PetFrame)
 
-    Hide.HideFrame(Boss1TargetFrame)
-    Hide.HideFrame(Boss2TargetFrame)
-    Hide.HideFrame(Boss3TargetFrame)
-    Hide.HideFrame(Boss4TargetFrame)
-    Hide.HideFrame(Boss5TargetFrame)
+    Hide.HideFrame(Boss1TargetFrame, true)
+    Hide.HideFrame(Boss2TargetFrame, true)
+    Hide.HideFrame(Boss3TargetFrame, true)
+    Hide.HideFrame(Boss4TargetFrame, true)
+    Hide.HideFrame(Boss5TargetFrame, true)
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -38,6 +38,8 @@ function UF.ToggleBossTest(active)
             frame.unit = unit
             frame.CastBar.unit = unit
         end
+
+        UF.UpdateAuras(frame)
 
         frame:RegisterUnitEvent("UNIT_AURA", unit)
         frame:RegisterUnitEvent("UNIT_HEALTH", unit)
@@ -76,11 +78,11 @@ end
 
 local function UpdateBossFrames()
     for i=1, 5 do
-        UF.UpdateFrame(_G["CUI_BossFrame"..i], i)
+        UF.UpdateFrame(_G["CUI_BossFrame"..i])
     end
 end
 
-function UF.UpdateFrame(frame, i)
+function UF.UpdateFrame(frame)
     if frame == "BossFrame" then UpdateBossFrames() return end
 
     local dbEntry = CUI.DB.profile.UnitFrames[frame.name]
@@ -89,10 +91,10 @@ function UF.UpdateFrame(frame, i)
 
     frame:ClearAllPoints()
     if frame.name == "BossFrame" then
-        if i == 1 then
+        if frame.number == 1 then
             frame:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
         else
-            frame:SetPoint("TOPLEFT", "CUI_BossFrame"..(i-1), "BOTTOMLEFT", 0, -dbEntry.Padding)
+            frame:SetPoint("TOPLEFT", "CUI_BossFrame"..(frame.number-1), "BOTTOMLEFT", 0, -dbEntry.Padding)
         end
     else
         frame:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
@@ -532,13 +534,6 @@ function SetupUnitFrame(frameName, unit, number)
         frame:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
     end
 
-    -- if frameName == "BossFrame" then
-    --     frame.unit = "player"
-    --     frame:SetAttribute("unit", "player")
-    -- else
-
-    -- end
-    
     frame:SetAttribute("unit", unit)
     frame:RegisterForClicks("AnyDown")
     frame:SetAttribute("*type1", "target")
@@ -547,6 +542,7 @@ function SetupUnitFrame(frameName, unit, number)
 
     frame.unit = unit
     frame.name = frameName
+    frame.number = number
     frame.pool = CreateFramePool("Frame", frame, "CUI_AuraFrameTemplate")
 
     if unit == "target" then
@@ -555,6 +551,7 @@ function SetupUnitFrame(frameName, unit, number)
         frame:RegisterEvent("PLAYER_FOCUS_CHANGED")
     elseif unit == "pet" or frameName == "BossFrame" then
         frame:HookScript("OnShow", function(self)
+            if EditModeManagerFrame:IsShown() then return end
             UpdateAll(self)
         end)
     end
@@ -563,8 +560,6 @@ function SetupUnitFrame(frameName, unit, number)
     powerBar:SetParentKey("PowerBar")
     powerBar:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT")
     powerBar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT")
-    powerBar:SetHeight(dbEntry.PowerBar.Height)
-    powerBar:SetStatusBarTexture(dbEntry.PowerBar.Texture)
     Util.AddStatusBarBackground(powerBar)
     Util.AddBorder(powerBar)
 
@@ -572,7 +567,6 @@ function SetupUnitFrame(frameName, unit, number)
     healthBar:SetParentKey("HealthBar")
     healthBar:SetPoint("TOPLEFT", frame, "TOPLEFT")
     healthBar:SetPoint("BOTTOMRIGHT", powerBar, "TOPRIGHT")
-    healthBar:SetStatusBarTexture(dbEntry.HealthBar.Texture)
     Util.AddStatusBarBackground(healthBar)
     Util.AddBorder(healthBar)
 
@@ -582,18 +576,13 @@ function SetupUnitFrame(frameName, unit, number)
 
     local unitName = overlayFrame:CreateFontString(nil, "OVERLAY")
     unitName:SetParentKey("UnitName")
-    unitName:SetPoint(dbEntry.Name.AnchorPoint, frame.Overlay, dbEntry.Name.AnchorRelativePoint, dbEntry.Name.PosX, dbEntry.Name.PosY)
     unitName:SetFont(dbEntry.Name.Font, dbEntry.Name.Size, dbEntry.Name.Outline)
-    unitName:SetWidth(dbEntry.Name.Width)
     unitName:SetJustifyH("LEFT")
     unitName:SetWordWrap(false)
-    unitName:SetText(UnitName(unit))
 
     local unitHealth = overlayFrame:CreateFontString(nil, "OVERLAY")
     unitHealth:SetParentKey("UnitHealth")
-    unitHealth:SetPoint(dbEntry.HealthText.AnchorPoint, frame.Overlay, dbEntry.HealthText.AnchorRelativePoint, dbEntry.HealthText.PosX, dbEntry.HealthText.PosY)
     unitHealth:SetFont(dbEntry.HealthText.Font, dbEntry.HealthText.Size, dbEntry.HealthText.Outline)
-    unitHealth:SetText(Util.UnitHealthText(unit))
 
     if dbEntry.LeaderIcon then
         local leaderFrame = overlayFrame:CreateTexture(nil, "OVERLAY")
@@ -643,8 +632,10 @@ function SetupUnitFrame(frameName, unit, number)
 
     SetupCastBar(frame)
 
-    UpdateAll(frame)
     UF.UpdateAuras(frame)
+    UF.UpdateFrame(frame)
+    UF.UpdateTexts(frame)
+    UpdateAll(frame)
     RegisterUnitWatch(frame, false)
 end
 

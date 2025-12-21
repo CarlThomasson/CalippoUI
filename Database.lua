@@ -122,7 +122,9 @@ local defaults = {
 
             },
             PetActionBar = {
-
+                Keybind = {
+                    PosX = -2,
+                },
             },
             MicroMenu = {
 
@@ -234,7 +236,7 @@ local defaults = {
 
                     MatchWidth = true,
                     Width = 200,
-                    Height = 20,
+                    Height = 15,
 
                     AnchorPoint = "TOPLEFT",
                     AnchorRelativePoint = "BOTTOMLEFT",
@@ -248,12 +250,12 @@ local defaults = {
 
                         Font = defaultFont,
                         Outline = "",
-                        Size = 12,
+                        Size = 10,
                         Width = 150,
 
                         AnchorPoint = "LEFT",
                         AnchorRelativePoint = "LEFT",
-                        PosX = 5,
+                        PosX = 3,
                         PosY = 0,
                     },
                     Time = {
@@ -261,11 +263,11 @@ local defaults = {
 
                         Font = defaultFont,
                         Outline = "",
-                        Size = 12,
+                        Size = 10,
 
                         AnchorPoint = "RIGHT",
                         AnchorRelativePoint = "RIGHT",
-                        PosX = -5,
+                        PosX = -3,
                         PosY = 0,
                     },
 
@@ -282,7 +284,7 @@ local defaults = {
                 Width = 174,
                 Height = 50,
 
-                AnchorFrame = "EssentialCooldownViewer",
+                AnchorFrame = "CUI_PowerBar",
                 AnchorPoint = "TOPRIGHT",
                 AnchorRelativePoint = "TOPLEFT",
                 PosX = -2,
@@ -298,7 +300,15 @@ local defaults = {
                     PosY = -1,
                 },
 
+                Buffs = {
+                    Enabled = false,
+                },
+                Debuffs = {
+                    Enabled = false,
+                },
+
                 CastBar = {
+                    Enabled = false,
                     AnchorFrame = "CUI_PlayerFrame"
                 },
             },
@@ -306,7 +316,7 @@ local defaults = {
                 Width = 174,
                 Height = 50,
 
-                AnchorFrame = "EssentialCooldownViewer",
+                AnchorFrame = "CUI_PowerBar",
                 AnchorPoint = "TOPLEFT",
                 AnchorRelativePoint = "TOPRIGHT",
                 PosX = 2,
@@ -323,6 +333,7 @@ local defaults = {
                 },
 
                 CastBar = {
+                    Enabled = false,
                     AnchorFrame = "CUI_TargetFrame"
                 },
             },
@@ -345,12 +356,10 @@ local defaults = {
                 },
 
                 Buffs = {
-                    RowLength = 7,
-                    Size = 16,
+                    Enabled = false,
                 },
                 Debuffs = {
-                    RowLength = 7,
-                    Size = 16,
+                    Enabled = false,
                 },
 
                 CastBar = {
@@ -381,6 +390,13 @@ local defaults = {
                     Size = 12,
                 },
 
+                Buffs = {
+                    Enabled = false,
+                },
+                Debuffs = {
+                    Enabled = false,
+                },
+
                 PowerBar = {
                     Enabled = false,
                     Height = 5,
@@ -394,10 +410,28 @@ local defaults = {
                 Width = 150,
                 Height = 40,
 
-                Padding = 30,
+                Padding = 25,
 
-                PosX = 0,
-                PosY = 0,
+                PosX = 600,
+                PosY = 300,
+
+                Buffs = {
+                    AnchorPoint = "TOPRIGHT",
+                    AnchorRelativePoint = "TOPLEFT",
+                    PosX = -2,
+                    PosY = 0,
+                },
+                Debuffs = {
+                    Enabled = false,
+                },
+
+                Name = {
+                    Size = 14,
+                    Width = 100,
+                },
+                HealthText = {
+                    Size = 14,
+                },
             },
         },
         GroupFrames = {

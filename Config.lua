@@ -566,6 +566,14 @@ local function CreateUnitFrameFramePage(container, unitFrame)
                 bossTestFrames = value
                 UF.ToggleBossTest(value)
             end, 1)
+
+        local bossGroup = CreateInlineGroup(scrollFrame, "Boss Frame Padding")
+
+        CreateSlider(bossGroup, "Padding", 1, 100, 1, dbEntry.Padding,
+            function(self, event, value)
+                dbEntry.Padding = value
+                UF.UpdateFrame(frame)
+            end, 0.5)
     end
 
     CreateSizeGroup(scrollFrame, dbEntry, UF.UpdateFrame, frame)

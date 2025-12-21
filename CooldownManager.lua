@@ -173,6 +173,9 @@ function CDM.Load()
     C_CVar.SetCVar("cooldownViewerEnabled", 1)
 
     for _, viewer in pairs(cooldownViewers) do
+        UpdatePositions(viewer)
+        CDM.UpdateAlpha(viewer)
+
         HookScripts(viewer)
 
         viewer:HookScript("OnShow", function(self)
