@@ -52,8 +52,7 @@ function CDM.UpdateStyle(viewer)
         end
 
         if frame.Cooldown then
-            -- TODO : vvvvv
-            frame.Cooldown:SetSwipeTexture("", 0, 0, 0, 1)
+            frame.Cooldown:SetSwipeTexture("", 1, 1, 1, 1)
 
             local text = frame.Cooldown:GetRegions()
             text:SetFont(dbEntry.Cooldown.Font, dbEntry.Cooldown.Size, dbEntry.Cooldown.Outline)
