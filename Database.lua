@@ -244,6 +244,7 @@ local defaults = {
                     PosY = -2,
 
                     Texture = defaultTexture,
+                    ShowIcon = true,
 
                     Name = {
                         Enabled = true,

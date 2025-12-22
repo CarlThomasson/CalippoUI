@@ -82,10 +82,6 @@ local function SetupMinimap()
     ObjectiveTrackerFrame.Header.Background:Hide()
     ObjectiveTrackerFrame.Header.Text:Hide()
 
-    QuestObjectiveTracker.Header.MinimizeButton:SetAlpha(0.5)
-    QuestObjectiveTracker.Header.Background:Hide()
-    QuestObjectiveTracker.Header.Text:Hide()
-
     FramerateFrame:ClearAllPoints()
     FramerateFrame:SetPoint("TOP", Minimap, "BOTTOM", 0, -5)
     hooksecurefunc(FramerateFrame, "UpdatePosition", function(self) 

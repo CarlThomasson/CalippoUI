@@ -183,8 +183,17 @@ function UF.UpdateCastBarFrame(unitFrame)
     if unitFrame.name == "BossFrame" then dbEntry.AnchorFrame = unitFrame:GetName() end
 
     castBar:SetSize(dbEntry.Width, dbEntry.Height)
-    castBar:SetStatusBarTexture(dbEntry.Texture)
-    castBar:SetStatusBarColor(dbEntry.Color.r, dbEntry.Color.g, dbEntry.Color.b, dbEntry.Color.a)
+    castBar.Bar:SetStatusBarTexture(dbEntry.Texture)
+    castBar.Bar:SetStatusBarColor(dbEntry.Color.r, dbEntry.Color.g, dbEntry.Color.b, dbEntry.Color.a)
+
+    if dbEntry.ShowIcon then
+        castBar.IconContainer:Show()
+        castBar.IconContainer:SetWidth(dbEntry.Height)
+        castBar.Bar:SetPoint("TOPLEFT", castBar.IconContainer, "TOPRIGHT")
+    else
+        castBar.IconContainer:Hide()
+        castBar.Bar:SetPoint("TOPLEFT", castBar, "TOPLEFT")
+    end
 
     Util.CheckAnchorFrame(unitFrame, dbEntry)
 
@@ -221,15 +230,15 @@ function UF.UpdateCastBarTexts(unitFrame)
     if unitFrame == "BossFrame" then UpdateBossFrameCastBarTexts() return end
 
     local dbEntry = CUI.DB.profile.UnitFrames[unitFrame.name].CastBar
-    local name = unitFrame.CastBar.Name
-    local time = unitFrame.CastBar.Time
+    local name = unitFrame.CastBar.Bar.Name
+    local time = unitFrame.CastBar.Bar.Time
 
     name:SetFont(dbEntry.Name.Font, dbEntry.Name.Size, dbEntry.Name.Outline)
-    name:SetPoint(dbEntry.Name.AnchorPoint, unitFrame.CastBar, dbEntry.Name.AnchorRelativePoint, dbEntry.Name.PosX, dbEntry.Name.PosY)
+    name:SetPoint(dbEntry.Name.AnchorPoint, unitFrame.CastBar.Bar, dbEntry.Name.AnchorRelativePoint, dbEntry.Name.PosX, dbEntry.Name.PosY)
     name:SetWidth(dbEntry.Name.Width)
 
     time:SetFont(dbEntry.Time.Font, dbEntry.Time.Size, dbEntry.Time.Outline)
-    time:SetPoint(dbEntry.Time.AnchorPoint, unitFrame.CastBar, dbEntry.Time.AnchorRelativePoint, dbEntry.Time.PosX, dbEntry.Time.PosY)
+    time:SetPoint(dbEntry.Time.AnchorPoint, unitFrame.CastBar.Bar, dbEntry.Time.AnchorRelativePoint, dbEntry.Time.PosX, dbEntry.Time.PosY)
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -430,15 +439,18 @@ local function GetCastOrChannelDuration(unit)
     return nil
 end
 
-local function UpdateCastBar(castBar, unitFrame)
+local function UpdateCastBar(castBarContainer, unitFrame)
     local dbEntry = CUI.DB.profile.UnitFrames[unitFrame.name].CastBar
-    local isChannel, duration, name, _, icon = GetCastOrChannelDuration(castBar.unit)
+    local isChannel, duration, name, _, icon = GetCastOrChannelDuration(castBarContainer.unit)
+    local castBar = castBarContainer.Bar
 
     if not duration then
-        castBar.isCasting = false
-        castBar:Hide()
+        castBarContainer.isCasting = false
+        castBarContainer:Hide()
         return
     end
+
+    castBarContainer.IconContainer.Icon:SetTexture(icon)
 
     if isChannel then
         local c = dbEntry.Color
@@ -465,26 +477,39 @@ local function UpdateCastBar(castBar, unitFrame)
         self.Time:SetText(string.format("%.1f", castTime))
     end)
 
-    castBar.isCasting = true
-    castBar:Show()
+    castBarContainer.isCasting = true
+    castBarContainer:Show()
 end
 
 function SetupCastBar(unitFrame)
     local dbEntry = CUI.DB.profile.UnitFrames[unitFrame.name].CastBar
     local unit = unitFrame.unit
 
-    local castBar = CreateFrame("Statusbar", nil, unitFrame)
-    castBar:SetParentKey("CastBar")
-    castBar:Hide()
+    local castBarContainer = CreateFrame("Frame", nil, unitFrame)
+    castBarContainer:SetParentKey("CastBar")
+    castBarContainer:Hide()
+
+    castBarContainer.isCasting = false
+    castBarContainer.unit = unit
+
+    local iconContainer = CreateFrame("Frame", nil, castBarContainer)
+    iconContainer:SetParentKey("IconContainer")
+    iconContainer:SetPoint("TOPLEFT", castBarContainer, "TOPLEFT")
+    iconContainer:SetPoint("BOTTOMLEFT", castBarContainer, "BOTTOMLEFT")
+    Util.AddBorder(iconContainer)
+
+    local icon = iconContainer:CreateTexture(nil, "ARTWORK")
+    icon:SetParentKey("Icon")
+    icon:SetAllPoints(iconContainer)
+    icon:SetTexCoord(.08, .92, .08, .92)
+
+    local castBar = CreateFrame("Statusbar", nil, castBarContainer)
+    castBar:SetParentKey("Bar")
+    castBar:SetPoint("BOTTOMRIGHT", castBarContainer, "BOTTOMRIGHT")
 
     UF.UpdateCastBarFrame(unitFrame)
-
     Util.AddStatusBarBackground(castBar)
     Util.AddBorder(castBar)
-
-    castBar.duration = C_DurationUtil.CreateDuration()
-    castBar.isCasting = false
-    castBar.unit = unit
 
     local castBarName = castBar:CreateFontString(nil, "OVERLAY")
     castBarName:SetParentKey("Name")
@@ -496,7 +521,7 @@ function SetupCastBar(unitFrame)
 
     UF.UpdateCastBarTexts(unitFrame)
 
-    castBar:SetScript("OnEvent", function(self, event)            
+    castBarContainer:SetScript("OnEvent", function(self, event)            
         if event == "UNIT_SPELLCAST_START" or
             event == "UNIT_SPELLCAST_CHANNEL_START" or
             event == "UNIT_SPELLCAST_STOP" or

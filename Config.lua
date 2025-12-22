@@ -765,7 +765,13 @@ local function CreateUnitFrameCastBarPage(container, unitFrame)
             function(self, event, value)
                 dbEntry.Enabled = value
                 UF.UpdateCastBarFrame(frame)
-            end, 1)
+            end, 0.5)
+
+        CreateCheckBox(toggleGroup, "Toggle Icon", dbEntry.ShowIcon,
+            function(self, event, value)
+                dbEntry.ShowIcon = value
+                UF.UpdateCastBarFrame(frame)
+            end, 0.5)
 
         local sizeGroup = CreateSizeGroup(scrollFrame, dbEntry, UF.UpdateCastBarFrame, frame)
 
