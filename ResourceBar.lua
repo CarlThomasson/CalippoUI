@@ -104,8 +104,9 @@ end
 
 ---------------------------------------------------------------------------------------------------
 
+local powerBar = CreateFrame("Statusbar", "CUI_PowerBar", UIParent)
+
 local function SetupPowerBar()
-    local powerBar = CreateFrame("Statusbar", "CUI_PowerBar", UIParent)
     powerBar:SetStatusBarTexture(CUI.DB.profile.ResourceBar.Texture)
 
     RB.UpdateFrame(powerBar)

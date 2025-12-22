@@ -415,6 +415,15 @@ local function CreateGeneralSettings(container)
     reloadButton:SetCallback("OnClick", function() ReloadUI() end)
     reloadButton:SetRelativeWidth(1)
     modulesGroup:AddChild(reloadButton)
+
+    local miscGroup = CreateInlineGroup(scrollFrame, "Misc")
+
+    CreateSlider(miscGroup, "Spell Queue Window", 0, 400, 1, C_CVar.GetCVar("SpellQueueWindow"),
+        function(self, event, value)
+            SetCVar("SpellQueueWindow", value)
+        end, 1)
+
+    scrollFrame:DoLayout()
 end
 
 ---------------------------------------------------------------------------------------------------------------------------------------

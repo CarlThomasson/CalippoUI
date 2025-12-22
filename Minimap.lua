@@ -84,7 +84,7 @@ local function SetupMinimap()
 
     FramerateFrame:ClearAllPoints()
     FramerateFrame:SetPoint("TOP", Minimap, "BOTTOM", 0, -5)
-    hooksecurefunc(FramerateFrame, "UpdatePosition", function(self) 
+    hooksecurefunc(FramerateFrame, "UpdatePosition", function(self)
         self:ClearAllPoints()
         self:SetPoint("TOP", Minimap, "BOTTOM", 0, -5)
     end)

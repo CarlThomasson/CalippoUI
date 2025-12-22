@@ -163,18 +163,6 @@ function AB.UpdateBarAnchor(bar)
             bar:ClearAllPoints()
             bar:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
         end
-
-        bar:RegisterEvent("PLAYER_ENTERING_WORLD")
-        bar:HookScript("OnEvent", function(self, event)
-            if event == "PLAYER_ENTERING_WORLD" then
-                C_Timer.After(0.5, function()
-                    self:ClearAllPoints()
-                    self:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
-                end)
-            end
-        end)
-    else
-        bar:HookScript("OnEvent", function() end)
     end
 end
 
@@ -204,21 +192,19 @@ local function AddHooks()
         end)
 
         AB.UpdateAlpha(bar)
+        hooksecurefunc(bar, "SetPoint", function(self)
+            local dbEntry = CUI.DB.profile.ActionBars[bar:GetName()]
+            local point, anchorFrame = bar:GetPoint()
+            if dbEntry.ShouldAnchor and (point ~= dbEntry.AnchorPoint or anchorFrame:GetName() ~= dbEntry.AnchorFrame) then
+                AB.UpdateBarAnchor(self)
+            end
+        end)
     end
-
     for _, button in pairs(microMenuButtons) do
         button:HookScript("OnEnter", function() Util.FadeFrame(MicroMenu, "IN", 1, 0.3) end)
         button:HookScript("OnLeave", function() AB.UpdateAlpha(MicroMenu) end)
     end
     AB.UpdateAlpha(MicroMenu)
-
-    EditModeManagerFrame:HookScript("OnHide", function(self)
-        if InCombatLockdown() then return end
-        for bar, _ in pairs(AB.ActionBars) do
-            AB.UpdateBar(bar)
-            AB.UpdateBarAnchor(bar)
-        end
-    end)
 end
 
 local function StyleXPBar()
@@ -246,7 +232,7 @@ local function StyleXPBar()
 end
 
 local function StyleButtons()
-    for bar, button in pairs(AB.ActionBars) do
+    for bar, _ in pairs(AB.ActionBars) do
         AB.UpdateBar(bar)
         AB.UpdateBarAnchor(bar)
     end

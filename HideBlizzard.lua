@@ -17,7 +17,31 @@ function Hide.HideFrame(frame, dontReparent)
     frame:Hide()
 
     if dontReparent then return end
-    frame:SetParent(hiddenParent) 
+    frame:SetParent(hiddenParent)
+end
+
+function Hide.UnregisterChildren(frame)
+    for _, child in ipairs({frame:GetChildren()}) do
+        if child.UnregisterAllEvents then
+            child:UnregisterAllEvents()
+        end
+        child:Hide()
+        if child:GetObjectType() ~= "Button" then
+            child:HookScript("OnShow", function(self)
+                self:Hide()
+            end)
+        end
+    end
+
+    for _, child in ipairs({frame:GetRegions()}) do
+        if child.UnregisterAllEvents then
+            child:UnregisterAllEvents()
+        end
+        child:Hide()
+        child:HookScript("OnShow", function(self)
+            self:Hide()
+        end)
+    end
 end
 
 function Hide.HideUnitFrameChildren(frame)

@@ -27,14 +27,17 @@ function CDM.UpdateStyle(viewer)
 
     for _, frame in ipairs({viewer:GetChildren()}) do
         if frame.Icon then
+            frame.Icon:SetTexCoord(.08, .92, .08, .92)
+
             local mask = frame.Icon:GetMaskTexture(1)
             if mask then
                 frame.Icon:RemoveMaskTexture(mask)
-                frame.Icon:SetTexCoord(.08, .92, .08, .92)
 
                 local _, _, overlay = frame:GetRegions()
                 overlay:Hide()
+            end
 
+            if not frame.Borders then
                 Util.AddBorder(frame)
             end
         end
@@ -155,7 +158,13 @@ local function HookScripts(viewer)
 
     if viewer:GetName() == "BuffIconCooldownViewer" then
         hooksecurefunc(viewer, "OnAcquireItemFrame", function(self, itemFrame)
-            UpdatePositions(viewer)
+            itemFrame:SetScript("OnShow", function()
+                UpdatePositions(viewer)
+            end)
+
+            itemFrame:SetScript("OnHide", function()
+                UpdatePositions(viewer)
+            end)
         end)
     end
 end

@@ -8,16 +8,35 @@ local Hide = CUI.Hide
 ---------------------------------------------------------------------------------------------------
 
 function HideBlizzard()
+    Hide.UnregisterChildren(PlayerFrame)
     Hide.HideFrame(PlayerFrame)
+
+    Hide.UnregisterChildren(TargetFrame)
     Hide.HideFrame(TargetFrame)
+
+    Hide.UnregisterChildren(FocusFrame)
     Hide.HideFrame(FocusFrame)
+
+    Hide.UnregisterChildren(PetFrame)
     Hide.HideFrame(PetFrame)
 
+    Hide.UnregisterChildren(Boss1TargetFrame)
     Hide.HideFrame(Boss1TargetFrame, true)
+
+    Hide.UnregisterChildren(Boss2TargetFrame)
     Hide.HideFrame(Boss2TargetFrame, true)
+
+    Hide.UnregisterChildren(Boss3TargetFrame)
     Hide.HideFrame(Boss3TargetFrame, true)
+
+    Hide.UnregisterChildren(Boss4TargetFrame)
     Hide.HideFrame(Boss4TargetFrame, true)
+
+    Hide.UnregisterChildren(Boss5TargetFrame)
     Hide.HideFrame(Boss5TargetFrame, true)
+
+    Hide.UnregisterChildren(BossTargetFrameContainer)
+    Hide.HideFrame(BossTargetFrameContainer)
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -541,10 +560,10 @@ function SetupUnitFrame(frameName, unit, number)
 
     local frame
     if frameName == "BossFrame" then
-        frame = CreateFrame("Button", "CUI_"..frameName..number, UIParent, "CUI_UnitFrameTemplate")
+        frame = _G["CUI_"..frameName..number]
         dbEntry.CastBar.AnchorFrame = "CUI_"..frameName..number
     else
-        frame = CreateFrame("Button", "CUI_"..frameName, UIParent, "CUI_UnitFrameTemplate")
+        frame = _G["CUI_"..frameName]
     end
     frame:SetSize(dbEntry.Width, dbEntry.Height)
 
@@ -665,6 +684,16 @@ function SetupUnitFrame(frameName, unit, number)
 end
 
 ---------------------------------------------------------------------------------------------------
+
+CreateFrame("Button", "CUI_PlayerFrame", UIParent, "CUI_UnitFrameTemplate")
+CreateFrame("Button", "CUI_TargetFrame", UIParent, "CUI_UnitFrameTemplate")
+CreateFrame("Button", "CUI_FocusFrame", UIParent, "CUI_UnitFrameTemplate")
+CreateFrame("Button", "CUI_PetFrame", UIParent, "CUI_UnitFrameTemplate")
+CreateFrame("Button", "CUI_BossFrame1", UIParent, "CUI_UnitFrameTemplate")
+CreateFrame("Button", "CUI_BossFrame2", UIParent, "CUI_UnitFrameTemplate")
+CreateFrame("Button", "CUI_BossFrame3", UIParent, "CUI_UnitFrameTemplate")
+CreateFrame("Button", "CUI_BossFrame4", UIParent, "CUI_UnitFrameTemplate")
+CreateFrame("Button", "CUI_BossFrame5", UIParent, "CUI_UnitFrameTemplate")
 
 function UF.Load()
     HideBlizzard()

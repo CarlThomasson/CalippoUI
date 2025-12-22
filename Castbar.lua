@@ -80,8 +80,9 @@ end
 
 ---------------------------------------------------------------------------------------------------
 
+local castBar = CreateFrame("Statusbar", "CUI_CastBar", UIParent)
+
 local function SetupCastBar()
-    local castBar = CreateFrame("Statusbar", "CUI_CastBar", UIParent)
     castBar:SetStatusBarTexture(CUI.DB.profile.PlayerCastBar.Texture)
     castBar:Hide()
 

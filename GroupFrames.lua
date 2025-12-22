@@ -10,7 +10,7 @@ local Hide = CUI.Hide
 local function HideBlizzard()
     Hide.HideBlizzardRaidManager()
     Hide.HideFrame(CompactPartyFrameTitle)
-    
+
     for i=1, 5 do
         local frame = _G["CompactPartyFrameMember"..i]
         Hide.HideFrame(frame.name)
@@ -32,7 +32,7 @@ local function UpdateFrames()
             local frame = _G["CompactPartyFrameMember"..i]
 
             frame.healthBar.UnitName:SetText(UnitName(frame.unit))
-            
+
             local role = UnitGroupRolesAssigned(frame.unit)
             if role == "TANK" then
                 frame.healthBar.Role:SetTexture("Interface/AddOns/CalippoUI/Media/TANK.tga")
@@ -56,7 +56,7 @@ local function UpdateAuraFrame(frame, addBorder, index, frameSize, padding, anch
     -- elseif growDirection == "RIGHT" then
     --     xPos = ((index - 1) * (frameSize + padding))
     -- end
-    
+
     -- frame:ClearAllPoints()
     -- frame:SetPoint(anchorPoint, frame:GetParent().healthBar, anchorPoint, xPos, 0)
     -- frame:SetSize(frameSize, frameSize)
