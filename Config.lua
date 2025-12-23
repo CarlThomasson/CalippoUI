@@ -1423,10 +1423,9 @@ function Conf.Load()
     frame:SetLayout("Fill")
 
     local dbEntry = CUI.DB.global.Config
-    print(dbEntry.Width, dbEntry.Height)
     frame:SetWidth(dbEntry.Width)
     frame:SetHeight(dbEntry.Height)
-    -- frame:SetPoint(dbEntry.AnchorPoint, UIParent, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
+    frame:SetPoint(dbEntry.AnchorPoint, UIParent, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
 
     function frame:OnWidthSet(width)
         CUI.DB.global.Config.Width = width
@@ -1436,14 +1435,14 @@ function Conf.Load()
         CUI.DB.global.Config.Height = height
     end
 
-    -- frame:SetCallback("OnClose",
-    --     function(self)
-    --         local point, _, relativePoint, X, Y = self:GetPoint()
-    --         dbEntry.AnchorPoint = point
-    --         dbEntry.AnchorRelativePoint = relativePoint
-    --         dbEntry.PosX = X
-    --         dbEntry.PosY = Y
-    --     end)
+    frame:SetCallback("OnClose",
+        function(self)
+            local point, _, relativePoint, X, Y = self:GetPoint()
+            dbEntry.AnchorPoint = point
+            dbEntry.AnchorRelativePoint = relativePoint
+            dbEntry.PosX = X
+            dbEntry.PosY = Y
+        end)
 
     SetupMainTabs(frame)
 end
