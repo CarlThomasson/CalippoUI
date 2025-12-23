@@ -80,7 +80,9 @@ end
 ---------------------------------------------------------------------------------------------------
 
 local function FixWidth(viewer)
-    viewer:SetWidth(viewer.iconScale * ((math.min(viewer.frameCount, viewer.iconLimit) * (viewer.frameSize + viewer.iconPadding) - viewer.iconPadding)))
+    if not InCombatLockdown() then
+        viewer:SetWidth(viewer.iconScale * ((math.min(viewer.frameCount, viewer.iconLimit) * (viewer.frameSize + viewer.iconPadding) - viewer.iconPadding)))
+    end
 end
 
 local function UpdatePositions(viewer)

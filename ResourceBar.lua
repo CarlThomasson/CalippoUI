@@ -99,7 +99,10 @@ local function UpdatePowerColor(frame)
     if color == nil then
         color = PowerBarColor["MAELSTROM"]
     end
-    frame:SetStatusBarColor(color.r, color.g, color.b, 1)
+    frame:SetStatusBarColor(color.r, color.g, color.b)
+
+    local v = 0.2
+    frame.Background:SetVertexColor(color.r*v, color.g*v, color.b*v)
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -109,10 +112,11 @@ local powerBar = CreateFrame("Statusbar", "CUI_PowerBar", UIParent)
 local function SetupPowerBar()
     powerBar:SetStatusBarTexture(CUI.DB.profile.ResourceBar.Texture)
 
-    RB.UpdateFrame(powerBar)
-    UpdatePowerColor(powerBar)
     Util.AddStatusBarBackground(powerBar)
     Util.AddBorder(powerBar)
+
+    RB.UpdateFrame(powerBar)
+    UpdatePowerColor(powerBar)
 
     local text = powerBar:CreateFontString(nil, "OVERLAY")
     text:SetParentKey("Text")

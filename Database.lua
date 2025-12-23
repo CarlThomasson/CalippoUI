@@ -17,6 +17,7 @@ CUI_BACKDROP_WHITE = {
 
 CUI.SharedMedia = LibStub("LibSharedMedia-3.0")
 CUI.SharedMedia:Register("font", "Fira Sans Medium", "Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf")
+CUI.SharedMedia:Register("font", "Fira Sans Black", "Interface/AddOns/CalippoUI/Fonts/FiraSans-Black.ttf")
 CUI.SharedMedia:Register("statusbar", "Cell", "Interface/AddOns/CalippoUI/Media/Statusbar.tga")
 
 local defaultFont = "Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf"
@@ -436,7 +437,148 @@ local defaults = {
             },
         },
         GroupFrames = {
-            Enabled = false,
+            Enabled = true,
+
+            ["**"] = {
+                AnchorFrame = "UIParent",
+                AnchorPoint = "CENTER",
+                AnchorRelativePoint = "CENTER",
+                PosX = -400,
+                PosY = 250,
+
+                Width = 150,
+                Height = 70,
+
+                Padding = 2,
+
+                CustomColor = false,
+                HealthColor = {
+                    ["r"] = 0,
+                    ["g"] = 0,
+                    ["b"] = 0,
+                    ["a"] = 1,
+                },
+                BackgroundColor = {
+                    ["r"] = 0.9,
+                    ["g"] = 0.9,
+                    ["b"] = 0.9,
+                    ["a"] = 1,
+                },
+
+                Name = {
+                    Font = defaultFont,
+                    Outline = "",
+                    Size = 10,
+
+                    AnchorPoint = "TOPLEFT",
+                    AnchorRelativePoint = "TOPLEFT",
+                    PosX = 3,
+                    PosY = -3,
+
+                    CustomColor = true,
+                    Color = {
+                        ["r"] = 1,
+                        ["g"] = 1,
+                        ["b"] = 1,
+                        ["a"] = 1,
+                    },
+                },
+
+                RoleIcon = {
+                    Size = 10,
+
+                    AnchorPoint = "TOPLEFT",
+                    AnchorRelativePoint = "TOPLEFT",
+                    PosX = 4,
+                    PosY = -15,
+                },
+
+                Buffs = {
+                    Enabled = true,
+
+                    RowLength = 3,
+                    Size = 20,
+                    DirH = "LEFT",
+                    DirV = "DOWN",
+                    Padding = 2,
+                    MaxShown = 20,
+
+                    AnchorPoint = "TOPRIGHT",
+                    AnchorRelativePoint = "TOPRIGHT",
+                    PosX = 0,
+                    PosY = 0,
+
+                    Stacks = {
+                        Enabled = true,
+                        Font = defaultFont,
+                        Outline = "OUTLINE",
+                        Size = 10,
+
+                        AnchorPoint = "BOTTOMRIGHT",
+                        AnchorRelativePoint = "BOTTOMRIGHT",
+                        PosX = 0,
+                        PosY = 1,
+                    },
+                },
+                Debuffs = {
+                    Enabled = true,
+
+                    RowLength = 6,
+                    Size = 20,
+                    DirH = "RIGHT",
+                    DirV = "UP",
+                    Padding = 2,
+                    MaxShown = 20,
+
+                    AnchorPoint = "BOTTOMLEFT",
+                    AnchorRelativePoint = "BOTTOMLEFT",
+                    PosX = 0,
+                    PosY = 0,
+
+                    Stacks = {
+                        Enabled = true,
+                        Font = defaultFont,
+                        Outline = "OUTLINE",
+                        Size = 10,
+
+                        AnchorPoint = "BOTTOMRIGHT",
+                        AnchorRelativePoint = "BOTTOMRIGHT",
+                        PosX = 0,
+                        PosY = 1,
+                    },
+                },
+                Defensives = {
+                    Enabled = true,
+
+                    RowLength = 8,
+                    Size = 20,
+                    DirH = "RIGHT",
+                    DirV = "UP",
+                    Padding = 2,
+                    MaxShown = 20,
+
+                    AnchorPoint = "CENTER",
+                    AnchorRelativePoint = "CENTER",
+                    PosX = 0,
+                    PosY = 0,
+
+                    Stacks = {
+                        Enabled = true,
+                        Font = defaultFont,
+                        Outline = "OUTLINE",
+                        Size = 10,
+
+                        AnchorPoint = "BOTTOMRIGHT",
+                        AnchorRelativePoint = "BOTTOMRIGHT",
+                        PosX = 0,
+                        PosY = 1,
+                    },
+                },
+            },
+
+            PartyFrame = {
+
+            },
         },
         PlayerCastBar = {
             Enabled = true,

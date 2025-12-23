@@ -390,7 +390,7 @@ local function CreateGeneralSettings(container)
             dbEntry.Nameplates.Enabled = value
         end, 0.33)
 
-    CreateCheckBox(modulesGroup, "Group Frames (WIP)", dbEntry.GroupFrames.Enabled,
+    CreateCheckBox(modulesGroup, "Group Frames", dbEntry.GroupFrames.Enabled,
         function(self, event, value)
             dbEntry.GroupFrames.Enabled = value
         end, 0.33)

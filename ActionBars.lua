@@ -150,7 +150,7 @@ function AB.UpdateBar(bar)
         if not frame.Borders then
             Util.AddBorder(frame)
         end
-    end   
+    end
 end
 
 function AB.UpdateBarAnchor(bar)

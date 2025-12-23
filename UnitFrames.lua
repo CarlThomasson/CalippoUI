@@ -121,6 +121,7 @@ function UF.UpdateFrame(frame)
     frame:SetSize(dbEntry.Width, dbEntry.Height)
 
     frame.HealthBar:SetStatusBarTexture(dbEntry.HealthBar.Texture)
+    frame.HealthBar.Background:SetTexture(dbEntry.HealthBar.Texture)
 
     if dbEntry.PowerBar.Enabled then
         frame.PowerBar:Show()
@@ -202,8 +203,12 @@ function UF.UpdateCastBarFrame(unitFrame)
     if unitFrame.name == "BossFrame" then dbEntry.AnchorFrame = unitFrame:GetName() end
 
     castBar:SetSize(dbEntry.Width, dbEntry.Height)
+
     castBar.Bar:SetStatusBarTexture(dbEntry.Texture)
     castBar.Bar:SetStatusBarColor(dbEntry.Color.r, dbEntry.Color.g, dbEntry.Color.b, dbEntry.Color.a)
+
+    castBar.Bar.Background:SetTexture(dbEntry.Texture)
+    castBar.Bar.Background:SetVertexColor(dbEntry.Color.r*0.2, dbEntry.Color.g*0.2, dbEntry.Color.b*0.2, dbEntry.Color.a)
 
     if dbEntry.ShowIcon then
         castBar.IconContainer:Show()
@@ -308,7 +313,9 @@ local function UpdateAuras(unitFrame, type)
         auraFrame:Show()
 
         auraFrame.unit = unitFrame.unit
-        auraFrame.index = index + 1
+        auraFrame.type = type
+        auraFrame.showTooltip = true
+        auraFrame.auraInstanceID = aura.auraInstanceID
 
         auraFrame:SetSize(size, size)
 
@@ -374,6 +381,28 @@ end
 
 ---------------------------------------------------------------------------------------------------
 
+local function UpdateHealthColor(frame)
+    local r, g, b = Util.GetUnitColor(frame.unit)
+    frame.HealthBar:SetStatusBarColor(r, g, b)
+
+    local v = 0.2
+    frame.HealthBar.Background:SetVertexColor(r*v, g*v, b*v, 1)
+end
+
+local function UpdatePowerColor(frame)
+    local _, powerType = UnitPowerType(frame.unit)
+    if powerType == "MANA" or powerType == nil then powerType = "MAELSTROM" end
+
+    local color = PowerBarColor[powerType]
+    if color == nil then
+        color = PowerBarColor["MAELSTROM"]
+    end
+    frame.PowerBar:SetStatusBarColor(color.r, color.g, color.b, 1)
+
+    local v = 0.2
+    frame.PowerBar.Background:SetVertexColor(color.r*v, color.g*v, color.b*v, 1)
+end
+
 local function UpdateHealth(frame)
     local unit = frame.unit
 
@@ -392,17 +421,10 @@ end
 local function UpdateHealthFull(frame)
     if not frame.HealthBar then return end
 
-    local unit = frame.unit
-
     UpdateMaxHealth(frame)
+    UpdateHealthColor(frame)
 
-    frame.Overlay.UnitHealth:SetText(Util.UnitHealthText(unit))
-
-    local r, g, b = Util.GetUnitColor(unit)
-    frame.HealthBar:SetStatusBarColor(r, g, b)
-
-    local v = 0.2
-    frame.HealthBar.Background:SetColorTexture(r*v, g*v, b*v, 1)
+    frame.Overlay.UnitHealth:SetText(Util.UnitHealthText(frame.unit))
 end
 
 local function UpdatePower(frame)
@@ -417,21 +439,8 @@ local function UpdateMaxPower(frame)
 end
 
 local function UpdatePowerFull(frame)
-    local unit = frame.unit
-
     UpdateMaxPower(frame)
-
-    local _, powerType = UnitPowerType(unit)
-    if powerType == "MANA" or powerType == nil then powerType = "MAELSTROM" end
-
-    local color = PowerBarColor[powerType]
-    if color == nil then
-        color = PowerBarColor["MAELSTROM"]
-    end
-    frame.PowerBar:SetStatusBarColor(color.r, color.g, color.b, 1)
-
-    local v = 0.2
-    frame.PowerBar.Background:SetColorTexture(color.r*v, color.g*v, color.b*v, 1)
+    UpdatePowerColor(frame)
 end
 
 local function UpdateNameText(frame)
@@ -470,26 +479,16 @@ local function UpdateCastBar(castBarContainer, unitFrame)
     end
 
     castBarContainer.IconContainer.Icon:SetTexture(icon)
-
-    if isChannel then
-        local c = dbEntry.Color
-        castBar.Background:SetVertexColor(c.r, c.g, c.b, c.a, 1)
-
-        local v = 0.2
-        castBar:SetStatusBarColor(c.r*v, c.g*v, c.b*v)
-        castBar:SetReverseFill(true)
-    else
-        local c = dbEntry.Color
-        castBar:SetStatusBarColor(c.r, c.g, c.b, c.a)
-
-        local v = 0.2
-        castBar.Background:SetVertexColor(c.r*v, c.g*v, c.b*v, 1)
-        castBar:SetReverseFill(false)
-    end
-
     castBar.Name:SetText(name)
 
-    castBar:SetTimerDuration(duration, 0)
+    local direction
+    if isChannel then
+        direction = 1
+    else
+        direction = 0
+    end
+
+    castBar:SetTimerDuration(duration, 0, direction)
 
     castBar:SetScript("OnUpdate", function(self)
         local castTime = duration:GetRemainingDuration()
@@ -526,9 +525,9 @@ function SetupCastBar(unitFrame)
     castBar:SetParentKey("Bar")
     castBar:SetPoint("BOTTOMRIGHT", castBarContainer, "BOTTOMRIGHT")
 
-    UF.UpdateCastBarFrame(unitFrame)
     Util.AddStatusBarBackground(castBar)
     Util.AddBorder(castBar)
+    UF.UpdateCastBarFrame(unitFrame)
 
     local castBarName = castBar:CreateFontString(nil, "OVERLAY")
     castBarName:SetParentKey("Name")
@@ -554,6 +553,16 @@ function SetupCastBar(unitFrame)
 end
 
 -------------------------------------------------------------------------------------------------
+
+CreateFrame("Button", "CUI_PlayerFrame", UIParent, "CUI_UnitFrameTemplate")
+CreateFrame("Button", "CUI_TargetFrame", UIParent, "CUI_UnitFrameTemplate")
+CreateFrame("Button", "CUI_FocusFrame", UIParent, "CUI_UnitFrameTemplate")
+CreateFrame("Button", "CUI_PetFrame", UIParent, "CUI_UnitFrameTemplate")
+CreateFrame("Button", "CUI_BossFrame1", UIParent, "CUI_UnitFrameTemplate")
+CreateFrame("Button", "CUI_BossFrame2", UIParent, "CUI_UnitFrameTemplate")
+CreateFrame("Button", "CUI_BossFrame3", UIParent, "CUI_UnitFrameTemplate")
+CreateFrame("Button", "CUI_BossFrame4", UIParent, "CUI_UnitFrameTemplate")
+CreateFrame("Button", "CUI_BossFrame5", UIParent, "CUI_UnitFrameTemplate")
 
 function SetupUnitFrame(frameName, unit, number)
     local dbEntry = CUI.DB.profile.UnitFrames[frameName]
@@ -684,16 +693,6 @@ function SetupUnitFrame(frameName, unit, number)
 end
 
 ---------------------------------------------------------------------------------------------------
-
-CreateFrame("Button", "CUI_PlayerFrame", UIParent, "CUI_UnitFrameTemplate")
-CreateFrame("Button", "CUI_TargetFrame", UIParent, "CUI_UnitFrameTemplate")
-CreateFrame("Button", "CUI_FocusFrame", UIParent, "CUI_UnitFrameTemplate")
-CreateFrame("Button", "CUI_PetFrame", UIParent, "CUI_UnitFrameTemplate")
-CreateFrame("Button", "CUI_BossFrame1", UIParent, "CUI_UnitFrameTemplate")
-CreateFrame("Button", "CUI_BossFrame2", UIParent, "CUI_UnitFrameTemplate")
-CreateFrame("Button", "CUI_BossFrame3", UIParent, "CUI_UnitFrameTemplate")
-CreateFrame("Button", "CUI_BossFrame4", UIParent, "CUI_UnitFrameTemplate")
-CreateFrame("Button", "CUI_BossFrame5", UIParent, "CUI_UnitFrameTemplate")
 
 function UF.Load()
     HideBlizzard()

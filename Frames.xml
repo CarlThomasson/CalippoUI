@@ -57,15 +57,25 @@
         <Scripts>
             <OnUpdate>
                 if GameTooltip:IsOwned(self) then
-                    GameTooltip:SetUnitBuff(self.unit, self.index);
+                    if self.type == "Buffs" then
+                        GameTooltip:SetUnitBuffByAuraInstanceID(self.unit, self.auraInstanceID)
+                    else
+                        GameTooltip:SetUnitDebuffByAuraInstanceID(self.unit, self.auraInstanceID)
+                    end 
                 end
             </OnUpdate>
             <OnEnter>
-                GameTooltip:SetOwner(self, "ANCHOR_BOTTOMRIGHT", 15, -25);
-                GameTooltip:SetUnitBuff(self.unit, self.index);
+                if self.showTooltip then
+                    GameTooltip:SetOwner(self, "ANCHOR_BOTTOMRIGHT", 15, -25)
+                    if self.type == "Buffs" then
+                        GameTooltip:SetUnitBuffByAuraInstanceID(self.unit, self.auraInstanceID)
+                    else
+                        GameTooltip:SetUnitDebuffByAuraInstanceID(self.unit, self.auraInstanceID)
+                    end 
+                end
             </OnEnter>
             <OnLeave>
-                GameTooltip:Hide();
+                GameTooltip:Hide()
             </OnLeave>
         </Scripts>
 	</Frame>

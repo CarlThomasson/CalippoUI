@@ -58,17 +58,15 @@ function Util.AddStatusBarBackground(frame)
     bg:SetVertexColor(r, g, b, 1)
 end
 
-function Util.GetUnitColor(unit)
+function Util.GetUnitColor(unit, prioClass)
     local r, g, b = 0, 0, 0
 
     if unit == "pet" then unit = "player" end
 
-    if UnitIsPlayer(unit) then
-        local _, class = UnitClass(unit)
-        if class then
-            local color = C_ClassColor.GetClassColor(class)
-            r, g, b = color.r, color.g, color.b
-        end
+    local _, class = UnitClass(unit)
+    if class and (prioClass or UnitIsPlayer(unit)) then
+        local color = C_ClassColor.GetClassColor(class)
+        r, g, b = color.r, color.g, color.b
     else
         local reaction = UnitReaction(unit, "player")
 

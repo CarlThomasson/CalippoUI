@@ -19,6 +19,14 @@ function CB.UpdateFrame(frame)
     frame:ClearAllPoints()
     frame:SetSize(dbEntry.Width, dbEntry.Height)
     frame:SetStatusBarTexture(dbEntry.Texture)
+    frame.Background:SetTexture(dbEntry.Texture)
+
+    local r, g, b, a = dbEntry.Color.r, dbEntry.Color.g, dbEntry.Color.b, dbEntry.Color.a
+    frame:SetStatusBarColor(r, g, b, a)
+
+    local v = 0.2
+    frame.Background:SetVertexColor(r*v, g*v, b*v, 1)
+    frame:SetReverseFill(false)
 
     Util.CheckAnchorFrame(frame, dbEntry)
 
@@ -47,30 +55,20 @@ end
 
 local function UpdateCastBar(castBar)
     local name, isChannel, startTime, endTime = GetCastOrChannelInfo("player")
-    local dbEntry = CUI.DB.profile.PlayerCastBar
 
     if not startTime then
         castBar:Hide()
         return
     end
 
+    local direction
     if isChannel then
-        local r, g, b, a = dbEntry.Color.r, dbEntry.Color.g, dbEntry.Color.b, dbEntry.Color.a
-        castBar.Background:SetVertexColor(r, g, b, a, 1)
-
-        local v = 0.2
-        castBar:SetStatusBarColor(r*v, g*v, b*v)
-        castBar:SetReverseFill(true)
+        direction = 1
     else
-        local r, g, b, a = dbEntry.Color.r, dbEntry.Color.g, dbEntry.Color.b, dbEntry.Color.a
-        castBar:SetStatusBarColor(r, g, b, a)
-
-        local v = 0.2
-        castBar.Background:SetVertexColor(r*v, g*v, b*v, 1)
-        castBar:SetReverseFill(false)
+        direction = 0
     end
 
-    castBar:SetTimerDuration(castBar.duration)
+    castBar:SetTimerDuration(castBar.duration, 0, direction)
     castBar.duration:SetTimeSpan(startTime/1000, endTime/1000)
 
     castBar.startTime = startTime
@@ -86,10 +84,10 @@ local function SetupCastBar()
     castBar:SetStatusBarTexture(CUI.DB.profile.PlayerCastBar.Texture)
     castBar:Hide()
 
-    CB.UpdateFrame(castBar)
-
     Util.AddStatusBarBackground(castBar)
     Util.AddBorder(castBar)
+
+    CB.UpdateFrame(castBar)
 
     castBar.duration = C_DurationUtil.CreateDuration()
 
