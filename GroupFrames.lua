@@ -32,7 +32,7 @@ for i, c in pairs(DEBUFF_DISPLAY_COLOR_INFO) do
 end
 
 local function UpdateAuras(groupFrame, type)
-    local dbEntry = CUI.DB.profile.GroupFrames["PartyFrame"][type]
+    local dbEntry = CUI.DB.profile.GroupFrames[groupFrame.name][type]
     local anchorPoint = dbEntry.AnchorPoint
     local anchorRelativePoint = dbEntry.AnchorRelativePoint
     local dirH = dbEntry.DirH
@@ -82,7 +82,6 @@ local function UpdateAuras(groupFrame, type)
         end
 
         auraFrame.Icon:SetTexture(aura.icon)
-        -- TODO : Flytta till Frames.XML vvvvvvvvvvvv
         auraFrame.Icon:SetTexCoord(.08, .92, .08, .92)
 
         local stacksFrame = auraFrame.Overlay.Count
@@ -100,7 +99,7 @@ local function UpdateAuras(groupFrame, type)
 
         if type == "Defensives" then print("ASDSAD") end
 
-        Util.PositionFromIndex(index, auraFrame, groupFrame.Overlay, anchorPoint, anchorRelativePoint, dirH, dirV, size, padding, posX, posY, rowLength)
+        Util.PositionFromIndex(index, auraFrame, groupFrame.Overlay, anchorPoint, anchorRelativePoint, dirH, dirV, size, size, padding, posX, posY, rowLength)
 
         index = index + 1
 	end
@@ -114,7 +113,7 @@ local function UpdateAuras(groupFrame, type)
     end
 end
 
-function GF.UpdateAuras(groupFrame)
+function UpdateAllAuras(groupFrame)
     local dbEntry = CUI.DB.profile.GroupFrames[groupFrame.name]
 
     groupFrame.pool:ReleaseAll()
@@ -126,6 +125,12 @@ function GF.UpdateAuras(groupFrame)
     end
     if dbEntry.Defensives.Enabled then
         UpdateAuras(groupFrame, "Defensives")
+    end
+end
+
+function GF.UpdateAuras(groupFrame)
+    for i, frame in ipairs(groupFrame.frames) do
+        UpdateAllAuras(frame)
     end
 end
 
@@ -169,22 +174,19 @@ local function UpdateHealth(frame)
     frame.HealthBar:SetValue(health)
 end
 
-local function UpdateShield(frame)
-    local totalAbsorb = UnitGetTotalAbsorbs(frame.unit)
-    frame.ShieldBar:SetValue(totalAbsorb)
+local function UpdateShieldAbsorb(frame)
+    local shieldAbsorb = UnitGetTotalAbsorbs(frame.unit)
+    frame.ShieldBar:SetValue(shieldAbsorb)
 end
 
-local function UpdateAbsorb(frame)
-    local absorb = frame.calc:GetHealAbsorbs()
-    frame.AbsorbBar:SetValue(absorb)
+local function UpdateHealAbsorb(frame)
+    UnitGetDetailedHealPrediction(frame.unit, "player", frame.calc)
+    local healAbsorb = frame.calc:GetHealAbsorbs()
+    frame.AbsorbBar:SetValue(healAbsorb)
 end
 
 local function UpdateInRange(frame)
-    -- if UnitInRange(frame.unit) then
-    --     frame:SetAlpha(1)
-    -- else
-    --     frame:SetAlpha(0.5)
-    -- end
+    frame:SetAlphaFromBoolean(UnitInRange(frame.unit), 1, 0.5)
 end
 
 local function UpdateInPhase(frame)
@@ -234,16 +236,20 @@ local function UpdateReadyCheck(frame)
 end
 
 local function UpdateRole(frame)
+    local dbEntry = CUI.DB.profile.GroupFrames[frame.name].RoleIcon
     frame.role = UnitGroupRolesAssigned(frame.unit)
+    if not dbEntry.Enabled then return end
+
+    local roleIcon = frame.Overlay.RoleIcon
 
     if frame.role == "TANK" then
-        frame.Overlay.Role:SetTexture("Interface/AddOns/CalippoUI/Media/TANK.tga")
-        frame.Overlay.Role:Show()
+        roleIcon:SetTexture("Interface/AddOns/CalippoUI/Media/TANK.tga")
+        roleIcon:Show()
     elseif frame.role == "HEALER" then
-        frame.Overlay.Role:SetTexture("Interface/AddOns/CalippoUI/Media/HEALER.tga")
-        frame.Overlay.Role:Show()
+        roleIcon:SetTexture("Interface/AddOns/CalippoUI/Media/HEALER.tga")
+        roleIcon:Show()
     else
-        frame.Overlay.Role:Hide()
+        roleIcon:Hide()
     end
 end
 
@@ -309,9 +315,9 @@ local function UpdateMaxHealth(frame)
     frame.HealPrediction:SetMinMaxValues(0, maxHealth)
     UpdateHealPrediction(frame)
     frame.AbsorbBar:SetMinMaxValues(0, maxHealth)
-    UpdateAbsorb(frame)
+    UpdateHealAbsorb(frame)
     frame.ShieldBar:SetMinMaxValues(0, maxHealth)
-    UpdateShield(frame)
+    UpdateShieldAbsorb(frame)
 end
 
 local function UpdateCenterIcon(frame)
@@ -362,6 +368,7 @@ local function UpdateAll(frame)
     UpdateRole(frame)
     UpdateName(frame)
     UpdateSummon(frame)
+    UpdateRess(frame)
     UpdateHealPrediction(frame)
 
     UpdateNameColor(frame)
@@ -369,6 +376,135 @@ local function UpdateAll(frame)
 
     UpdateCenterIcon(frame)
 end
+
+local function ToggleEvents(frame, unit, state)
+    if UnitExists(unit) then
+        frame:RegisterUnitEvent("UNIT_AURA", unit)
+        frame:RegisterUnitEvent("UNIT_HEALTH", unit)
+        frame:RegisterUnitEvent("UNIT_MAXHEALTH", unit)
+        frame:RegisterUnitEvent("UNIT_ABSORB_AMOUNT_CHANGED", unit)
+        frame:RegisterUnitEvent("UNIT_HEAL_ABSORB_AMOUNT_CHANGED", unit)
+        frame:RegisterUnitEvent("UNIT_PHASE", unit)
+        frame:RegisterUnitEvent("UNIT_CONNECTION", unit)
+        frame:RegisterUnitEvent("UNIT_HEAL_PREDICTION", unit)
+        frame:RegisterEvent("READY_CHECK")
+        frame:RegisterEvent("READY_CHECK_CONFIRM")
+        frame:RegisterEvent("READY_CHECK_FINISHED")
+        frame:RegisterEvent("INCOMING_RESURRECT_CHANGED")
+        frame:RegisterEvent("INCOMING_SUMMON_CHANGED")
+        frame:RegisterEvent("PLAYER_ROLES_ASSIGNED")
+        frame:RegisterUnitEvent("UNIT_IN_RANGE_UPDATE", unit)
+        --self:RegisterUnitEvent("UNIT_DISTANCE_CHECK_UPDATE", unit)
+    else
+        frame:UnregisterEvent("UNIT_AURA")
+        frame:UnregisterEvent("UNIT_HEALTH")
+        frame:UnregisterEvent("UNIT_MAXHEALTH")
+        frame:UnregisterEvent("UNIT_ABSORB_AMOUNT_CHANGED")
+        frame:UnregisterEvent("UNIT_HEAL_ABSORB_AMOUNT_CHANGED")
+        frame:UnregisterEvent("UNIT_PHASE")
+        frame:UnregisterEvent("UNIT_CONNECTION")
+        frame:UnregisterEvent("UNIT_HEAL_PREDICTION")
+        frame:UnregisterEvent("READY_CHECK")
+        frame:UnregisterEvent("READY_CHECK_CONFIRM")
+        frame:UnregisterEvent("READY_CHECK_FINISHED")
+        frame:UnregisterEvent("INCOMING_RESURRECT_CHANGED")
+        frame:UnregisterEvent("INCOMING_SUMMON_CHANGED")
+        frame:UnregisterEvent("PLAYER_ROLES_ASSIGNED")
+        frame:UnregisterEvent("UNIT_IN_RANGE_UPDATE")
+        --self:UnregisterEvent("UNIT_DISTANCE_CHECK_UPDATE")
+    end
+end
+
+function GF.ToggleGroupTestFrames(type, state)
+    if InCombatLockdown() then return end
+
+    if type == "PartyFrame" then
+        for i, frame in ipairs(CUI_PartyFrame.frames) do
+            if state then
+                ToggleEvents(frame, "player", true)
+                frame.unit = "player"
+                frame:SetAttribute("unit", "player")
+                UpdateAll(frame)
+                RegisterAttributeDriver(frame, "state-visibility", "show")
+            else
+                local unit
+                if i == 5 then
+                    unit = "player"
+                else
+                    unit = "party"..i
+                end
+                ToggleEvents(frame, unit, true)
+                frame.unit = unit
+                frame:SetAttribute("unit", unit)
+                UpdateAll(frame)
+                RegisterAttributeDriver(frame, "state-visibility", "[group:raid]hide;[group:party, @"..unit..", exists]show;hide")
+            end
+        end
+        GF.UpdateAuras(CUI_PartyFrame)
+        GF.SortGroupFrames(CUI_PartyFrame)
+    elseif type == "RaidFrame" then
+        for i, frame in ipairs(CUI_RaidFrame.frames) do
+            if state then
+                ToggleEvents(frame, "player", true)
+                frame.unit = "player"
+                frame:SetAttribute("unit", "player")
+                UpdateAll(frame)
+                RegisterAttributeDriver(frame, "state-visibility", "show")
+            else
+                local unit = "raid"..i
+                ToggleEvents(frame, unit, true)
+                frame.unit = unit
+                frame:SetAttribute("unit", unit)
+                UpdateAll(frame)
+                RegisterAttributeDriver(frame, "state-visibility", "[group:raid, @"..unit..", exists]show;hide")
+            end
+        end
+        GF.UpdateAuras(CUI_RaidFrame)
+        GF.SortGroupFrames(CUI_RaidFrame)
+    end
+end
+
+---------------------------------------------------------------------------------------------------------------------------------
+
+function GF.UpdateFrame(groupFrame)
+    if InCombatLockdown() then return end
+    local dbEntry = CUI.DB.profile.GroupFrames[groupFrame.name]
+
+    for _, frame in ipairs(groupFrame.frames) do
+        frame:SetSize(dbEntry.Width, dbEntry.Height)
+
+        local dbEntryName = dbEntry.Name
+        local unitName = frame.Overlay.UnitName
+        if dbEntryName.Enabled then
+            unitName:Show()
+            unitName:ClearAllPoints()
+            unitName:SetPoint(dbEntryName.AnchorPoint, frame.Overlay, dbEntryName.AnchorRelativePoint, dbEntryName.PosX, dbEntryName.PosY)
+            unitName:SetFont(dbEntryName.Font, dbEntryName.Size, dbEntryName.Outline)
+            unitName:SetWidth(dbEntryName.Width)
+        else
+            unitName:Hide()
+        end
+
+        local dbEntryRole = dbEntry.RoleIcon
+        local roleIcon = frame.Overlay.RoleIcon
+        if dbEntryRole.Enabled then
+            UpdateRole(frame)
+            roleIcon:ClearAllPoints()
+            roleIcon:SetPoint(dbEntryRole.AnchorPoint, frame.Overlay, dbEntryRole.AnchorRelativePoint, dbEntryRole.PosX, dbEntryRole.PosY)
+            roleIcon:SetSize(dbEntryRole.Size, dbEntryRole.Size)
+        else
+            roleIcon:Hide()
+        end
+    end
+
+    Util.CheckAnchorFrame(groupFrame, dbEntry)
+
+    groupFrame:ClearAllPoints()
+    groupFrame:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
+    GF.SortGroupFrames(groupFrame)
+end
+
+---------------------------------------------------------------------------------------------------------------------------------
 
 local rolePriority = {
     ["TANK"] = 3,
@@ -419,31 +555,25 @@ local function RoleComp(a, b)
 end
 
 -- TODO : Istället för SetPoint använd SetAttribute("Unit", ...)?
-local function SortGroupFrames(groupFrame)
+function GF.SortGroupFrames(groupFrame)
     if InCombatLockdown() then return end
     local dbEntry = CUI.DB.profile.GroupFrames[groupFrame.name]
 
     table.sort(groupFrame.frames, RoleComp)
 
-    if groupFrame.groupType == "party" then
-        local height = dbEntry.Height
-        for i, frame in ipairs(groupFrame.frames) do
-            local padding = dbEntry.Padding
-            local positionY = -(i-1)*(height+padding)
-
-            frame:SetPoint("TOPLEFT", frame:GetParent(), "TOPLEFT", 0, positionY)
-        end
-    else
-        local width = dbEntry.Width
-        local height = dbEntry.Height
-        for i, frame in ipairs(groupFrame.frames) do
-            local padding = 0
-            local level = math.floor((i-1)/5)
-            local positionX = (i-1)*(width+padding)-(level*(width+padding)*5)
-            local positionY = -height*level
-
-            frame:SetPoint("TOPLEFT", frame:GetParent(), "TOPLEFT", positionX, positionY)
-        end
+    local aF = dbEntry.AnchorFrame
+    local aP = dbEntry.AnchorPoint
+    local aRP = dbEntry.AnchorRelativePoint
+    local dirH = dbEntry.DirH
+    local dirV = dbEntry.DirV
+    local width = dbEntry.Width
+    local height = dbEntry.Height
+    local padding = dbEntry.Padding
+    local pX = dbEntry.PosX
+    local pY = dbEntry.PosY
+    local rL = dbEntry.RowLength
+    for i, frame in ipairs(groupFrame.frames) do
+        Util.PositionFromIndex(i-1, frame, aF, aP, aRP, dirH, dirV, width, height, padding, pX, pY, rL)
     end
 end
 
@@ -457,6 +587,8 @@ local function UpdateGroupFrames(groupFrame)
     if groupType == "raid" and not IsInRaid() then return end
     if groupType == "party" and (not IsInGroup() or IsInRaid()) then return end
 
+    GF.UpdateFrame(groupFrame)
+
     for i=1, numMem do
         local unit = groupType..i
         if groupType == "party" and i == numMem then unit = "player" end
@@ -465,14 +597,14 @@ local function UpdateGroupFrames(groupFrame)
 
         UpdateAll(frame)
 
-        GF.UpdateAuras(frame)
+        UpdateAllAuras(frame)
     end
 
     --if lastNumMem == numMem then return end
 
     lastNumMem = numMem
 
-    SortGroupFrames(groupFrame)
+    GF.SortGroupFrames(groupFrame)
 end
 
 ---------------------------------------------------------------------------------------------------------------------------------
@@ -526,20 +658,21 @@ local function SetupGroupFrame(unit, groupType, frameName, parent)
     absorbBar:SetFrameLevel(healPrediction:GetFrameLevel()+1)
     absorbBar:SetAllPoints(frame)
     absorbBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Striped.tga")
-    absorbBar:GetStatusBarTexture():SetHorizTile(true)
     absorbBar:SetStatusBarColor(1, 0, 0, 1)
     absorbBar:SetReverseFill(false)
-
-    absorbBar:SetMinMaxValues(0,1)
-    absorbBar:SetValue(1)
+    local absorbTexture = absorbBar:GetStatusBarTexture()
+    absorbTexture:SetTexture("Interface/AddOns/CalippoUI/Media/Striped.tga", "REPEAT", "REPEAT")
+    absorbTexture:SetHorizTile(true)
 
     local shieldBar = CreateFrame("StatusBar", nil, frame)
     shieldBar:SetParentKey("ShieldBar")
     shieldBar:SetAllPoints(frame)
     shieldBar:SetFrameLevel(absorbBar:GetFrameLevel()+1)
     shieldBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Striped.tga")
-    shieldBar:GetStatusBarTexture():SetHorizTile(true)
     shieldBar:SetStatusBarColor(0, 1, 1, 0.8)
+    local shieldTexture = shieldBar:GetStatusBarTexture()
+    shieldTexture:SetTexture("Interface/AddOns/CalippoUI/Media/Striped.tga", "REPEAT", "REPEAT")
+    shieldTexture:SetHorizTile(true)
 
     local overlayFrame = CreateFrame("Frame", nil, frame)
     overlayFrame:SetParentKey("Overlay")
@@ -554,6 +687,8 @@ local function SetupGroupFrame(unit, groupType, frameName, parent)
     unitName:SetParentKey("UnitName")
     unitName:SetPoint(dbEntryUN.AnchorPoint, overlayFrame, dbEntryUN.AnchorRelativePoint, dbEntryUN.PosX, dbEntryUN.PosY)
     unitName:SetFont(dbEntryUN.Font, dbEntryUN.Size, dbEntryUN.Outline)
+    unitName:SetJustifyH("LEFT")
+    unitName:SetWordWrap(false)
     unitName:SetText(UnitName(unit))
 
     local centerTexture = overlayFrame:CreateTexture(nil, "OVERLAY")
@@ -567,16 +702,12 @@ local function SetupGroupFrame(unit, groupType, frameName, parent)
     unitDispel:SetSize(12, 12)
     unitDispel:Hide()
 
-    local dbEntryRI = dbEntry.RoleIcon
     local unitRole = overlayFrame:CreateTexture(nil, "OVERLAY")
-    unitRole:SetParentKey("Role")
-    unitRole:SetPoint(dbEntryRI.AnchorPoint , overlayFrame, dbEntryRI.AnchorRelativePoint, dbEntryRI.PosX, dbEntryRI.PosY)
-    unitRole:SetSize(10, 10)
-    unitRole:Hide()
+    unitRole:SetParentKey("RoleIcon")
 
     frame:SetScript("OnEvent", function(self, event)
         if event == "UNIT_AURA" then
-            GF.UpdateAuras(self)
+            UpdateAllAuras(self)
             --UpdateDispel(self)
         elseif event == "UNIT_HEALTH" then
             UpdateHealth(self)
@@ -585,9 +716,9 @@ local function SetupGroupFrame(unit, groupType, frameName, parent)
         elseif event == "UNIT_MAXHEALTH" then
             UpdateMaxHealth(self)
         elseif event == "UNIT_ABSORB_AMOUNT_CHANGED" then
-            UpdateShield(self)
+            UpdateShieldAbsorb(self)
         elseif event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED" then
-            UpdateAbsorb(self)
+            UpdateHealAbsorb(self)
         elseif event == "UNIT_HEAL_PREDICTION" then
             UpdateHealPrediction(self)
         elseif event == "UNIT_IN_RANGE_UPDATE" then
@@ -615,44 +746,18 @@ local function SetupGroupFrame(unit, groupType, frameName, parent)
     end)
 
     frame:HookScript("OnShow", function(self)
-        frame:RegisterUnitEvent("UNIT_AURA", unit)
-        frame:RegisterUnitEvent("UNIT_HEALTH", unit)
-        frame:RegisterUnitEvent("UNIT_MAXHEALTH", unit)
-        frame:RegisterUnitEvent("UNIT_ABSORB_AMOUNT_CHANGED", unit)
-        frame:RegisterUnitEvent("UNIT_HEAL_ABSORB_AMOUNT_CHANGED", unit)
-        frame:RegisterUnitEvent("UNIT_PHASE", unit)
-        frame:RegisterUnitEvent("UNIT_CONNECTION", unit)
-        frame:RegisterUnitEvent("UNIT_HEAL_PREDICTION", unit)
-        frame:RegisterEvent("READY_CHECK")
-        frame:RegisterEvent("READY_CHECK_CONFIRM")
-        frame:RegisterEvent("READY_CHECK_FINISHED")
-        frame:RegisterEvent("INCOMING_RESURRECT_CHANGED")
-        frame:RegisterEvent("INCOMING_SUMMON_CHANGED")
-        frame:RegisterEvent("PLAYER_ROLES_ASSIGNED")
-        self:RegisterUnitEvent("UNIT_IN_RANGE_UPDATE", self.unit)
-        --self:RegisterUnitEvent("UNIT_DISTANCE_CHECK_UPDATE", self.unit)
+        ToggleEvents(self, self.unit, true)
     end)
 
     frame:HookScript("OnHide", function(self)
-        frame:UnregisterEvent("UNIT_AURA")
-        frame:UnregisterEvent("UNIT_HEALTH")
-        frame:UnregisterEvent("UNIT_MAXHEALTH")
-        frame:UnregisterEvent("UNIT_ABSORB_AMOUNT_CHANGED")
-        frame:UnregisterEvent("UNIT_HEAL_ABSORB_AMOUNT_CHANGED")
-        frame:UnregisterEvent("UNIT_PHASE")
-        frame:UnregisterEvent("UNIT_CONNECTION")
-        frame:UnregisterEvent("UNIT_HEAL_PREDICTION")
-        frame:UnregisterEvent("READY_CHECK")
-        frame:UnregisterEvent("READY_CHECK_CONFIRM")
-        frame:UnregisterEvent("READY_CHECK_FINISHED")
-        frame:UnregisterEvent("INCOMING_RESURRECT_CHANGED")
-        frame:UnregisterEvent("INCOMING_SUMMON_CHANGED")
-        frame:UnregisterEvent("PLAYER_ROLES_ASSIGNED")
-        self:UnregisterEvent("UNIT_IN_RANGE_UPDATE")
-        --self:UnregisterEvent("UNIT_DISTANCE_CHECK_UPDATE")
+        ToggleEvents(self, self.unit, false)
     end)
 
-    RegisterAttributeDriver(frame, "state-visibility", "[group:raid]hide;[group:party, @"..unit..", exists]show;hide")
+    if groupType == "party" then
+        RegisterAttributeDriver(frame, "state-visibility", "[group:raid]hide;[group:party, @"..unit..", exists]show;hide")
+    else
+        RegisterAttributeDriver(frame, "state-visibility", "[group:raid, @"..unit..", exists]show;hide")
+    end
     RegisterUnitWatch(frame, true)
 
     return frame
@@ -663,14 +768,13 @@ end
 function GF.Load()
     HideBlizzard()
 
-    ------------------------------------------------------------------------------
-    local dbEntry = CUI.DB.profile.GroupFrames.PartyFrame
+    local dbEntryP = CUI.DB.profile.GroupFrames.PartyFrame
 
     local partyFrame = CreateFrame("Frame", "CUI_PartyFrame", UIParent)
     partyFrame.groupType = "party"
     partyFrame.name = "PartyFrame"
     partyFrame.frames = {}
-    partyFrame:SetPoint("TOPLEFT", UIParent, "CENTER", dbEntry.PosX, dbEntry.PosY)
+    partyFrame:SetPoint(dbEntryP.AnchorPoint, dbEntryP.AnchorFrame, dbEntryP.AnchorRelativePoint, dbEntryP.PosX, dbEntryP.PosY)
     partyFrame:SetSize(1, 1)
     partyFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
     partyFrame:RegisterEvent("PLAYER_ROLES_ASSIGNED")
@@ -679,13 +783,11 @@ function GF.Load()
     partyFrame:RegisterEvent("GROUP_FORMED")
     partyFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
     partyFrame:SetScript("OnEvent", function(self, event)
-        if not self:IsShown() then return end
-
         if event == "GROUP_ROSTER_UPDATE" then
             UpdateGroupFrames(self)
         elseif event == "PLAYER_ROLES_ASSIGNED" then
             if not IsInGroup() or IsInRaid() then return end
-            SortGroupFrames(self)
+            GF.SortGroupFrames(self)
         elseif event == "GROUP_JOINED" or event == "GROUP_LEFT" or event == "GROUP_FORMED" then
             lastNumMem = 0
         elseif event == "PLAYER_REGEN_DISABLED" then
@@ -695,52 +797,50 @@ function GF.Load()
         end
     end)
 
-    for i=1, 5 do
-
+    for i=1, 4 do
         local frame = SetupGroupFrame("party"..i, "party", "PartyFrame", partyFrame)
         table.insert(partyFrame.frames, frame)
     end
 
-    -- local playerFrame = SetupGroupFrame("player", "party", "PartyFrame", partyFrame)
-    -- table.insert(partyFrame.frames, playerFrame)
+    local playerFrame = SetupGroupFrame("player", "party", "PartyFrame", partyFrame)
+    table.insert(partyFrame.frames, playerFrame)
 
     UpdateGroupFrames(partyFrame)
 
     ------------------------------------------------------------------------------
+    local dbEntryR = CUI.DB.profile.GroupFrames.RaidFrame
 
-    -- local raidFrame = CreateFrame("Frame", "CUI_raidFrame", UIParent)
-    -- raidFrame.groupType = "raid"
-    -- raidFrame.frames = {}
-    -- raidFrame:SetPoint("TOPLEFT", UIParent, "CENTER", CalippoDB.raidFrame.posX, CalippoDB.raidFrame.posY)
-    -- raidFrame:SetSize(1, 1)
-    -- RegisterAttributeDriver(raidFrame, "state-visibility", "[group:raid]show;hide")
-    -- raidFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
-    -- raidFrame:RegisterEvent("PLAYER_ROLES_ASSIGNED")
-    -- raidFrame:RegisterEvent("GROUP_JOINED")
-    -- raidFrame:RegisterEvent("GROUP_LEFT")
-    -- raidFrame:RegisterEvent("GROUP_FORMED")
-    -- raidFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
-    -- raidFrame:SetScript("OnEvent", function(self, event)
-    --     if not self:IsShown() then return end
+    local raidFrame = CreateFrame("Frame", "CUI_RaidFrame", UIParent)
+    raidFrame.groupType = "raid"
+    raidFrame.name = "RaidFrame"
+    raidFrame.frames = {}
+    raidFrame:SetPoint(dbEntryR.AnchorPoint, dbEntryR.AnchorFrame, dbEntryR.AnchorRelativePoint, dbEntryR.PosX, dbEntryR.PosY)
+    raidFrame:SetSize(1, 1)
+    raidFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
+    raidFrame:RegisterEvent("PLAYER_ROLES_ASSIGNED")
+    raidFrame:RegisterEvent("GROUP_JOINED")
+    raidFrame:RegisterEvent("GROUP_LEFT")
+    raidFrame:RegisterEvent("GROUP_FORMED")
+    raidFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
+    raidFrame:SetScript("OnEvent", function(self, event)
+        if event == "GROUP_ROSTER_UPDATE" then
+            UpdateGroupFrames(self)
+        elseif event == "PLAYER_ROLES_ASSIGNED" then
+            if not IsInRaid() then return end
+            GF.SortGroupFrames(self)
+        elseif event == "GROUP_JOINED" or event == "GROUP_LEFT" or event == "GROUP_FORMED" then
+            lastNumMem = 0
+        elseif event == "PLAYER_REGEN_DISABLED" then
+            if GetNumGroupMembers() ~= lastNumMem then
+                UpdateGroupFrames(self)
+            end
+        end
+    end)
 
-    --     if event == "GROUP_ROSTER_UPDATE" then
-    --         UpdateGroupFrames(self)
-    --     elseif event == "PLAYER_ROLES_ASSIGNED" then
-    --         if not IsInRaid() then return end
-    --         SortGroupFrames(self)
-    --     elseif event == "GROUP_JOINED" or event == "GROUP_LEFT" or event == "GROUP_FORMED" then
-    --         lastNumMem = 0
-    --     elseif event == "PLAYER_REGEN_DISABLED" then
-    --         if GetNumGroupMembers() ~= lastNumMem then
-    --             UpdateGroupFrames(self)
-    --         end
-    --     end
-    -- end)
+    for i=1, 40 do
+        local frame = SetupGroupFrame("raid"..i, "raid", "RaidFrame", raidFrame)
+        table.insert(raidFrame.frames, frame)
+    end
 
-    -- for i=1, 40 do
-    --     local frame = SetupGroupFrame("raid"..i, "raid", raidFrame, 0, 0, CalippoDB.raidFrame.sizeX, CalippoDB.raidFrame.sizeY)
-    --     table.insert(raidFrame.frames, frame)
-    -- end
-
-    -- UpdateGroupFrames(raidFrame)
+    UpdateGroupFrames(raidFrame)
 end

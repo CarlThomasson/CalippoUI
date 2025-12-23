@@ -84,6 +84,18 @@ function Util.GetUnitColor(unit, prioClass)
     return r, g, b
 end
 
+function Util.GetUnitPowerColor(unit)
+    local _, powerType = UnitPowerType(unit)
+    if powerType == "MANA" or powerType == nil then powerType = "MAELSTROM" end
+
+    local color = PowerBarColor[powerType]
+    if color == nil then
+        color = PowerBarColor["MAELSTROM"]
+    end
+
+    return color.r, color.g, color.b
+end
+
 function Util.UnitHealthPercent(unit)
     return string.format("%0.0f", UnitHealthPercent(unit, true, CurveConstants.ScaleTo100)).."%"
 end
@@ -133,20 +145,20 @@ function Util.FadeFrame(frame, inOut, endAlpha, fadeTime)
 	frameFadeManager:SetScript("OnUpdate", UIFrameFade_OnUpdate)
 end
 
-function Util.PositionFromIndex(index, frame, anchorFrame, point, relativePoint, dirH, dirV, frameSize, padding, offsetX, offsetY, rowLength)
+function Util.PositionFromIndex(index, frame, anchorFrame, point, relativePoint, dirH, dirV, frameWidth, frameHeight, padding, offsetX, offsetY, rowLength)
     local x, y
     local level = math.floor(index/rowLength)
 
     if dirH == "LEFT" then
-        x = -(index*(frameSize+padding))+(level*rowLength*(frameSize+padding))+offsetX
+        x = -(index*(frameWidth+padding))+(level*rowLength*(frameWidth+padding))+offsetX
     elseif dirH == "RIGHT" then
-        x = (index*(frameSize+padding))-(level*rowLength*(frameSize+padding))+offsetX
+        x = (index*(frameWidth+padding))-(level*rowLength*(frameWidth+padding))+offsetX
     end
 
     if dirV == "UP" then
-        y = (level*(frameSize+padding))+offsetY
+        y = (level*(frameHeight+padding))+offsetY
     elseif dirV == "DOWN" then
-        y = -(level*(frameSize+padding))+offsetY
+        y = -(level*(frameHeight+padding))+offsetY
     end
 
     frame:ClearAllPoints()

@@ -9,6 +9,7 @@ local PA = CUI.PA
 local RB = CUI.RB
 local MM = CUI.MM
 local CB = CUI.CB
+local GF = CUI.GF
 
 local AceGUI = LibStub("AceGUI-3.0")
 
@@ -691,7 +692,7 @@ local function CreateUnitFramAuraSettings(container, unitFrame, type)
 
     CreateTextGroup(scrollFrame, dbEntry.Stacks, UF.UpdateAuras, frame, "Stacks")
 
-    group:DoLayout()
+    scrollFrame:DoLayout()
 end
 
 local function CreateUnitFrameAuraPage(container, unitFrame)
@@ -852,29 +853,19 @@ local function CreateUnitFrameMiscPage(container, unitFrame)
     if dbEntry.LeaderIcon then
         local leaderGroup = CreateInlineGroup(scrollFrame, "Leader / Assist Icon")
 
-        CreateDropDown(leaderGroup, "Anchor Point", dbEntry.LeaderIcon.AnchorPoint, anchorPoints,
+        CreateCheckBox(leaderGroup, "Toggle Leader / Assist Icon", dbEntry.LeaderIcon.Enabled,
             function(self, event, value)
-                dbEntry.LeaderIcon.AnchorPoint = value
-                UF.UpdateLeaderAssist(frame)
+                dbEntry.LeaderIcon.Enabled = value
+                UF.UpdateFrame(frame)
             end, 0.5)
 
-        CreateDropDown(leaderGroup, "Relative Anchor Point", dbEntry.LeaderIcon.AnchorRelativePoint, anchorPoints,
+        CreateSlider(leaderGroup, "Size", 1, 50, 1, dbEntry.LeaderIcon.Size,
             function(self, event, value)
-                dbEntry.LeaderIcon.AnchorRelativePoint = value
-                UF.UpdateLeaderAssist(frame)
+                dbEntry.LeaderIcon.Size = value
+                UF.UpdateFrame(frame)
             end, 0.5)
 
-        CreateSlider(leaderGroup, "Position X", -500, 500, 0.1, dbEntry.LeaderIcon.PosX,
-            function(self, event, value)
-                dbEntry.LeaderIcon.PosX = value
-                UF.UpdateLeaderAssist(frame)
-            end, 0.5)
-
-        CreateSlider(leaderGroup, "Position Y", -500, 500, 0.1, dbEntry.LeaderIcon.PosY,
-            function(self, event, value)
-                dbEntry.LeaderIcon.PosY = value
-                UF.UpdateLeaderAssist(frame)
-            end, 0.5)
+        CreateAnchorGroupWithoutFrame(leaderGroup, dbEntry.LeaderIcon, UF.UpdateFrame, frame)
     end
 
     scrollFrame:DoLayout()
@@ -925,6 +916,258 @@ local function CreateUnitFrameSettings(container)
                     {text="Boss Frame", value="BossFrame"},})
     tabGroup:SetCallback("OnGroupSelected", SelectGroup)
     tabGroup:SelectTab("PlayerFrame")
+
+    container:AddChild(tabGroup)
+    container:DoLayout()
+end
+
+---------------------------------------------------------------------------------------------------------------------------------------
+
+local partyTestFrame = false
+local raidTestFrame = false
+
+local function CreateGroupFrameFramePage(container, groupFrame)
+    local dbEntry = CUI.DB.profile.GroupFrames[groupFrame]
+    local frame =  _G["CUI_"..groupFrame]
+
+    local scrollFrame = AceGUI:Create("ScrollFrame")
+    scrollFrame:SetLayout("List")
+    container:AddChild(scrollFrame)
+
+    local testGroup = CreateInlineGroup(scrollFrame, "Test frames")
+
+    if groupFrame == "PartyFrame" then
+        CreateCheckBox(testGroup, "Toggle test frames", partyTestFrame,
+            function(self, event, value)
+                partyTestFrame = value
+                GF.ToggleGroupTestFrames(groupFrame, partyTestFrame)
+            end, 1)
+    else
+        CreateCheckBox(testGroup, "Toggle test frames", raidTestFrame,
+            function(self, event, value)
+                raidTestFrame = value
+                GF.ToggleGroupTestFrames(groupFrame, raidTestFrame)
+            end, 1)
+    end
+
+    local sizeGroup = CreateSizeGroup(scrollFrame, dbEntry, GF.UpdateFrame, frame)
+
+    CreateSlider(sizeGroup, "Padding", 0, 50, 1, dbEntry.Padding,
+        function(self, event, value)
+            dbEntry.Padding = value
+            GF.UpdateFrame(frame)
+        end, 1)
+
+    local anchorGroup = CreateAnchorGroup(scrollFrame, dbEntry, GF.UpdateFrame, frame)
+
+    CreateDropDown(anchorGroup, "Horizontal Growth Direction", dbEntry.DirH, directionsHorizontal,
+        function(self, event, value)
+            dbEntry.DirH = value
+            GF.UpdateFrame(frame)
+        end, 0.5)
+
+    CreateDropDown(anchorGroup, "Vertical Growth Direction", dbEntry.DirV, directionsVertical,
+        function(self, event, value)
+            dbEntry.DirV = value
+            GF.UpdateFrame(frame)
+        end, 0.5)
+
+    CreateSlider(anchorGroup, "Row length", 1, 20, 1, dbEntry.RowLength,
+        function(self, event, value)
+            dbEntry.RowLength = value
+            GF.UpdateFrame(frame)
+        end, 1)
+
+    scrollFrame:DoLayout()
+end
+
+local function CreateGroupFrameAuraPage(container, groupFrame)
+    local function CreateAuraPage(container, groupFrame, type)
+        local dbEntry = CUI.DB.profile.GroupFrames[groupFrame][type]
+        local frame = _G["CUI_"..groupFrame]
+
+        local scrollFrame = AceGUI:Create("ScrollFrame")
+        scrollFrame:SetLayout("List")
+        container:AddChild(scrollFrame)
+
+        local group = CreateInlineGroup(scrollFrame, type)
+
+        CreateCheckBox(group, "Toggle "..type, dbEntry.Enabled,
+            function(self, event, value)
+                dbEntry.Enabled = value
+                GF.UpdateAuras(frame)
+            end, 1)
+
+        CreateSlider(group, "Size", 1, 50, 1, dbEntry.Size,
+            function(self, event, value)
+                dbEntry.Size = value
+                GF.UpdateAuras(frame)
+            end, 0.5)
+
+        CreateSlider(group, "Padding", 0, 20, 1, dbEntry.Padding,
+            function(self, event, value)
+                dbEntry.Padding = value
+                GF.UpdateAuras(frame)
+            end, 0.5)
+
+        CreateSlider(group, "Row length", 1, 20, 1, dbEntry.RowLength,
+            function(self, event, value)
+                dbEntry.RowLength = value
+                GF.UpdateAuras(frame)
+            end, 0.5)
+
+        CreateSlider(group, "Max Shown", 1, 30, 1, dbEntry.MaxShown,
+            function(self, event, value)
+                dbEntry.MaxShown = value
+                GF.UpdateAuras(frame)
+            end, 0.5)
+
+        CreateDropDown(group, "Horizontal Growth Direction", dbEntry.DirH, directionsHorizontal,
+            function(self, event, value)
+                dbEntry.DirH = value
+                GF.UpdateAuras(frame)
+            end, 0.5)
+
+        CreateDropDown(group, "Vertical Growth Direction", dbEntry.DirV, directionsVertical,
+            function(self, event, value)
+                dbEntry.DirV = value
+                GF.UpdateAuras(frame)
+            end, 0.5)
+
+        CreateDropDown(group, "Anchor Point", dbEntry.AnchorPoint, anchorPoints,
+            function(self, event, value)
+                dbEntry.AnchorPoint = value
+                GF.UpdateAuras(frame)
+            end, 0.5)
+
+        CreateDropDown(group, "Relative Anchor Point", dbEntry.AnchorRelativePoint, anchorPoints,
+            function(self, event, value)
+                dbEntry.AnchorRelativePoint = value
+                GF.UpdateAuras(frame)
+            end, 0.5)
+
+        CreateSlider(group, "Position X", -500, 500, 0.1, dbEntry.PosX,
+            function(self, event, value)
+                dbEntry.PosX = value
+                GF.UpdateAuras(frame)
+            end, 0.5)
+
+        CreateSlider(group, "Position Y", -500, 500, 0.1, dbEntry.PosY,
+            function(self, event, value)
+                dbEntry.PosY = value
+                GF.UpdateAuras(frame)
+            end, 0.5)
+
+        CreateTextGroup(scrollFrame, dbEntry.Stacks, GF.UpdateAuras, frame, "Stacks")
+
+        scrollFrame:DoLayout()
+    end
+
+    local function SelectGroup(container, event, tab)
+        container:ReleaseChildren()
+        if tab == "Buffs" then
+            CreateAuraPage(container, groupFrame, "Buffs")
+        elseif tab == "Debuffs" then
+            CreateAuraPage(container, groupFrame, "Debuffs")
+        end
+    end
+
+    local tabGroup = AceGUI:Create("TabGroup")
+    tabGroup:SetLayout("Fill")
+    tabGroup:SetTabs({{text="Buffs", value="Buffs"},
+                    {text="Debuffs", value="Debuffs"},})
+    tabGroup:SetCallback("OnGroupSelected", SelectGroup)
+    tabGroup:SelectTab("Buffs")
+
+    container:AddChild(tabGroup)
+    container:DoLayout()
+end
+
+local function CreateGroupFrameTextTabs(container, groupFrame)
+    local dbEntry = CUI.DB.profile.GroupFrames[groupFrame]
+    local frame = _G["CUI_"..groupFrame]
+
+    local scrollFrame = AceGUI:Create("ScrollFrame")
+    scrollFrame:SetLayout("List")
+    container:AddChild(scrollFrame)
+
+    local textGroup = CreateTextGroup(scrollFrame, dbEntry.Name, GF.UpdateFrame, frame, "Name")
+
+    CreateSlider(textGroup, "Width", 1, 500, 1, dbEntry.Name.Width,
+        function(self, event, value)
+            dbEntry.Name.Width = value
+            GF.UpdateFrame(frame)
+        end, 1)
+
+    scrollFrame:DoLayout()
+end
+
+local function CreateGroupFrameMiscPage(container, groupFrame)
+    local dbEntry = CUI.DB.profile.GroupFrames[groupFrame]
+    local frame = _G["CUI_"..groupFrame]
+
+    local scrollFrame = AceGUI:Create("ScrollFrame")
+    scrollFrame:SetLayout("List")
+    container:AddChild(scrollFrame)
+
+    local roleGroup = CreateInlineGroup(scrollFrame, "Role Icon")
+
+    CreateCheckBox(roleGroup, "Toggle Role Icon", dbEntry.RoleIcon.Enabled,
+        function(self, event, value)
+            dbEntry.RoleIcon.Enabled = value
+            GF.UpdateFrame(frame)
+        end, 0.5)
+
+    CreateSlider(roleGroup, "Size", 1, 50, 1, dbEntry.RoleIcon.Size,
+        function(self, event, value)
+            dbEntry.RoleIcon.Size = value
+            GF.UpdateFrame(frame)
+        end, 0.5)
+
+    CreateAnchorGroupWithoutFrame(roleGroup, dbEntry.RoleIcon, GF.UpdateFrame, frame)
+
+    scrollFrame:DoLayout()
+end
+
+local function CreateGroupFrameTabs(container, groupFrame)
+    local function SelectGroup(container, event, tab)
+        container:ReleaseChildren()
+        if tab == "Frame" then
+            CreateGroupFrameFramePage(container, groupFrame)
+        elseif tab == "Aura" then
+            CreateGroupFrameAuraPage(container, groupFrame)
+        elseif tab == "Text" then
+            CreateGroupFrameTextTabs(container, groupFrame)
+        elseif tab == "Misc" then
+            CreateGroupFrameMiscPage(container, groupFrame)
+        end
+    end
+
+    local tabGroup = AceGUI:Create("TabGroup")
+    tabGroup:SetLayout("Fill")
+    tabGroup:SetTabs({{text="Frame", value="Frame"},
+                    {text="Auras", value="Aura"},
+                    {text="Texts", value="Text"},
+                    {text="Misc", value="Misc"},})
+    tabGroup:SetCallback("OnGroupSelected", SelectGroup)
+    tabGroup:SelectTab("Frame")
+
+    container:AddChild(tabGroup)
+    container:DoLayout()
+end
+
+local function CreateGroupFrameSettings(container)
+    local function SelectGroup(container, event, groupFrame)
+        container:ReleaseChildren()
+        CreateGroupFrameTabs(container, groupFrame)
+    end
+
+    local tabGroup = AceGUI:Create("TabGroup")
+    tabGroup:SetLayout("Fill")
+    tabGroup:SetTabs({{text="Party", value="PartyFrame"}, 
+                    {text="Raid", value="RaidFrame"},})
+    tabGroup:SetCallback("OnGroupSelected", SelectGroup)
+    tabGroup:SelectTab("PartyFrame")
 
     container:AddChild(tabGroup)
 end
@@ -1123,8 +1366,8 @@ local function SetupMainTabs(frame)
             CreatePlayerAuraSettings(container)
         elseif group == "PlayerCastBar" then
             CreatePlayerCastBarSettings(container)
-        elseif group == "" then
-
+        elseif group == "GroupFrames" then
+            CreateGroupFrameSettings(container)
         elseif group == "" then
 
         end
@@ -1139,6 +1382,9 @@ local function SetupMainTabs(frame)
     if dbEntry.UnitFrames.Enabled then
         table.insert(activeModules, {text="Unit Frames", value="UnitFrames"})
     end
+    if dbEntry.GroupFrames.Enabled then
+        table.insert(activeModules, {text="Group Frames", value="GroupFrames"})
+    end
     if dbEntry.CooldownManager.Enabled then
         table.insert(activeModules, {text="Cooldown Manager", value="CooldownManager"})
     end
@@ -1146,13 +1392,10 @@ local function SetupMainTabs(frame)
         table.insert(activeModules, {text="Resource Bar", value="ResourceBar"})
     end
     if dbEntry.PlayerCastBar.Enabled then
-        table.insert(activeModules, {text="Player Cast Bar", value="PlayerCastBar"})
+        table.insert(activeModules, {text="Cast Bar", value="PlayerCastBar"})
     end
     if dbEntry.Nameplates.Enabled then
         table.insert(activeModules, {text="Nameplates", value="Nameplates"})
-    end
-    if dbEntry.GroupFrames.Enabled then
-        table.insert(activeModules, {text="Group Frames", value="GroupFrames"})
     end
     if dbEntry.Minimap.Enabled then
         table.insert(activeModules, {text="Minimap", value="Minimap"})

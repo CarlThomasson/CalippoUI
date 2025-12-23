@@ -441,10 +441,14 @@ local defaults = {
 
             ["**"] = {
                 AnchorFrame = "UIParent",
-                AnchorPoint = "CENTER",
+                AnchorPoint = "TOPLEFT",
                 AnchorRelativePoint = "CENTER",
                 PosX = -400,
                 PosY = 250,
+
+                DirH = "RIGHT",
+                DirV = "DOWN",
+                RowLength = 5,
 
                 Width = 150,
                 Height = 70,
@@ -466,9 +470,11 @@ local defaults = {
                 },
 
                 Name = {
+                    Enabled = true,
                     Font = defaultFont,
                     Outline = "",
                     Size = 10,
+                    Width = 100,
 
                     AnchorPoint = "TOPLEFT",
                     AnchorRelativePoint = "TOPLEFT",
@@ -485,6 +491,7 @@ local defaults = {
                 },
 
                 RoleIcon = {
+                    Enabled = true,
                     Size = 10,
 
                     AnchorPoint = "TOPLEFT",
@@ -517,7 +524,7 @@ local defaults = {
                         AnchorPoint = "BOTTOMRIGHT",
                         AnchorRelativePoint = "BOTTOMRIGHT",
                         PosX = 0,
-                        PosY = 1,
+                        PosY = 0,
                     },
                 },
                 Debuffs = {
@@ -544,7 +551,7 @@ local defaults = {
                         AnchorPoint = "BOTTOMRIGHT",
                         AnchorRelativePoint = "BOTTOMRIGHT",
                         PosX = 0,
-                        PosY = 1,
+                        PosY = 0,
                     },
                 },
                 Defensives = {
@@ -571,13 +578,108 @@ local defaults = {
                         AnchorPoint = "BOTTOMRIGHT",
                         AnchorRelativePoint = "BOTTOMRIGHT",
                         PosX = 0,
-                        PosY = 1,
+                        PosY = 0,
                     },
                 },
             },
 
             PartyFrame = {
+                PosX = -450,
+                PosY = 250,
 
+                Width = 150,
+                Height = 70,
+
+                RowLength = 1,
+
+                Name = {
+                    Size = 12,
+                    Width = 140,
+
+                    PosX = 2,
+                    PosY = -3,
+                },
+
+                RoleIcon = {
+                    Size = 10,
+
+                    PosX = 3,
+                    PosY = -15,
+                },
+
+                Buffs = {
+                    RowLength = 3,
+                    Size = 20,
+
+                    Stacks = {
+                        Size = 10,
+                    },
+                },
+                Debuffs = {
+                    RowLength = 6,
+                    Size = 20,
+
+                    Stacks = {
+                        Size = 10,
+                    },
+                },
+                Defensives = {
+                    RowLength = 8,
+                    Size = 20,
+
+                    Stacks = {
+                        Size = 10,
+                    },
+                },
+            },
+            RaidFrame = {
+                PosX = -700,
+                PosY = 200,
+
+                Width = 90,
+                Height = 55,
+
+                RowLength = 5,
+
+                Name = {
+                    Size = 10,
+                    Width = 80,
+
+                    PosX = 3,
+                    PosY = -3,
+                },
+
+                RoleIcon = {
+                    Size = 10,
+
+                    PosX = 3,
+                    PosY = -15,
+                },
+
+                Buffs = {
+                    RowLength = 4,
+                    Size = 15,
+
+                    Stacks = {
+                        Size = 8,
+                    },
+                },
+                Debuffs = {
+                    RowLength = 6,
+                    Size = 15,
+
+                    Stacks = {
+                        Size = 8,
+                    },
+                },
+                Defensives = {
+                    RowLength = 8,
+                    Size = 15,
+
+                    Stacks = {
+                        Size = 8,
+                    },
+                },
             },
         },
         PlayerCastBar = {

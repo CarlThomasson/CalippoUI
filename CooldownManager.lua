@@ -81,7 +81,9 @@ end
 
 local function FixWidth(viewer)
     if not InCombatLockdown() then
-        viewer:SetWidth(viewer.iconScale * ((math.min(viewer.frameCount, viewer.iconLimit) * (viewer.frameSize + viewer.iconPadding) - viewer.iconPadding)))
+        C_Timer.After(0.5, function()
+            viewer:SetWidth(viewer.iconScale * ((math.min(viewer.frameCount, viewer.iconLimit) * (viewer.frameSize + viewer.iconPadding) - viewer.iconPadding)))
+        end)
     end
 end
 

@@ -83,6 +83,9 @@ local function UpdateMaxPower(frame)
     frame:SetMinMaxValues(0, UnitPowerMax("player"))
     frame:SetValue(value)
 
+    local _, powerType = UnitPowerType("player")
+    frame.powerType = powerType
+
     if frame.powerType == "MANA" and CUI.DB.profile.ResourceBar.Text.ShowManaPercent then
         frame.Text:SetText(Util.UnitPowerPercent("player", frame.powerType))
     else
@@ -91,18 +94,13 @@ local function UpdateMaxPower(frame)
 end
 
 local function UpdatePowerColor(frame)
-    local _, powerType = UnitPowerType("player")
-    frame.powerType = powerType
-    if powerType == "MANA" or powerType == nil then powerType = "MAELSTROM" end
+    C_Timer.After(0.5, function()
+        local r, g, b = Util.GetUnitPowerColor("player")
+        frame:SetStatusBarColor(r, g, b)
 
-    local color = PowerBarColor[powerType]
-    if color == nil then
-        color = PowerBarColor["MAELSTROM"]
-    end
-    frame:SetStatusBarColor(color.r, color.g, color.b)
-
-    local v = 0.2
-    frame.Background:SetVertexColor(color.r*v, color.g*v, color.b*v)
+        local v = 0.2
+        frame.Background:SetVertexColor(r*v, g*v, b*v)
+    end)
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -111,6 +109,9 @@ local powerBar = CreateFrame("Statusbar", "CUI_PowerBar", UIParent)
 
 local function SetupPowerBar()
     powerBar:SetStatusBarTexture(CUI.DB.profile.ResourceBar.Texture)
+
+    local _, powerType = UnitPowerType("player")
+    powerBar.powerType = powerType
 
     Util.AddStatusBarBackground(powerBar)
     Util.AddBorder(powerBar)
@@ -141,7 +142,7 @@ local function SetupPowerBar()
             RB.UpdateAlpha(self, true)
             RB.UpdateAlpha(PersonalResourceDisplayFrame, true)
         elseif event == "ACTIVE_TALENT_GROUP_CHANGED" then
-            C_Timer.After(0.5, function() UpdatePowerColor(self) end)
+            UpdatePowerColor(self)
         end
     end)
 
@@ -165,6 +166,14 @@ local function SetupPersonalResourceBar()
         RB.UpdatePersonalBar(PersonalResourceDisplayFrame)
     end)
 
+    PersonalResourceDisplayFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+    PersonalResourceDisplayFrame:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
+    PersonalResourceDisplayFrame:HookScript("OnEvent", function(self, event)
+        if event == "PLAYER_ENTERING_WORLD" or event == "ACTIVE_TALENT_GROUP_CHANGED" then
+            C_Timer.After(0.5, function() RB.UpdatePersonalBar(self) end)
+        end
+    end)
+
     if not prdClassFrame then return end
 
     local _, class = UnitClass("player")
@@ -181,11 +190,4 @@ end
 function RB.Load()
     SetupPowerBar()
     SetupPersonalResourceBar()
-
-    local f = CreateFrame("Frame")
-    f:RegisterEvent("PLAYER_ENTERING_WORLD")
-    f:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
-    f:SetScript("OnEvent", function()
-        C_Timer.After(0.5, function() RB.UpdatePersonalBar(PersonalResourceDisplayFrame) end)
-    end)
 end

@@ -41,6 +41,38 @@ end
 
 ---------------------------------------------------------------------------------------------------
 
+local function UpdateBossFrameAlpha()
+    for i=1, 5 do
+        UF.UpdateAlpha(_G["CUI_BossFrame"..i])
+    end
+end
+
+local function UpdateBossFrames()
+    for i=1, 5 do
+        UF.UpdateFrame(_G["CUI_BossFrame"..i])
+    end
+end
+
+local function UpdateBossFrameTexts()
+    for i=1, 5 do
+        UF.UpdateTexts(_G["CUI_BossFrame"..i])
+    end
+end
+
+local function UpdateBossFrameCastBarFrame()
+    for i=1, 5 do
+        UF.UpdateCastBarFrame(_G["CUI_BossFrame"..i])
+    end
+end
+
+local function UpdateBossFrameCastBarTexts()
+    for i=1, 5 do
+        UF.UpdateCastBarTexts(_G["CUI_BossFrame"..i])
+    end
+end
+
+---------------------------------------------------------------------------------------------------
+
 function UF.ToggleBossTest(active)
     for i=1, 5 do
         local frame = _G["CUI_BossFrame"..i]
@@ -79,12 +111,6 @@ function UF.ToggleBossTest(active)
     end
 end
 
-local function UpdateBossFrameAlpha()
-    for i=1, 5 do
-        UF.UpdateAlpha(_G["CUI_BossFrame"..i])
-    end
-end
-
 function UF.UpdateAlpha(frame, inCombat)
     if frame == "BossFrame" then UpdateBossFrameAlpha() return end
 
@@ -92,51 +118,6 @@ function UF.UpdateAlpha(frame, inCombat)
         Util.FadeFrame(frame, "IN", CUI.DB.profile.UnitFrames[frame.name].CombatAlpha)
     else
         Util.FadeFrame(frame, "OUT", CUI.DB.profile.UnitFrames[frame.name].Alpha)
-    end
-end
-
-local function UpdateBossFrames()
-    for i=1, 5 do
-        UF.UpdateFrame(_G["CUI_BossFrame"..i])
-    end
-end
-
-function UF.UpdateFrame(frame)
-    if frame == "BossFrame" then UpdateBossFrames() return end
-
-    local dbEntry = CUI.DB.profile.UnitFrames[frame.name]
-
-    Util.CheckAnchorFrame(frame, dbEntry)
-
-    frame:ClearAllPoints()
-    if frame.name == "BossFrame" then
-        if frame.number == 1 then
-            frame:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
-        else
-            frame:SetPoint("TOPLEFT", "CUI_BossFrame"..(frame.number-1), "BOTTOMLEFT", 0, -dbEntry.Padding)
-        end
-    else
-        frame:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
-    end
-    frame:SetSize(dbEntry.Width, dbEntry.Height)
-
-    frame.HealthBar:SetStatusBarTexture(dbEntry.HealthBar.Texture)
-    frame.HealthBar.Background:SetTexture(dbEntry.HealthBar.Texture)
-
-    if dbEntry.PowerBar.Enabled then
-        frame.PowerBar:Show()
-        frame.PowerBar:SetHeight(dbEntry.PowerBar.Height)
-        frame.PowerBar:SetStatusBarTexture(dbEntry.PowerBar.Texture)
-        frame.HealthBar:SetPoint("BOTTOMRIGHT", frame.PowerBar, "TOPRIGHT")
-    else
-        frame.PowerBar:Hide()
-        frame.HealthBar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT")
-    end
-end
-
-local function UpdateBossFrameTexts()
-    for i=1, 5 do
-        UF.UpdateTexts(_G["CUI_BossFrame"..i])
     end
 end
 
@@ -164,33 +145,6 @@ function UF.UpdateTexts(frame)
             dbEntry.HealthText.PosX, dbEntry.HealthText.PosY)
     else
         frame.Overlay.UnitHealth:Hide()
-    end
-end
-
-function UF.UpdateLeaderAssist(frame)
-    if not CUI.DB.profile.UnitFrames[frame.name].LeaderIcon then return end
-
-    local unit = frame.unit
-    local dbEntry = CUI.DB.profile.UnitFrames[frame.name].LeaderIcon
-    local leaderFrame = frame.Overlay.Leader
-
-    leaderFrame:ClearAllPoints()
-    leaderFrame:SetPoint(dbEntry.AnchorPoint, frame.Overlay, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
-
-    if UnitIsGroupLeader(unit) then
-        leaderFrame:SetTexture("Interface/AddOns/CalippoUI/Media/GroupLeader.blp")
-        leaderFrame:Show()
-    elseif UnitIsGroupAssistant(unit) then
-        leaderFrame:SetTexture("Interface/AddOns/CalippoUI/Media/GroupAssist.blp")
-        leaderFrame:Show()
-    else
-        leaderFrame:Hide()
-    end
-end
-
-local function UpdateBossFrameCastBarFrame()
-    for i=1, 5 do
-        UF.UpdateCastBarFrame(_G["CUI_BossFrame"..i])
     end
 end
 
@@ -241,12 +195,6 @@ function UF.UpdateCastBarFrame(unitFrame)
     else
         castBar:Hide()
         castBar:UnregisterAllEvents()
-    end
-end
-
-local function UpdateBossFrameCastBarTexts()
-    for i=1, 5 do
-        UF.UpdateCastBarTexts(_G["CUI_BossFrame"..i])
     end
 end
 
@@ -332,7 +280,6 @@ local function UpdateAuras(unitFrame, type)
         end
 
         auraFrame.Icon:SetTexture(aura.icon)
-        -- TODO : Flytta till Frames.XML vvvvvvvvvvvv
         auraFrame.Icon:SetTexCoord(.08, .92, .08, .92)
 
         local stacksFrame = auraFrame.Overlay.Count
@@ -348,7 +295,7 @@ local function UpdateAuras(unitFrame, type)
 
         auraFrame.Cooldown:SetCooldownFromExpirationTime(aura.expirationTime, aura.duration)
 
-        Util.PositionFromIndex(index, auraFrame, unitFrame, anchorPoint, anchorRelativePoint, dirH, dirV, size, padding, posX, posY, rowLength)
+        Util.PositionFromIndex(index, auraFrame, unitFrame, anchorPoint, anchorRelativePoint, dirH, dirV, size, size, padding, posX, posY, rowLength)
 
         index = index + 1
 	end
@@ -390,17 +337,13 @@ local function UpdateHealthColor(frame)
 end
 
 local function UpdatePowerColor(frame)
-    local _, powerType = UnitPowerType(frame.unit)
-    if powerType == "MANA" or powerType == nil then powerType = "MAELSTROM" end
+    C_Timer.After(0.5, function()
+        local r, g, b = Util.GetUnitPowerColor(frame.unit)
+        frame.PowerBar:SetStatusBarColor(r, g, b)
 
-    local color = PowerBarColor[powerType]
-    if color == nil then
-        color = PowerBarColor["MAELSTROM"]
-    end
-    frame.PowerBar:SetStatusBarColor(color.r, color.g, color.b, 1)
-
-    local v = 0.2
-    frame.PowerBar.Background:SetVertexColor(color.r*v, color.g*v, color.b*v, 1)
+        local v = 0.2
+        frame.PowerBar.Background:SetVertexColor(r*v, g*v, b*v)
+    end)
 end
 
 local function UpdateHealth(frame)
@@ -429,7 +372,7 @@ end
 
 local function UpdatePower(frame)
     frame.PowerBar:SetValue(UnitPower(frame.unit))
-end 
+end
 
 local function UpdateMaxPower(frame)
     local unit = frame.unit
@@ -447,12 +390,80 @@ local function UpdateNameText(frame)
     frame.Overlay.UnitName:SetText(UnitName(frame.unit))
 end
 
+local function UpdateLeaderAssist(frame)
+    if not frame.Overlay.LeaderIcon then return end
+
+    local dbEntry = CUI.DB.profile.UnitFrames[frame.name].LeaderIcon
+    if not dbEntry.Enabled then frame.Overlay.LeaderIcon:Hide() return end
+
+    local leaderFrame = frame.Overlay.LeaderIcon
+    local unit = frame.unit
+
+    if UnitIsGroupLeader(unit) then
+        leaderFrame:SetTexture("Interface/AddOns/CalippoUI/Media/GroupLeader.blp")
+        leaderFrame:Show()
+    elseif UnitIsGroupAssistant(unit) then
+        leaderFrame:SetTexture("Interface/AddOns/CalippoUI/Media/GroupAssist.blp")
+        leaderFrame:Show()
+    else
+        leaderFrame:Hide()
+    end
+end
+
 local function UpdateAll(frame)
     UpdateHealthFull(frame)
     UpdatePowerFull(frame)
     UpdateNameText(frame)
-    UF.UpdateLeaderAssist(frame)
+    UpdateLeaderAssist(frame)
     UF.UpdateAlpha(frame)
+end
+
+-------------------------------------------------------------------------------------------------
+
+function UF.UpdateFrame(frame)
+    if frame == "BossFrame" then UpdateBossFrames() return end
+
+    local dbEntry = CUI.DB.profile.UnitFrames[frame.name]
+
+    Util.CheckAnchorFrame(frame, dbEntry)
+
+    frame:ClearAllPoints()
+    if frame.name == "BossFrame" then
+        if frame.number == 1 then
+            frame:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
+        else
+            frame:SetPoint("TOPLEFT", "CUI_BossFrame"..(frame.number-1), "BOTTOMLEFT", 0, -dbEntry.Padding)
+        end
+    else
+        frame:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
+    end
+    frame:SetSize(dbEntry.Width, dbEntry.Height)
+
+    frame.HealthBar:SetStatusBarTexture(dbEntry.HealthBar.Texture)
+    frame.HealthBar.Background:SetTexture(dbEntry.HealthBar.Texture)
+
+    if dbEntry.PowerBar.Enabled then
+        frame.PowerBar:Show()
+        frame.PowerBar:SetHeight(dbEntry.PowerBar.Height)
+        frame.PowerBar:SetStatusBarTexture(dbEntry.PowerBar.Texture)
+        frame.HealthBar:SetPoint("BOTTOMRIGHT", frame.PowerBar, "TOPRIGHT")
+    else
+        frame.PowerBar:Hide()
+        frame.HealthBar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT")
+    end
+
+    local leaderIcon = frame.Overlay.LeaderIcon
+    if leaderIcon then
+        local dbEntryLead = dbEntry.LeaderIcon
+        if dbEntryLead.Enabled then
+            UpdateLeaderAssist(frame)
+            leaderIcon:ClearAllPoints()
+            leaderIcon:SetPoint(dbEntryLead.AnchorPoint, frame.Overlay, dbEntryLead.AnchorRelativePoint, dbEntryLead.PosX, dbEntryLead.PosY)
+            leaderIcon:SetSize(dbEntryLead.Size, dbEntryLead.Size)
+        else
+            leaderIcon:Hide()
+        end
+    end
 end
 
 -------------------------------------------------------------------------------------------------
@@ -467,8 +478,7 @@ local function GetCastOrChannelDuration(unit)
     return nil
 end
 
-local function UpdateCastBar(castBarContainer, unitFrame)
-    local dbEntry = CUI.DB.profile.UnitFrames[unitFrame.name].CastBar
+local function UpdateCastBar(castBarContainer)
     local isChannel, duration, name, _, icon = GetCastOrChannelDuration(castBarContainer.unit)
     local castBar = castBarContainer.Bar
 
@@ -500,7 +510,6 @@ local function UpdateCastBar(castBarContainer, unitFrame)
 end
 
 function SetupCastBar(unitFrame)
-    local dbEntry = CUI.DB.profile.UnitFrames[unitFrame.name].CastBar
     local unit = unitFrame.unit
 
     local castBarContainer = CreateFrame("Frame", nil, unitFrame)
@@ -625,6 +634,7 @@ function SetupUnitFrame(frameName, unit, number)
 
     local overlayFrame = CreateFrame("Frame", nil, frame)
     overlayFrame:SetParentKey("Overlay")
+    overlayFrame:SetFrameLevel(frame:GetFrameLevel()+10)
     overlayFrame:SetAllPoints(frame)
 
     local unitName = overlayFrame:CreateFontString(nil, "OVERLAY")
@@ -639,7 +649,7 @@ function SetupUnitFrame(frameName, unit, number)
 
     if dbEntry.LeaderIcon then
         local leaderFrame = overlayFrame:CreateTexture(nil, "OVERLAY")
-        leaderFrame:SetParentKey("Leader")
+        leaderFrame:SetParentKey("LeaderIcon")
         leaderFrame:SetPoint(dbEntry.LeaderIcon.AnchorPoint, overlayFrame, dbEntry.LeaderIcon.AnchorRelativePoint, dbEntry.LeaderIcon.PosX, dbEntry.LeaderIcon.PosY)
         leaderFrame:SetSize(15, 15)
         leaderFrame:Hide()
@@ -677,7 +687,7 @@ function SetupUnitFrame(frameName, unit, number)
         elseif event == "PLAYER_REGEN_DISABLED" then
             UF.UpdateAlpha(self, true)
         elseif event == "PARTY_LEADER_CHANGED" or event == "GROUP_FORMED" or event == "GROUP_LEFT" then
-            UF.UpdateLeaderAssist(self)
+            UpdateLeaderAssist(self)
         elseif event == "ACTIVE_TALENT_GROUP_CHANGED" then
             C_Timer.After(0.5, function() UpdatePowerFull(self) end)
         end

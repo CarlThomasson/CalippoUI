@@ -74,9 +74,9 @@ function AB.UpdateBar(bar)
         local container = _G[bar:GetName().."ButtonContainer"..i]
 
         if bar.isHorizontal then
-            Util.PositionFromIndex(i-1, container, bar, "TOPLEFT", "TOPLEFT", "RIGHT", "DOWN", container:GetWidth(), dbEntry.Padding, 0, 0, math.ceil(bar.numButtonsShowable / bar.numRows))
+            Util.PositionFromIndex(i-1, container, bar, "TOPLEFT", "TOPLEFT", "RIGHT", "DOWN", container:GetWidth(), container:GetHeight(), dbEntry.Padding, 0, 0, math.ceil(bar.numButtonsShowable / bar.numRows))
         else
-            Util.PositionFromIndex(i-1, container, bar, "TOPLEFT", "TOPLEFT", "RIGHT", "DOWN", container:GetWidth(), dbEntry.Padding, 0, 0, bar.numRows)
+            Util.PositionFromIndex(i-1, container, bar, "TOPLEFT", "TOPLEFT", "RIGHT", "DOWN", container:GetWidth(), container:GetHeight(), dbEntry.Padding, 0, 0, bar.numRows)
         end
 
         local kb = dbEntry.Keybind
