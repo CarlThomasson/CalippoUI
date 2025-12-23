@@ -303,7 +303,11 @@ local function UpdateAuras(unitFrame, type)
     if type == "Buffs" then
 	    AuraUtil.ForEachAura(unitFrame.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Helpful), nil, HandleAura, true)
     elseif type == "Debuffs" then
-        AuraUtil.ForEachAura(unitFrame.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Harmful, AuraUtil.AuraFilters.Player), nil, HandleAura, true)
+        if UnitIsEnemy("player", unitFrame.unit) then
+            AuraUtil.ForEachAura(unitFrame.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Harmful, AuraUtil.AuraFilters.Player), nil, HandleAura, true)
+        else
+            AuraUtil.ForEachAura(unitFrame.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Harmful), nil, HandleAura, true)
+        end
     end
 end
 
@@ -554,9 +558,9 @@ function SetupCastBar(unitFrame)
             event == "UNIT_SPELLCAST_STOP" or
             event == "UNIT_SPELLCAST_CHANNEL_STOP" or
             event == "UNIT_SPELLCAST_CHANNEL_UPDATE" then
-            UpdateCastBar(self, unitFrame)
+            UpdateCastBar(self)
         elseif event == "PLAYER_FOCUS_CHANGED" or event == "PLAYER_TARGET_CHANGED" then
-            UpdateCastBar(self, unitFrame)
+            UpdateCastBar(self)
         end
     end)
 end
