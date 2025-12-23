@@ -958,6 +958,8 @@ local function CreateGroupFrameFramePage(container, groupFrame)
             GF.UpdateFrame(frame)
         end, 1)
 
+    CreateTextureGroup(scrollFrame, dbEntry, GF.UpdateFrame, frame)
+
     local anchorGroup = CreateAnchorGroup(scrollFrame, dbEntry, GF.UpdateFrame, frame)
 
     CreateDropDown(anchorGroup, "Horizontal Growth Direction", dbEntry.DirH, directionsHorizontal,
@@ -1416,24 +1418,20 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------
 
 function Conf.Load()
+    local dbEntry = CUI.DB.global.Config
     local frame = AceGUI:Create("Frame")
     frame:SetTitle("CalippoUI")
     frame:SetStatusText("CalippoUI, bästa UIn i Midnight!")
-    frame:SetCallback("OnClose", function(widget) AceGUI:Release(widget) end)
+    frame:SetCallback("OnClose", function(widget)
+        AceGUI:Release(widget)
+        dbEntry.Width, dbEntry.Height = frame.frame:GetSize()
+        end)
     frame:SetLayout("Fill")
 
-    local dbEntry = CUI.DB.global.Config
+    SetupMainTabs(frame)
+
+    frame:ClearAllPoints()
     frame:SetPoint("CENTER", UIParent, "CENTER")
     frame:SetWidth(dbEntry.Width)
     frame:SetHeight(dbEntry.Height)
-
-    function frame:OnWidthSet(width)
-        CUI.DB.global.Config.Width = width
-    end
-
-    function frame:OnHeightSet(height)
-        CUI.DB.global.Config.Height = height
-    end
-
-    SetupMainTabs(frame)
 end

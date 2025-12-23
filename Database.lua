@@ -455,6 +455,8 @@ local defaults = {
 
                 Padding = 2,
 
+                Texture = defaultTexture,
+
                 CustomColor = false,
                 HealthColor = {
                     ["r"] = 0,

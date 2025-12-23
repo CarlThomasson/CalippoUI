@@ -473,6 +473,9 @@ function GF.UpdateFrame(groupFrame)
     for _, frame in ipairs(groupFrame.frames) do
         frame:SetSize(dbEntry.Width, dbEntry.Height)
 
+        frame.HealthBar:SetStatusBarTexture(dbEntry.Texture)
+        frame.Background:SetTexture(dbEntry.Texture)
+
         local dbEntryName = dbEntry.Name
         local unitName = frame.Overlay.UnitName
         if dbEntryName.Enabled then
@@ -638,13 +641,13 @@ local function SetupGroupFrame(unit, groupType, frameName, parent)
     local healthBar = CreateFrame("StatusBar", nil, frame)
     healthBar:SetParentKey("HealthBar")
     healthBar:SetAllPoints(frame)
-    healthBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
+    healthBar:SetStatusBarTexture(dbEntry.Texture)
 
     local background = frame:CreateTexture(nil, "BACKGROUND")
     background:SetParentKey("Background")
+    background:SetTexture(dbEntry.Texture)
     background:SetPoint("TOPLEFT", healthBar:GetStatusBarTexture(), "TOPRIGHT")
     background:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT")
-    background:SetTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
 
     local healPrediction = CreateFrame("StatusBar", nil, frame)
     healPrediction:SetParentKey("HealPrediction")
