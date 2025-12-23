@@ -28,7 +28,7 @@ function RB.UpdateText(frame)
         frame.Text:ClearAllPoints()
         frame.Text:SetPoint(dbEntry.AnchorPoint, frame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
 
-        if frame.powerType == "MANA" and CUI.DB.profile.ResourceBar.Text.ShowManaPercent then
+        if frame.powerType == "MANA" and dbEntry.ShowManaPercent then
             frame.Text:SetText(Util.UnitPowerPercent("player", frame.powerType))
         else
             frame.Text:SetText(Util.UnitPowerText("player"))
@@ -94,13 +94,11 @@ local function UpdateMaxPower(frame)
 end
 
 local function UpdatePowerColor(frame)
-    C_Timer.After(0.5, function()
-        local r, g, b = Util.GetUnitPowerColor("player")
-        frame:SetStatusBarColor(r, g, b)
+    local r, g, b = Util.GetUnitPowerColor("player")
+    frame:SetStatusBarColor(r, g, b)
 
-        local v = 0.2
-        frame.Background:SetVertexColor(r*v, g*v, b*v)
-    end)
+    local v = 0.2
+    frame.Background:SetVertexColor(r*v, g*v, b*v)
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -117,13 +115,16 @@ local function SetupPowerBar()
     Util.AddBorder(powerBar)
 
     RB.UpdateFrame(powerBar)
-    UpdatePowerColor(powerBar)
 
     local text = powerBar:CreateFontString(nil, "OVERLAY")
     text:SetParentKey("Text")
+
     RB.UpdateText(powerBar)
 
-    UpdateMaxPower(powerBar)
+    C_Timer.After(0.5, function()
+        UpdateMaxPower(powerBar)
+        UpdatePowerColor(powerBar)
+    end)
 
     powerBar:RegisterUnitEvent("UNIT_POWER_UPDATE", "player")
     powerBar:RegisterUnitEvent("UNIT_MAXPOWER", "player")
@@ -142,7 +143,7 @@ local function SetupPowerBar()
             RB.UpdateAlpha(self, true)
             RB.UpdateAlpha(PersonalResourceDisplayFrame, true)
         elseif event == "ACTIVE_TALENT_GROUP_CHANGED" then
-            UpdatePowerColor(self)
+            C_Timer.After(0.5, function() UpdatePowerColor(self) end)
         end
     end)
 

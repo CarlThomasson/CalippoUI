@@ -341,13 +341,11 @@ local function UpdateHealthColor(frame)
 end
 
 local function UpdatePowerColor(frame)
-    C_Timer.After(0.5, function()
-        local r, g, b = Util.GetUnitPowerColor(frame.unit)
-        frame.PowerBar:SetStatusBarColor(r, g, b)
+    local r, g, b = Util.GetUnitPowerColor(frame.unit)
+    frame.PowerBar:SetStatusBarColor(r, g, b)
 
-        local v = 0.2
-        frame.PowerBar.Background:SetVertexColor(r*v, g*v, b*v)
-    end)
+    local v = 0.2
+    frame.PowerBar.Background:SetVertexColor(r*v, g*v, b*v)
 end
 
 local function UpdateHealth(frame)
@@ -703,6 +701,11 @@ function SetupUnitFrame(frameName, unit, number)
     UF.UpdateFrame(frame)
     UF.UpdateTexts(frame)
     UpdateAll(frame)
+
+    C_Timer.After(0.5, function()
+        UpdatePowerColor(frame)
+    end)
+
     RegisterUnitWatch(frame, false)
 end
 

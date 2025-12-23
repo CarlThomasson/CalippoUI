@@ -80,11 +80,10 @@ end
 ---------------------------------------------------------------------------------------------------
 
 local function FixWidth(viewer)
-    if not InCombatLockdown() then
-        C_Timer.After(0.5, function()
-            viewer:SetWidth(viewer.iconScale * ((math.min(viewer.frameCount, viewer.iconLimit) * (viewer.frameSize + viewer.iconPadding) - viewer.iconPadding)))
-        end)
-    end
+    C_Timer.After(0.5, function()
+        if InCombatLockdown() then return end
+        viewer:SetWidth(viewer.iconScale * ((math.min(viewer.frameCount, viewer.iconLimit) * (viewer.frameSize + viewer.iconPadding) - viewer.iconPadding)))
+    end)
 end
 
 local function UpdatePositions(viewer)
@@ -116,7 +115,7 @@ local function UpdatePositions(viewer)
     table.sort(frames, function(a, b)
         local a2 = a.layoutIndex or 1000
         local b2 = b.layoutIndex or 1000
-        return a2 < b2 
+        return a2 < b2
     end)
 
     local lastRow
