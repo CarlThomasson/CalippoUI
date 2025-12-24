@@ -662,6 +662,8 @@ local defaults = {
                     RowLength = 4,
                     Size = 15,
 
+                    DirV = "DOWN",
+
                     Stacks = {
                         Size = 8,
                     },
