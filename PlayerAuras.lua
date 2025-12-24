@@ -26,7 +26,9 @@ local function StyleFrame(frame)
         Util.AddBorder(overlay, true)
     end
 
-    frame.Count:SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", 12, "")
+    frame.Count:SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", 12, "Outline")
+    frame.Count:SetPoint("BOTTOMRIGHT", frame.Icon, "BOTTOMRIGHT")
+
     frame.Duration:SetFont("Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf", 12, "")
 
     if frame.DebuffBorder then
@@ -58,6 +60,12 @@ local function StyleBuffsAndDebuffs()
     end
 end
 
+local function StyleDebuffs()
+    for _, frame in pairs({DebuffFrame.AuraContainer:GetChildren()}) do
+        StyleFrame(frame)
+    end
+end
+
 ---------------------------------------------------------------------------------------------------
 
 function PA.Load()
@@ -72,11 +80,7 @@ function PA.Load()
     frame:RegisterUnitEvent("UNIT_AURA", "player")
     frame:SetScript("OnEvent", function(self, event)
         if event == "UNIT_AURA" then
-            StyleBuffsAndDebuffs()
+            StyleDebuffs()
         end
-    end)
-
-    EditModeManagerFrame:HookScript("OnHide", function(self)
-        StyleBuffsAndDebuffs()
     end)
 end

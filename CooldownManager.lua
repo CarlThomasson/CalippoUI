@@ -150,13 +150,32 @@ local function UpdatePositions(viewer)
 end
 
 local function HookScripts(viewer)
-    viewer:HookScript("OnShow", function(self)
-        CDM.UpdateStyle(self)
-    end)
-
     viewer:HookScript("OnSizeChanged", function(self)
         CDM.UpdateStyle(self)
         UpdatePositions(self)
+    end)
+
+    viewer:HookScript("OnShow", function(self)
+        if self:GetName() ~= "BuffIconCooldownViewer" then
+            FixWidth(self)
+        end
+        UpdatePositions(self)
+        CDM.UpdateAlpha(self)
+    end)
+
+    if viewer:GetName() ~= "BuffIconCooldownViewer" then
+        viewer:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
+    end
+    viewer:RegisterEvent("PLAYER_REGEN_ENABLED")
+    viewer:RegisterEvent("PLAYER_REGEN_DISABLED")
+    viewer:HookScript("OnEvent", function(self, event)
+        if event == "PLAYER_REGEN_ENABLED" then
+            CDM.UpdateAlpha(self)
+        elseif event == "PLAYER_REGEN_DISABLED" then
+            CDM.UpdateAlpha(self, true)
+        elseif event == "ACTIVE_TALENT_GROUP_CHANGED" then
+                FixWidth(self)
+        end
     end)
 
     if viewer:GetName() == "BuffIconCooldownViewer" then
@@ -182,30 +201,5 @@ function CDM.Load()
         CDM.UpdateAlpha(viewer)
 
         HookScripts(viewer)
-
-        viewer:HookScript("OnShow", function(self)
-            if self:GetName() ~= "BuffIconCooldownViewer" then
-                FixWidth(self)
-            end
-            UpdatePositions(self)
-            CDM.UpdateAlpha(self)
-        end)
-
-        if viewer:GetName() ~= "BuffIconCooldownViewer" then
-            viewer:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
-        end
-        viewer:RegisterEvent("PLAYER_REGEN_ENABLED")
-        viewer:RegisterEvent("PLAYER_REGEN_DISABLED")
-        viewer:HookScript("OnEvent", function(self, event)
-            if event == "PLAYER_REGEN_ENABLED" then
-                CDM.UpdateAlpha(self)
-            elseif event == "PLAYER_REGEN_DISABLED" then
-                CDM.UpdateAlpha(self, true)
-            elseif event == "ACTIVE_TALENT_GROUP_CHANGED" then
-                 FixWidth(self)
-            end
-        end)
-
-        CDM.UpdateAlpha(viewer)
     end
 end

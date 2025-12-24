@@ -30,12 +30,18 @@ function Util.AddBorder(frame, useLines)
             end
         end
     else
+        local backdropInfo = {
+            edgeFile = "Interface/AddOns/CalippoUI/Media/DropShadowBorder.blp",
+            edgeSize = PixelUtil.GetNearestPixelSize(1, UIParent:GetEffectiveScale(), 1) * 3,
+            bgFile = nil
+        }
+
         local offset = 1
         local backdrop = CreateFrame("Frame", nil, frame, "BackdropTemplate")
         backdrop:SetParentKey("BackdropBorder")
         backdrop:SetPoint("TOPLEFT", frame, "TOPLEFT", -offset, offset)
         backdrop:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", offset, -offset)
-        backdrop:SetBackdrop(CUI_BACKDROP_DS)
+        backdrop:SetBackdrop(backdropInfo)
     end
 end
 
@@ -166,7 +172,8 @@ function Util.PositionFromIndex(index, frame, anchorFrame, point, relativePoint,
 end
 
 function Util.CheckAnchorFrame(frame, dbEntry)
-    if not _G[dbEntry.AnchorFrame] then
+    local anchorFrame = _G[dbEntry.AnchorFrame]
+    if not anchorFrame then
         print(frame:GetName().." could not anchor to "..dbEntry.AnchorFrame.." because it does not exist, resetting anchor to center of UIParent")
         dbEntry.AnchorFrame = "UIParent"
         dbEntry.AnchorPoint = "CENTER"

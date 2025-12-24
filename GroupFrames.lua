@@ -71,11 +71,11 @@ local function UpdateAuras(groupFrame, type)
             if aura.dispelName then
                 auraFrame.Overlay.Backdrop:Hide()
                 auraFrame.Overlay.DispelBackdrop:Show()
+                auraFrame.Overlay.DispelBackdrop:SetBackdropBorderColor(color.r, color.g, color.b, color.a)
             else
                 auraFrame.Overlay.Backdrop:Show()
                 auraFrame.Overlay.DispelBackdrop:Hide()
             end
-            auraFrame.Overlay.DispelBackdrop:SetBackdropBorderColor(color.r, color.g, color.b, color.a)
         else
             auraFrame.Overlay.Backdrop:Show()
             auraFrame.Overlay.DispelBackdrop:Hide()
@@ -97,8 +97,6 @@ local function UpdateAuras(groupFrame, type)
 
         auraFrame.Cooldown:SetCooldownFromExpirationTime(aura.expirationTime, aura.duration)
 
-        if type == "Defensives" then print("ASDSAD") end
-
         Util.PositionFromIndex(index, auraFrame, groupFrame.Overlay, anchorPoint, anchorRelativePoint, dirH, dirV, size, size, padding, posX, posY, rowLength)
 
         index = index + 1
@@ -109,7 +107,7 @@ local function UpdateAuras(groupFrame, type)
     elseif type == "Debuffs" then
         AuraUtil.ForEachAura(groupFrame.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Harmful), nil, HandleAura, true)
     elseif type == "Defensives" then
-        AuraUtil.ForEachAura(groupFrame.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.ExternalDefensive), nil, HandleAura, true)
+        AuraUtil.ForEachAura(groupFrame.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Helpful, AuraUtil.AuraFilters.ExternalDefensive), nil, HandleAura, true)
     end
 end
 
@@ -599,7 +597,6 @@ local function UpdateGroupFrames(groupFrame)
         local frame = groupFrame[unit]
 
         UpdateAll(frame)
-
         UpdateAllAuras(frame)
     end
 
@@ -680,7 +677,7 @@ local function SetupGroupFrame(unit, groupType, frameName, parent)
     local overlayFrame = CreateFrame("Frame", nil, frame)
     overlayFrame:SetParentKey("Overlay")
     overlayFrame:SetAllPoints(frame)
-    overlayFrame:SetFrameLevel(10)
+    overlayFrame:SetFrameLevel(shieldBar:GetFrameLevel()+1)
     Util.AddBorder(overlayFrame)
 
     frame.pool = CreateFramePool("Frame", overlayFrame, "CUI_AuraFrameTemplate")
@@ -772,7 +769,6 @@ function GF.Load()
     HideBlizzard()
 
     local dbEntryP = CUI.DB.profile.GroupFrames.PartyFrame
-
     local partyFrame = CreateFrame("Frame", "CUI_PartyFrame", UIParent)
     partyFrame.groupType = "party"
     partyFrame.name = "PartyFrame"
@@ -786,10 +782,11 @@ function GF.Load()
     partyFrame:RegisterEvent("GROUP_FORMED")
     partyFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
     partyFrame:SetScript("OnEvent", function(self, event)
+        if not IsInGroup() or IsInRaid() then return end
+
         if event == "GROUP_ROSTER_UPDATE" then
             UpdateGroupFrames(self)
         elseif event == "PLAYER_ROLES_ASSIGNED" then
-            if not IsInGroup() or IsInRaid() then return end
             GF.SortGroupFrames(self)
         elseif event == "GROUP_JOINED" or event == "GROUP_LEFT" or event == "GROUP_FORMED" then
             lastNumMem = 0
@@ -810,9 +807,7 @@ function GF.Load()
 
     UpdateGroupFrames(partyFrame)
 
-    ------------------------------------------------------------------------------
     local dbEntryR = CUI.DB.profile.GroupFrames.RaidFrame
-
     local raidFrame = CreateFrame("Frame", "CUI_RaidFrame", UIParent)
     raidFrame.groupType = "raid"
     raidFrame.name = "RaidFrame"
@@ -826,10 +821,11 @@ function GF.Load()
     raidFrame:RegisterEvent("GROUP_FORMED")
     raidFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
     raidFrame:SetScript("OnEvent", function(self, event)
+        if not IsInRaid() then return end
+
         if event == "GROUP_ROSTER_UPDATE" then
             UpdateGroupFrames(self)
         elseif event == "PLAYER_ROLES_ASSIGNED" then
-            if not IsInRaid() then return end
             GF.SortGroupFrames(self)
         elseif event == "GROUP_JOINED" or event == "GROUP_LEFT" or event == "GROUP_FORMED" then
             lastNumMem = 0

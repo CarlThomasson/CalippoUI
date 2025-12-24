@@ -264,6 +264,7 @@ local function UpdateAuras(unitFrame, type)
         auraFrame.type = type
         auraFrame.showTooltip = true
         auraFrame.auraInstanceID = aura.auraInstanceID
+        --print(aura.spellId)
 
         auraFrame:SetSize(size, size)
 
@@ -272,11 +273,11 @@ local function UpdateAuras(unitFrame, type)
             if aura.dispelName then
                 auraFrame.Overlay.Backdrop:Hide()
                 auraFrame.Overlay.DispelBackdrop:Show()
+                auraFrame.Overlay.DispelBackdrop:SetBackdropBorderColor(color.r, color.g, color.b, color.a)
             else
                 auraFrame.Overlay.Backdrop:Show()
                 auraFrame.Overlay.DispelBackdrop:Hide()
             end
-            auraFrame.Overlay.DispelBackdrop:SetBackdropBorderColor(color.r, color.g, color.b, color.a)
         end
 
         auraFrame.Icon:SetTexture(aura.icon)
@@ -632,12 +633,12 @@ function SetupUnitFrame(frameName, unit, number)
     healthBar:SetPoint("TOPLEFT", frame, "TOPLEFT")
     healthBar:SetPoint("BOTTOMRIGHT", powerBar, "TOPRIGHT")
     Util.AddStatusBarBackground(healthBar)
-    Util.AddBorder(healthBar)
 
     local overlayFrame = CreateFrame("Frame", nil, frame)
     overlayFrame:SetParentKey("Overlay")
     overlayFrame:SetFrameLevel(frame:GetFrameLevel()+10)
     overlayFrame:SetAllPoints(frame)
+    Util.AddBorder(overlayFrame)
 
     local unitName = overlayFrame:CreateFontString(nil, "OVERLAY")
     unitName:SetParentKey("UnitName")
