@@ -210,12 +210,17 @@ function UpdateAllAuras(frame)
         for _, f in ipairs(CompactPartyFrame.memberUnitFrames) do
             if f.unit == frame.unit then
                 blizzFrame = f
+                break
             end
         end
     elseif frame.name == "RaidFrame" then
-        for _, f in ipairs(CompactRaidFrame.memberUnitFrames) do
+        if true then return end
+
+        -- TODO
+        for _, f in ipairs(CompactRaidFrameContainer.memberRaidFrames) do
             if f.unit == frame.unit then
                 blizzFrame = f
+                break
             end
         end
     end

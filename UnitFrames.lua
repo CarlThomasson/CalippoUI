@@ -113,11 +113,12 @@ end
 
 function UF.UpdateAlpha(frame, inCombat)
     if frame == "BossFrame" then UpdateBossFrameAlpha() return end
+    local dbEntry = CUI.DB.profile.UnitFrames[frame.name]
 
     if InCombatLockdown() or inCombat then
-        Util.FadeFrame(frame, "IN", CUI.DB.profile.UnitFrames[frame.name].CombatAlpha)
+        Util.FadeFrame(frame, "IN", dbEntry.CombatAlpha)
     else
-        Util.FadeFrame(frame, "OUT", CUI.DB.profile.UnitFrames[frame.name].Alpha)
+        Util.FadeFrame(frame, "OUT", dbEntry.Alpha)
     end
 end
 
@@ -157,12 +158,6 @@ function UF.UpdateCastBarFrame(frame)
     if frame.name == "BossFrame" then dbEntry.AnchorFrame = frame:GetName() end
 
     castBar:SetSize(dbEntry.Width, dbEntry.Height)
-
-    castBar.Bar:SetStatusBarTexture(dbEntry.Texture)
-    castBar.Bar:SetStatusBarColor(dbEntry.Color.r, dbEntry.Color.g, dbEntry.Color.b, dbEntry.Color.a)
-
-    castBar.Bar.Background:SetTexture(dbEntry.Texture)
-    castBar.Bar.Background:SetVertexColor(dbEntry.Color.r*0.2, dbEntry.Color.g*0.2, dbEntry.Color.b*0.2, dbEntry.Color.a)
 
     if dbEntry.ShowIcon then
         castBar.IconContainer:Show()
@@ -481,7 +476,7 @@ local function GetCastOrChannelDuration(unit)
 end
 
 local function UpdateCastBar(castBarContainer)
-    local isChannel, duration, name, _, icon = GetCastOrChannelDuration(castBarContainer.unit)
+    local isChannel, duration, name, _, icon, _, _, _, notInterruptible = GetCastOrChannelDuration(castBarContainer.unit)
     local castBar = castBarContainer.Bar
 
     if not duration then
@@ -492,6 +487,18 @@ local function UpdateCastBar(castBarContainer)
 
     castBarContainer.IconContainer.Icon:SetTexture(icon)
     castBar.Name:SetText(name)
+
+    local dbEntry = CUI.DB.profile.UnitFrames[castBarContainer.name].CastBar
+    local color = dbEntry.Color
+    local colorNotInt = dbEntry.ColorNotInterruptiple
+
+    print(notInterruptible)
+
+    castBar:GetStatusBarTexture():SetVertexColorFromBoolean(notInterruptible,
+        CreateColor(colorNotInt.r, colorNotInt.g, colorNotInt.b), CreateColor(color.r, color.g, color.b))
+
+    castBar.Background:SetVertexColorFromBoolean(notInterruptible,
+        CreateColor(colorNotInt.r*0.2, colorNotInt.g*0.2, colorNotInt.b*0.2), CreateColor(color.r*0.2, color.g*0.2, color.b*0.2))
 
     local direction
     if isChannel then
@@ -519,6 +526,7 @@ function SetupCastBar(unitFrame)
     castBarContainer:Hide()
 
     castBarContainer.isCasting = false
+    castBarContainer.name = unitFrame.name
     castBarContainer.unit = unit
 
     local iconContainer = CreateFrame("Frame", nil, castBarContainer)

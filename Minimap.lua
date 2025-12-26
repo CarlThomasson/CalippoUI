@@ -7,10 +7,12 @@ local Util = CUI.Util
 ---------------------------------------------------------------------------------------------------
 
 function MM.UpdateAlpha(frame, inCombat)
-    if InCombatLockdown() or inCombat then 
-        Util.FadeFrame(frame, "IN", CUI.DB.profile.Minimap.CombatAlpha)
+    local dbEntry = CUI.DB.profile.Minimap
+
+    if InCombatLockdown() or inCombat then
+        Util.FadeFrame(frame, "IN", dbEntry.CombatAlpha)
     else
-        Util.FadeFrame(frame, "OUT", CUI.DB.profile.Minimap.Alpha)
+        Util.FadeFrame(frame, "OUT", dbEntry.Alpha)
     end
 end
 

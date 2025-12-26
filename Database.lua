@@ -285,6 +285,13 @@ local defaults = {
                         ["b"] = 0,
                         ["a"] = 1
                     },
+
+                    ColorNotInterruptiple = {
+                        ["r"] = 0.5,
+                        ["g"] = 0.5,
+                        ["b"] = 0.5,
+                        ["a"] = 1
+                    }
                 },
             },
 
@@ -758,6 +765,7 @@ local defaults = {
 
             Text = {
                 Enabled = true,
+
                 Font = defaultFont,
                 Outline = "",
                 Size = 14,
@@ -772,6 +780,9 @@ local defaults = {
 
             PersonalResourceBar = {
                 Enabled = true,
+
+                Alpha = 1,
+                CombatAlpha = 1,
 
                 AnchorFrame = "CUI_PowerBar",
                 AnchorPoint = "BOTTOM",
@@ -832,10 +843,10 @@ local defaults = {
 
             EssentialCooldownViewer = {
                 Cooldown = {
-                    Size = 16,
+                    Size = 20,
                 },
                 Charges = {
-                    Size = 16,
+                    Size = 20,
                 },
             },
             UtilityCooldownViewer = {
@@ -848,10 +859,10 @@ local defaults = {
             },
             BuffIconCooldownViewer = {
                 Cooldown = {
-                    Size = 12,
+                    Size = 16,
                 },
                 Charges = {
-                    Size = 12,
+                    Size = 16,
                 },
             },
         },

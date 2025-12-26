@@ -14,11 +14,12 @@ local cooldownViewers = {
 
 function CDM.UpdateAlpha(frame, inCombat)
     if not frame:IsShown() then return end
+    local dbEntry = CUI.DB.profile.CooldownManager[frame:GetName()]
 
-    if InCombatLockdown() or inCombat then 
-        Util.FadeFrame(frame, "IN", CUI.DB.profile.CooldownManager[frame:GetName()].CombatAlpha)
+    if InCombatLockdown() or inCombat then
+        Util.FadeFrame(frame, "IN", dbEntry.CombatAlpha)
     else
-        Util.FadeFrame(frame, "OUT", CUI.DB.profile.CooldownManager[frame:GetName()].Alpha)
+        Util.FadeFrame(frame, "OUT", dbEntry.Alpha)
     end
 end
 
@@ -40,6 +41,12 @@ function CDM.UpdateStyle(viewer)
             if not frame.Borders then
                 Util.AddBorder(frame)
             end
+        end
+
+        if frame.DebuffBorder then
+            frame.DebuffBorder:ClearAllPoints()
+            frame.DebuffBorder:SetPoint("TOPLEFT", frame, "TOPLEFT", -6, 6)
+            frame.DebuffBorder:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 6, -6)
         end
 
         if frame.Applications then
@@ -79,29 +86,21 @@ end
 
 ---------------------------------------------------------------------------------------------------
 
-local function FixWidth(viewer)
-    C_Timer.After(0.5, function()
-        if InCombatLockdown() then return end
-        viewer:SetWidth(viewer.iconScale * ((math.min(viewer.frameCount, viewer.iconLimit) * (viewer.frameSize + viewer.iconPadding) - viewer.iconPadding)))
-    end)
-end
-
 local function UpdatePositions(viewer)
-    local iconScale = viewer.iconScale
-    local padding = viewer.iconPadding
+    local padding = viewer.childXPadding
     local rowSize = viewer.iconLimit
 
     local viewerName = viewer:GetName()
 
     local frameSize
     if viewerName == "EssentialCooldownViewer" then
-        frameSize = 50 * iconScale
-        viewer.frameSize = frameSize
+        frameSize = 50
+        viewer.frameSize = 50
     elseif viewerName == "UtilityCooldownViewer" then
-        frameSize = 30 * iconScale
-        viewer.frameSize = frameSize
+        frameSize = 30
+        viewer.frameSize = 30
     elseif viewerName == "BuffIconCooldownViewer" then
-        frameSize = 40 * iconScale
+        frameSize = 40
     end
 
     local frames = {}
@@ -121,17 +120,26 @@ local function UpdatePositions(viewer)
     local lastRow
     local lastRowSize
     local lastRowOffest
+    local starts
+    local ends
 
     if viewerName == "BuffIconCooldownViewer" then
         lastRowOffest = ((frameSize + padding) * (#frames - 1)) / 2 + padding
+        starts = 1
+        ends = #frames
     else
         lastRow = math.ceil(#frames / rowSize) - 1
         lastRowSize = #frames % rowSize
-        if lastRowSize == 0 then lastRowSize = rowSize end
+
+        if lastRowSize == 0 or lastRowSize == #frames then return end
+
+        starts = (rowSize*lastRow) + 1
+        ends = #frames
         lastRowOffest = (frameSize + padding) * ((rowSize - lastRowSize) / 2)
     end
 
-    for index, frame in ipairs(frames) do
+    for index=starts, ends do
+        local frame = frames[index]
         index = index - 1
         local row = math.floor(index/rowSize)
 
@@ -144,8 +152,6 @@ local function UpdatePositions(viewer)
         else
             frame:SetPoint("TOPLEFT", viewer, "TOPLEFT", (index*(frameSize+padding))-(row*rowSize*(frameSize+padding)), -(row*(frameSize+padding)))
         end
-
-        frame:SetSize(frameSize, frameSize)
     end
 end
 
@@ -156,16 +162,10 @@ local function HookScripts(viewer)
     end)
 
     viewer:HookScript("OnShow", function(self)
-        if self:GetName() ~= "BuffIconCooldownViewer" then
-            FixWidth(self)
-        end
         UpdatePositions(self)
         CDM.UpdateAlpha(self)
     end)
 
-    if viewer:GetName() ~= "BuffIconCooldownViewer" then
-        viewer:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
-    end
     viewer:RegisterEvent("PLAYER_REGEN_ENABLED")
     viewer:RegisterEvent("PLAYER_REGEN_DISABLED")
     viewer:HookScript("OnEvent", function(self, event)
@@ -173,8 +173,6 @@ local function HookScripts(viewer)
             CDM.UpdateAlpha(self)
         elseif event == "PLAYER_REGEN_DISABLED" then
             CDM.UpdateAlpha(self, true)
-        elseif event == "ACTIVE_TALENT_GROUP_CHANGED" then
-                FixWidth(self)
         end
     end)
 

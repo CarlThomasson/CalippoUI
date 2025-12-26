@@ -423,6 +423,8 @@ local function CreateGeneralSettings(container)
         function(self, event, value)
             SetCVar("SpellQueueWindow", value)
         end, 1)
+
+    scrollFrame:DoLayout()
 end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
@@ -490,6 +492,8 @@ local function CreateActionBarFramePage(container, actionBar)
             dbEntry.PosY = value
             AB.UpdateBarAnchor(frame)
         end, 0.5)
+
+    scrollFrame:DoLayout()
 end
 
 local function CreateActionBarTextPage(container, actionBar, type)
@@ -501,6 +505,8 @@ local function CreateActionBarTextPage(container, actionBar, type)
     container:AddChild(scrollFrame)
 
     CreateTextGroup(scrollFrame, dbEntry, AB.UpdateBar, frame, type)
+
+    scrollFrame:DoLayout()
 end
 
 local function CreateActionBarTabs(container, actionBar)
@@ -613,6 +619,8 @@ local function CreateUnitFrameFramePage(container, unitFrame)
         end, 0.5)
 
     CreateTextureGroup(powerBarGroup, dbEntry.PowerBar, UF.UpdateFrame, frame)
+
+    scrollFrame:DoLayout()
 end
 
 local function CreateUnitFramAuraSettings(container, unitFrame, type)
@@ -693,6 +701,8 @@ local function CreateUnitFramAuraSettings(container, unitFrame, type)
         end, 0.5)
 
     CreateTextGroup(scrollFrame, dbEntry.Stacks, UF.UpdateAuras, frame, "Stacks")
+
+    scrollFrame:DoLayout()
 end
 
 local function CreateUnitFrameAuraPage(container, unitFrame)
@@ -733,6 +743,8 @@ local function CreateUnitFrameTextPage(container, unitFrame, type)
                 UF.UpdateTexts(frame)
             end, 1)
     end
+
+    scrollFrame:DoLayout()
 end
 
 local function CreateUnitFrameTextTabs(container, unitFrame)
@@ -796,6 +808,8 @@ local function CreateUnitFrameCastBarPage(container, unitFrame)
         else
             CreateAnchorGroup(scrollFrame, dbEntry, UF.UpdateCastBarFrame, frame)
         end
+
+        scrollFrame:DoLayout()
     end
 
     local function CastBarTextPage(container)
@@ -812,6 +826,8 @@ local function CreateUnitFrameCastBarPage(container, unitFrame)
             end, 1)
 
         CreateTextGroupWithoutToggle(scrollFrame, dbEntry.Time, UF.UpdateCastBarTexts, frame, "Spell Time")
+
+        scrollFrame:DoLayout()
     end
 
     local function SelectGroup(container, event, tab)
@@ -859,6 +875,8 @@ local function CreateUnitFrameMiscPage(container, unitFrame)
 
         CreateAnchorGroupWithoutFrame(leaderGroup, dbEntry.LeaderIcon, UF.UpdateFrame, frame)
     end
+
+    scrollFrame:DoLayout()
 end
 
 local function CreateUnitFrameTabs(container, unitFrame)
@@ -967,6 +985,8 @@ local function CreateGroupFrameFramePage(container, groupFrame)
             dbEntry.RowLength = value
             GF.UpdateFrame(frame)
         end, 1)
+
+    scrollFrame:DoLayout()
 end
 
 local function CreateGroupFrameAuraPage(container, groupFrame)
@@ -1047,6 +1067,8 @@ local function CreateGroupFrameAuraPage(container, groupFrame)
             end, 0.5)
 
         CreateTextGroup(scrollFrame, dbEntry.Stacks, GF.UpdateAuras, frame, "Stacks")
+
+        scrollFrame:DoLayout()
     end
 
     local function SelectGroup(container, event, tab)
@@ -1083,6 +1105,8 @@ local function CreateGroupFrameTextTabs(container, groupFrame)
             dbEntry.Name.Width = value
             GF.UpdateFrame(frame)
         end, 1)
+
+    scrollFrame:DoLayout()
 end
 
 local function CreateGroupFrameMiscPage(container, groupFrame)
@@ -1108,6 +1132,8 @@ local function CreateGroupFrameMiscPage(container, groupFrame)
         end, 0.5)
 
     CreateAnchorGroupWithoutFrame(roleGroup, dbEntry.RoleIcon, GF.UpdateFrame, frame)
+
+    scrollFrame:DoLayout()
 end
 
 local function CreateGroupFrameTabs(container, groupFrame)
@@ -1167,6 +1193,8 @@ local function CreateCDMPage(container, viewer)
     CreateTextGroupWithoutToggle(scrollFrame, dbEntry.Cooldown, CDM.UpdateStyle, frame, "Cooldown")
 
     CreateTextGroupWithoutToggle(scrollFrame, dbEntry.Charges, CDM.UpdateStyle, frame, "Charges")
+
+    scrollFrame:DoLayout()
 end
 
 local function CreateCDMSettings(container)
@@ -1217,17 +1245,47 @@ local function CreatePrimaryResourceBarPage(container)
             dbEntry.Text.ShowManaPercent = value
             RB.UpdateText(frame)
         end, 1)
+
+    scrollFrame:DoLayout()
 end
 
 local function CreateSecondaryResourceBarPage(container)
-    local dbEntry = CUI.DB.profile.ResourceBar.PersonalResourceBar
+    local dbEntry = CUI.DB.profile.ResourceBar.SecondaryResourceBar
     local frame = CUI_SecondaryPowerBar
 
     local scrollFrame = AceGUI:Create("ScrollFrame")
     scrollFrame:SetLayout("List")
     container:AddChild(scrollFrame)
 
-    -- CreateAnchorGroup(scrollFrame, dbEntry, RB.UpdatePersonalBar, frame)
+    local toggleGroup = CreateInlineGroup(scrollFrame, "")
+
+    CreateCheckBox(toggleGroup, "Toggle", dbEntry.Enabled,
+        function(self, event, value)
+            dbEntry.Enabled = value
+            RB.UpdateSecondaryPowerBar(frame)
+        end, 0.5)
+
+    local sizeGroup = CreateSizeGroup(scrollFrame, dbEntry, RB.UpdateSecondaryPowerBar, frame)
+
+    CreateCheckBox(sizeGroup, "Match width to anchored frame", dbEntry.MatchWidth,
+        function(self, event, value)
+            dbEntry.MatchWidth = value
+            RB.UpdateSecondaryPowerBar(frame)
+        end, 0.5)
+
+    CreateSlider(sizeGroup, "Padding", 0, 50, 1, dbEntry.Padding,
+        function(self, event, value)
+            dbEntry.Padding = value
+            RB.UpdateSecondaryPowerBar(frame)
+        end, 0.5)
+
+    CreateAlphaGroup(scrollFrame, dbEntry, RB.UpdateAlpha, frame)
+
+    CreateTextureGroup(scrollFrame, dbEntry, RB.UpdateSecondaryPowerBar, frame)
+
+    CreateAnchorGroup(scrollFrame, dbEntry, RB.UpdateSecondaryPowerBar, frame)
+
+    scrollFrame:DoLayout()
 end
 
 local function CreatePersonalResourceBarPage(container)
@@ -1238,7 +1296,19 @@ local function CreatePersonalResourceBarPage(container)
     scrollFrame:SetLayout("List")
     container:AddChild(scrollFrame)
 
+    local toggleGroup = CreateInlineGroup(scrollFrame, "")
+
+    CreateCheckBox(toggleGroup, "Toggle", dbEntry.Enabled,
+        function(self, event, value)
+            dbEntry.Enabled = value
+            RB.UpdatePersonalBar(frame)
+        end, 0.5)
+
+    CreateAlphaGroup(scrollFrame, dbEntry, RB.UpdateAlpha, frame)
+
     CreateAnchorGroup(scrollFrame, dbEntry, RB.UpdatePersonalBar, frame)
+
+    scrollFrame:DoLayout()
 end
 
 local function CreateResourceBarSettings(container)
@@ -1274,6 +1344,8 @@ local function CreateMinimapSettings(container)
     container:AddChild(scrollFrame)
 
     CreateAlphaGroup(scrollFrame, dbEntry, MM.UpdateAlpha, MinimapCluster)
+
+    scrollFrame:DoLayout()
 end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
@@ -1300,6 +1372,8 @@ local function CreatePlayerAuraSettings(container)
             PA.UpdateAlpha(BuffFrame)
             PA.UpdateAlpha(DebuffFrame)
         end, 0.5)
+
+    scrollFrame:DoLayout()
 end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
@@ -1325,6 +1399,8 @@ local function CreatePlayerCastBarSettings(container)
     CreateTextureGroup(scrollFrame, dbEntry, CB.UpdateFrame, frame)
 
     CreateAnchorGroup(scrollFrame, dbEntry, CB.UpdateFrame, frame)
+
+    scrollFrame:DoLayout()
 end
 
 ---------------------------------------------------------------------------------------------------------------------------------------

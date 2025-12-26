@@ -7,10 +7,12 @@ local Util = CUI.Util
 ---------------------------------------------------------------------------------------------------
 
 function PA.UpdateAlpha(frame, inCombat)
-    if InCombatLockdown() or inCombat then 
-        Util.FadeFrame(frame, "IN", CUI.DB.profile.PlayerAuras.CombatAlpha)
+    local dbEntry = CUI.DB.profile.PlayerAuras
+
+    if InCombatLockdown() or inCombat then
+        Util.FadeFrame(frame, "IN", dbEntry.CombatAlpha)
     else
-        Util.FadeFrame(frame, "OUT", CUI.DB.profile.PlayerAuras.Alpha)
+        Util.FadeFrame(frame, "OUT", dbEntry.Alpha)
     end
 end
 

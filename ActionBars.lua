@@ -54,10 +54,12 @@ AB.ActionBars = {
 ---------------------------------------------------------------------------------------------------
 
 function AB.UpdateAlpha(frame, inCombat)
-    if InCombatLockdown() or inCombat then 
-        Util.FadeFrame(frame, "IN", CUI.DB.profile.ActionBars[frame:GetName()].CombatAlpha, 0.2)
+    local dbEntry = CUI.DB.profile.ActionBars[frame:GetName()]
+
+    if InCombatLockdown() or inCombat then
+        Util.FadeFrame(frame, "IN", dbEntry.CombatAlpha, 0.2)
     else
-        Util.FadeFrame(frame, "OUT", CUI.DB.profile.ActionBars[frame:GetName()].Alpha, 0.2)
+        Util.FadeFrame(frame, "OUT", dbEntry.Alpha, 0.2)
     end
 end
 
