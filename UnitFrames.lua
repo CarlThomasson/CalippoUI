@@ -148,13 +148,13 @@ function UF.UpdateTexts(frame)
     end
 end
 
-function UF.UpdateCastBarFrame(unitFrame)
-    if unitFrame == "BossFrame" then UpdateBossFrameCastBarFrame() return end
+function UF.UpdateCastBarFrame(frame)
+    if frame == "BossFrame" then UpdateBossFrameCastBarFrame() return end
 
-    local dbEntry = CUI.DB.profile.UnitFrames[unitFrame.name].CastBar
-    local castBar = unitFrame.CastBar
+    local dbEntry = CUI.DB.profile.UnitFrames[frame.name].CastBar
+    local castBar = frame.CastBar
 
-    if unitFrame.name == "BossFrame" then dbEntry.AnchorFrame = unitFrame:GetName() end
+    if frame.name == "BossFrame" then dbEntry.AnchorFrame = frame:GetName() end
 
     castBar:SetSize(dbEntry.Width, dbEntry.Height)
 
@@ -173,7 +173,7 @@ function UF.UpdateCastBarFrame(unitFrame)
         castBar.Bar:SetPoint("TOPLEFT", castBar, "TOPLEFT")
     end
 
-    Util.CheckAnchorFrame(unitFrame, dbEntry)
+    Util.CheckAnchorFrame(frame, dbEntry)
 
     castBar:ClearAllPoints()
     if dbEntry.MatchWidth then
@@ -184,7 +184,7 @@ function UF.UpdateCastBarFrame(unitFrame)
     end
 
     if dbEntry.Enabled then
-        local unit = unitFrame.unit
+        local unit = frame.unit
         castBar:RegisterUnitEvent("UNIT_SPELLCAST_START", unit)
         castBar:RegisterUnitEvent("UNIT_SPELLCAST_STOP", unit)
         castBar:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_START", unit)
@@ -198,19 +198,19 @@ function UF.UpdateCastBarFrame(unitFrame)
     end
 end
 
-function UF.UpdateCastBarTexts(unitFrame)
-    if unitFrame == "BossFrame" then UpdateBossFrameCastBarTexts() return end
+function UF.UpdateCastBarTexts(frame)
+    if frame == "BossFrame" then UpdateBossFrameCastBarTexts() return end
 
-    local dbEntry = CUI.DB.profile.UnitFrames[unitFrame.name].CastBar
-    local name = unitFrame.CastBar.Bar.Name
-    local time = unitFrame.CastBar.Bar.Time
+    local dbEntry = CUI.DB.profile.UnitFrames[frame.name].CastBar
+    local name = frame.CastBar.Bar.Name
+    local time = frame.CastBar.Bar.Time
 
     name:SetFont(dbEntry.Name.Font, dbEntry.Name.Size, dbEntry.Name.Outline)
-    name:SetPoint(dbEntry.Name.AnchorPoint, unitFrame.CastBar.Bar, dbEntry.Name.AnchorRelativePoint, dbEntry.Name.PosX, dbEntry.Name.PosY)
+    name:SetPoint(dbEntry.Name.AnchorPoint, frame.CastBar.Bar, dbEntry.Name.AnchorRelativePoint, dbEntry.Name.PosX, dbEntry.Name.PosY)
     name:SetWidth(dbEntry.Name.Width)
 
     time:SetFont(dbEntry.Time.Font, dbEntry.Time.Size, dbEntry.Time.Outline)
-    time:SetPoint(dbEntry.Time.AnchorPoint, unitFrame.CastBar.Bar, dbEntry.Time.AnchorRelativePoint, dbEntry.Time.PosX, dbEntry.Time.PosY)
+    time:SetPoint(dbEntry.Time.AnchorPoint, frame.CastBar.Bar, dbEntry.Time.AnchorRelativePoint, dbEntry.Time.PosX, dbEntry.Time.PosY)
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -224,15 +224,16 @@ local DEBUFF_DISPLAY_COLOR_INFO = {
     [9] = DEBUFF_TYPE_BLEED_COLOR, -- enrage
     [11] = DEBUFF_TYPE_BLEED_COLOR,
 }
-local dispelColorCurve = C_CurveUtil.CreateColorCurve()
 
+local dispelColorCurve = C_CurveUtil.CreateColorCurve()
 dispelColorCurve:SetType(Enum.LuaCurveType.Step)
+
 for i, c in pairs(DEBUFF_DISPLAY_COLOR_INFO) do
     dispelColorCurve:AddPoint(i, c)
 end
 
-local function UpdateAuras(unitFrame, type)
-    local dbEntry = CUI.DB.profile.UnitFrames[unitFrame.name][type]
+local function UpdateAuras(frame, type)
+    local dbEntry = CUI.DB.profile.UnitFrames[frame.name][type]
     local anchorPoint = dbEntry.AnchorPoint
     local anchorRelativePoint = dbEntry.AnchorRelativePoint
     local dirH = dbEntry.DirH
@@ -257,18 +258,18 @@ local function UpdateAuras(unitFrame, type)
 	local function HandleAura(aura)
         if index >= maxShown then return end
 
-        local auraFrame = unitFrame.pool:Acquire()
+        local id = aura.auraInstanceID
+        local auraFrame = frame.pool:Acquire()
         auraFrame:Show()
 
-        auraFrame.unit = unitFrame.unit
+        auraFrame.unit = frame.unit
         auraFrame.type = type
         auraFrame.showTooltip = true
-        auraFrame.auraInstanceID = aura.auraInstanceID
-        --print(aura.spellId)
+        auraFrame.auraInstanceID = id
 
         auraFrame:SetSize(size, size)
 
-        local color = C_UnitAuras.GetAuraDispelTypeColor(unitFrame.unit, aura.auraInstanceID, dispelColorCurve)
+        local color = C_UnitAuras.GetAuraDispelTypeColor(frame.unit, id, dispelColorCurve)
         if color then
             if aura.dispelName then
                 auraFrame.Overlay.Backdrop:Hide()
@@ -296,18 +297,18 @@ local function UpdateAuras(unitFrame, type)
 
         auraFrame.Cooldown:SetCooldownFromExpirationTime(aura.expirationTime, aura.duration)
 
-        Util.PositionFromIndex(index, auraFrame, unitFrame, anchorPoint, anchorRelativePoint, dirH, dirV, size, size, padding, posX, posY, rowLength)
+        Util.PositionFromIndex(index, auraFrame, frame, anchorPoint, anchorRelativePoint, dirH, dirV, size, size, padding, posX, posY, rowLength)
 
         index = index + 1
 	end
 
     if type == "Buffs" then
-	    AuraUtil.ForEachAura(unitFrame.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Helpful), nil, HandleAura, true)
+        AuraUtil.ForEachAura(frame.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Helpful), nil, HandleAura, true)
     elseif type == "Debuffs" then
-        if UnitIsEnemy("player", unitFrame.unit) then
-            AuraUtil.ForEachAura(unitFrame.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Harmful, AuraUtil.AuraFilters.Player), nil, HandleAura, true)
+        if UnitIsEnemy("player", frame.unit) then
+            AuraUtil.ForEachAura(frame.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Harmful, AuraUtil.AuraFilters.Player), nil, HandleAura, true)
         else
-            AuraUtil.ForEachAura(unitFrame.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Harmful), nil, HandleAura, true)
+            AuraUtil.ForEachAura(frame.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Harmful), nil, HandleAura, true)
         end
     end
 end
@@ -318,16 +319,16 @@ local function UpdateBossFrameAuras()
     end
 end
 
-function UF.UpdateAuras(unitFrame)
-    if unitFrame == "BossFrame" then UpdateBossFrameAuras() return end
-    local dbEntry = CUI.DB.profile.UnitFrames[unitFrame.name]
+function UF.UpdateAuras(frame)
+    if frame == "BossFrame" then UpdateBossFrameAuras() return end
+    local dbEntry = CUI.DB.profile.UnitFrames[frame.name]
 
-    unitFrame.pool:ReleaseAll()
+    frame.pool:ReleaseAll()
     if dbEntry.Buffs.Enabled then
-        UpdateAuras(unitFrame, "Buffs")
+        UpdateAuras(frame, "Buffs")
     end
     if dbEntry.Debuffs.Enabled then
-        UpdateAuras(unitFrame, "Debuffs")
+        UpdateAuras(frame, "Debuffs")
     end
 end
 
@@ -352,14 +353,14 @@ end
 local function UpdateHealth(frame)
     local unit = frame.unit
 
-    frame.Overlay.UnitHealth:SetText(Util.UnitHealthText(unit))
+    Util.SetUnitHealthText(frame.Overlay.UnitHealth, unit)
     frame.HealthBar:SetValue(UnitHealth(unit))
 end
 
 local function UpdateMaxHealth(frame)
     local unit = frame.unit
 
-    frame.Overlay.UnitHealth:SetText(Util.UnitHealthText(unit))
+    Util.SetUnitHealthText(frame.Overlay.UnitHealth, unit)
     frame.HealthBar:SetMinMaxValues(0, UnitHealthMax(unit))
     frame.HealthBar:SetValue(UnitHealth(unit))
 end
@@ -369,8 +370,6 @@ local function UpdateHealthFull(frame)
 
     UpdateMaxHealth(frame)
     UpdateHealthColor(frame)
-
-    frame.Overlay.UnitHealth:SetText(Util.UnitHealthText(frame.unit))
 end
 
 local function UpdatePower(frame)
@@ -608,6 +607,8 @@ function SetupUnitFrame(frameName, unit, number)
     frame.unit = unit
     frame.name = frameName
     frame.number = number
+    frame.buffs = {}
+    frame.debuffs = {}
     frame.pool = CreateFramePool("Frame", frame, "CUI_AuraFrameTemplate")
 
     if unit == "target" then
@@ -669,7 +670,7 @@ function SetupUnitFrame(frameName, unit, number)
     frame:RegisterEvent("GROUP_FORMED")
     frame:RegisterEvent("GROUP_LEFT")
     frame:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
-    frame:HookScript("OnEvent", function(self, event, ...)
+    frame:HookScript("OnEvent", function(self, event)
         if event == "UNIT_AURA" then
             UF.UpdateAuras(self)
         elseif event == "UNIT_HEALTH" then

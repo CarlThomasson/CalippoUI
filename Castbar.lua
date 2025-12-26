@@ -8,6 +8,7 @@ local Hide = CUI.Hide
 ---------------------------------------------------------------------------------------------------
 
 local function HideBlizzard()
+    Hide.UnregisterChildren(PlayerCastingBarFrame)
     Hide.HideFrame(PlayerCastingBarFrame)
 end
 

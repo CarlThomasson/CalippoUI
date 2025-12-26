@@ -31,8 +31,90 @@ for i, c in pairs(DEBUFF_DISPLAY_COLOR_INFO) do
     dispelColorCurve:AddPoint(i, c)
 end
 
-local function UpdateAuras(groupFrame, type)
-    local dbEntry = CUI.DB.profile.GroupFrames[groupFrame.name][type]
+do
+-- local function UpdateAuras(frame, type)
+--     local dbEntry = CUI.DB.profile.GroupFrames[frame.name][type]
+--     local anchorPoint = dbEntry.AnchorPoint
+--     local anchorRelativePoint = dbEntry.AnchorRelativePoint
+--     local dirH = dbEntry.DirH
+--     local dirV = dbEntry.DirV
+--     local size = dbEntry.Size
+--     local padding = dbEntry.Padding
+--     local posX = dbEntry.PosX
+--     local posY = dbEntry.PosY
+--     local rowLength = dbEntry.RowLength
+--     local maxShown = dbEntry.MaxShown
+
+--     local stacksEnabled = dbEntry.Stacks.Enabled
+--     local stacksAP = dbEntry.Stacks.AnchorPoint
+--     local stacksARP = dbEntry.Stacks.AnchorRelativePoint
+--     local stacksPX = dbEntry.Stacks.PosX
+--     local stacksPY = dbEntry.Stacks.PosY
+--     local stacksFont = dbEntry.Stacks.Font
+--     local stacksOutline = dbEntry.Stacks.Outline
+--     local stacksSize = dbEntry.Stacks.Size
+
+--     local index = 0
+-- 	local function HandleAura(aura)
+--         if index >= maxShown then return end
+
+--         local auraFrame = frame.pool:Acquire()
+--         auraFrame:Show()
+
+--         auraFrame.unit = frame.unit
+--         auraFrame.type = type
+--         auraFrame.auraInstanceID = aura.auraInstanceID
+
+--         auraFrame:SetSize(size, size)
+
+--         local color = C_UnitAuras.GetAuraDispelTypeColor(frame.unit, aura.auraInstanceID, dispelColorCurve)
+--         if type == "Debuffs" and color then
+--             if aura.dispelName then
+--                 auraFrame.Overlay.Backdrop:Hide()
+--                 auraFrame.Overlay.DispelBackdrop:Show()
+--                 auraFrame.Overlay.DispelBackdrop:SetBackdropBorderColor(color.r, color.g, color.b, color.a)
+--             else
+--                 auraFrame.Overlay.Backdrop:Show()
+--                 auraFrame.Overlay.DispelBackdrop:Hide()
+--             end
+--         else
+--             auraFrame.Overlay.Backdrop:Show()
+--             auraFrame.Overlay.DispelBackdrop:Hide()
+--         end
+
+--         auraFrame.Icon:SetTexture(aura.icon)
+--         auraFrame.Icon:SetTexCoord(.08, .92, .08, .92)
+
+--         local stacksFrame = auraFrame.Overlay.Count
+--         if stacksEnabled then
+--             stacksFrame:Show()
+--             stacksFrame:ClearAllPoints()
+--             stacksFrame:SetPoint(stacksAP, auraFrame.Overlay, stacksARP, stacksPX, stacksPY)
+--             stacksFrame:SetFont(stacksFont, stacksSize, stacksOutline)
+--             stacksFrame:SetText(C_StringUtil.TruncateWhenZero(aura.applications))
+--         else
+--             stacksFrame:Hide()
+--         end
+
+--         auraFrame.Cooldown:SetCooldownFromExpirationTime(aura.expirationTime, aura.duration)
+
+--         Util.PositionFromIndex(index, auraFrame, frame.Overlay, anchorPoint, anchorRelativePoint, dirH, dirV, size, size, padding, posX, posY, rowLength)
+
+--         index = index + 1
+-- 	end
+
+--     if type == "Buffs" then
+-- 	    AuraUtil.ForEachAura(frame.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Helpful, AuraUtil.AuraFilters.Player, AuraUtil.AuraFilters.Raid), nil, HandleAura, true)
+--     elseif type == "Debuffs" then
+--         AuraUtil.ForEachAura(frame.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Harmful), nil, HandleAura, true)
+--     elseif type == "Defensives" then
+--         AuraUtil.ForEachAura(frame.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Helpful, AuraUtil.AuraFilters.ExternalDefensive), nil, HandleAura, true)
+--     end
+-- end
+end
+
+local function UpdateAuras(frame, blizzFrame, type)
+    local dbEntry = CUI.DB.profile.GroupFrames[frame.name][type]
     local anchorPoint = dbEntry.AnchorPoint
     local anchorRelativePoint = dbEntry.AnchorRelativePoint
     local dirH = dbEntry.DirH
@@ -54,80 +136,104 @@ local function UpdateAuras(groupFrame, type)
     local stacksSize = dbEntry.Stacks.Size
 
     local index = 0
-	local function HandleAura(aura)
-        if index >= maxShown then return end
+    local function HandleAura(id)
+        if id then
+            local aura = AuraUtil.GetAuraDataByAuraInstanceID(frame.unit, id)
+            if aura then
+                if index >= maxShown then return end
 
-        local auraFrame = groupFrame.pool:Acquire()
-        auraFrame:Show()
+                local auraFrame = frame.pool:Acquire()
+                auraFrame:Show()
 
-        auraFrame.unit = groupFrame.unit
-        auraFrame.type = type
-        auraFrame.auraInstanceID = aura.auraInstanceID
+                auraFrame.unit = frame.unit
+                auraFrame.type = type
+                auraFrame.auraInstanceID = aura.auraInstanceID
 
-        auraFrame:SetSize(size, size)
+                auraFrame:SetSize(size, size)
 
-        local color = C_UnitAuras.GetAuraDispelTypeColor(groupFrame.unit, aura.auraInstanceID, dispelColorCurve)
-        if type == "Debuffs" and color then
-            if aura.dispelName then
-                auraFrame.Overlay.Backdrop:Hide()
-                auraFrame.Overlay.DispelBackdrop:Show()
-                auraFrame.Overlay.DispelBackdrop:SetBackdropBorderColor(color.r, color.g, color.b, color.a)
-            else
-                auraFrame.Overlay.Backdrop:Show()
-                auraFrame.Overlay.DispelBackdrop:Hide()
+                local color = C_UnitAuras.GetAuraDispelTypeColor(frame.unit, aura.auraInstanceID, dispelColorCurve)
+                if type == "Debuffs" and color then
+                    if aura.dispelName then
+                        auraFrame.Overlay.Backdrop:Hide()
+                        auraFrame.Overlay.DispelBackdrop:Show()
+                        auraFrame.Overlay.DispelBackdrop:SetBackdropBorderColor(color.r, color.g, color.b, color.a)
+                    else
+                        auraFrame.Overlay.Backdrop:Show()
+                        auraFrame.Overlay.DispelBackdrop:Hide()
+                    end
+                else
+                    auraFrame.Overlay.Backdrop:Show()
+                    auraFrame.Overlay.DispelBackdrop:Hide()
+                end
+
+                auraFrame.Icon:SetTexture(aura.icon)
+                auraFrame.Icon:SetTexCoord(.08, .92, .08, .92)
+
+                local stacksFrame = auraFrame.Overlay.Count
+                if stacksEnabled then
+                    stacksFrame:Show()
+                    stacksFrame:ClearAllPoints()
+                    stacksFrame:SetPoint(stacksAP, auraFrame.Overlay, stacksARP, stacksPX, stacksPY)
+                    stacksFrame:SetFont(stacksFont, stacksSize, stacksOutline)
+                    stacksFrame:SetText(C_StringUtil.TruncateWhenZero(aura.applications))
+                else
+                    stacksFrame:Hide()
+                end
+
+                auraFrame.Cooldown:SetCooldownFromExpirationTime(aura.expirationTime, aura.duration)
+
+                Util.PositionFromIndex(index, auraFrame, frame.Overlay, anchorPoint, anchorRelativePoint, dirH, dirV, size, size, padding, posX, posY, rowLength)
+
+                index = index + 1
             end
-        else
-            auraFrame.Overlay.Backdrop:Show()
-            auraFrame.Overlay.DispelBackdrop:Hide()
         end
-
-        auraFrame.Icon:SetTexture(aura.icon)
-        auraFrame.Icon:SetTexCoord(.08, .92, .08, .92)
-
-        local stacksFrame = auraFrame.Overlay.Count
-        if stacksEnabled then
-            stacksFrame:Show()
-            stacksFrame:ClearAllPoints()
-            stacksFrame:SetPoint(stacksAP, auraFrame.Overlay, stacksARP, stacksPX, stacksPY)
-            stacksFrame:SetFont(stacksFont, stacksSize, stacksOutline)
-            stacksFrame:SetText(C_StringUtil.TruncateWhenZero(aura.applications))
-        else
-            stacksFrame:Hide()
-        end
-
-        auraFrame.Cooldown:SetCooldownFromExpirationTime(aura.expirationTime, aura.duration)
-
-        Util.PositionFromIndex(index, auraFrame, groupFrame.Overlay, anchorPoint, anchorRelativePoint, dirH, dirV, size, size, padding, posX, posY, rowLength)
-
-        index = index + 1
-	end
+    end
 
     if type == "Buffs" then
-	    AuraUtil.ForEachAura(groupFrame.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Helpful, AuraUtil.AuraFilters.Player, AuraUtil.AuraFilters.Raid), nil, HandleAura, true)
+        for _, f in ipairs(blizzFrame.buffFrames) do
+            if f:IsShown() then HandleAura(f.auraInstanceID) end
+        end
     elseif type == "Debuffs" then
-        AuraUtil.ForEachAura(groupFrame.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Harmful), nil, HandleAura, true)
+        for _, f in ipairs(blizzFrame.debuffFrames) do
+            if f:IsShown() then HandleAura(f.auraInstanceID) end
+        end
     elseif type == "Defensives" then
-        AuraUtil.ForEachAura(groupFrame.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Helpful, AuraUtil.AuraFilters.ExternalDefensive), nil, HandleAura, true)
+        HandleAura(blizzFrame.CenterDefensiveBuff.auraInstanceID)
     end
 end
 
-function UpdateAllAuras(groupFrame)
-    local dbEntry = CUI.DB.profile.GroupFrames[groupFrame.name]
+function UpdateAllAuras(frame)
+    local dbEntry = CUI.DB.profile.GroupFrames[frame.name]
 
-    groupFrame.pool:ReleaseAll()
+    local blizzFrame
+    if frame.name == "PartyFrame" then
+        for _, f in ipairs(CompactPartyFrame.memberUnitFrames) do
+            if f.unit == frame.unit then
+                blizzFrame = f
+            end
+        end
+    elseif frame.name == "RaidFrame" then
+        for _, f in ipairs(CompactRaidFrame.memberUnitFrames) do
+            if f.unit == frame.unit then
+                blizzFrame = f
+            end
+        end
+    end
+
+    frame.pool:ReleaseAll()
     if dbEntry.Buffs.Enabled then
-        UpdateAuras(groupFrame, "Buffs")
+        UpdateAuras(frame, blizzFrame, "Buffs")
     end
     if dbEntry.Debuffs.Enabled then
-        UpdateAuras(groupFrame, "Debuffs")
+        UpdateAuras(frame, blizzFrame,  "Debuffs")
     end
     if dbEntry.Defensives.Enabled then
-        UpdateAuras(groupFrame, "Defensives")
+        UpdateAuras(frame, blizzFrame,  "Defensives")
     end
 end
 
-function GF.UpdateAuras(groupFrame)
-    for i, frame in ipairs(groupFrame.frames) do
+function GF.UpdateAuras(groupFramesContainer)
+    for _, frame in ipairs(groupFramesContainer.frames) do
         UpdateAllAuras(frame)
     end
 end
@@ -464,11 +570,11 @@ end
 
 ---------------------------------------------------------------------------------------------------------------------------------
 
-function GF.UpdateFrame(groupFrame)
+function GF.UpdateFrame(groupFramesContainer)
     if InCombatLockdown() then return end
-    local dbEntry = CUI.DB.profile.GroupFrames[groupFrame.name]
+    local dbEntry = CUI.DB.profile.GroupFrames[groupFramesContainer.name]
 
-    for _, frame in ipairs(groupFrame.frames) do
+    for _, frame in ipairs(groupFramesContainer.frames) do
         frame:SetSize(dbEntry.Width, dbEntry.Height)
 
         frame.HealthBar:SetStatusBarTexture(dbEntry.Texture)
@@ -498,11 +604,11 @@ function GF.UpdateFrame(groupFrame)
         end
     end
 
-    Util.CheckAnchorFrame(groupFrame, dbEntry)
+    Util.CheckAnchorFrame(groupFramesContainer, dbEntry)
 
-    groupFrame:ClearAllPoints()
-    groupFrame:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
-    GF.SortGroupFrames(groupFrame)
+    groupFramesContainer:ClearAllPoints()
+    groupFramesContainer:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
+    GF.SortGroupFrames(groupFramesContainer)
 end
 
 ---------------------------------------------------------------------------------------------------------------------------------
@@ -556,11 +662,11 @@ local function RoleComp(a, b)
 end
 
 -- TODO : Istället för SetPoint använd SetAttribute("Unit", ...)?
-function GF.SortGroupFrames(groupFrame)
+function GF.SortGroupFrames(groupFramesContainer)
     if InCombatLockdown() then return end
-    local dbEntry = CUI.DB.profile.GroupFrames[groupFrame.name]
+    local dbEntry = CUI.DB.profile.GroupFrames[groupFramesContainer.name]
 
-    table.sort(groupFrame.frames, RoleComp)
+    table.sort(groupFramesContainer.frames, RoleComp)
 
     local aF = dbEntry.AnchorFrame
     local aP = dbEntry.AnchorPoint
@@ -573,28 +679,28 @@ function GF.SortGroupFrames(groupFrame)
     local pX = dbEntry.PosX
     local pY = dbEntry.PosY
     local rL = dbEntry.RowLength
-    for i, frame in ipairs(groupFrame.frames) do
+    for i, frame in ipairs(groupFramesContainer.frames) do
         Util.PositionFromIndex(i-1, frame, aF, aP, aRP, dirH, dirV, width, height, padding, pX, pY, rL)
     end
 end
 
 local lastNumMem = 0
-local function UpdateGroupFrames(groupFrame)
+local function UpdateGroupFrames(groupFramesContainer)
     local numMem = GetNumGroupMembers()
     if numMem == 0 then return end
 
-    local groupType = groupFrame.groupType
+    local groupType = groupFramesContainer.groupType
 
     if groupType == "raid" and not IsInRaid() then return end
     if groupType == "party" and (not IsInGroup() or IsInRaid()) then return end
 
-    GF.UpdateFrame(groupFrame)
+    GF.UpdateFrame(groupFramesContainer)
 
     for i=1, numMem do
         local unit = groupType..i
         if groupType == "party" and i == numMem then unit = "player" end
 
-        local frame = groupFrame[unit]
+        local frame = groupFramesContainer[unit]
 
         UpdateAll(frame)
         UpdateAllAuras(frame)
@@ -604,7 +710,7 @@ local function UpdateGroupFrames(groupFrame)
 
     lastNumMem = numMem
 
-    GF.SortGroupFrames(groupFrame)
+    GF.SortGroupFrames(groupFramesContainer)
 end
 
 ---------------------------------------------------------------------------------------------------------------------------------
@@ -781,6 +887,7 @@ function GF.Load()
     partyFrame:RegisterEvent("GROUP_LEFT")
     partyFrame:RegisterEvent("GROUP_FORMED")
     partyFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
+    partyFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
     partyFrame:SetScript("OnEvent", function(self, event)
         if not IsInGroup() or IsInRaid() then return end
 
@@ -790,7 +897,10 @@ function GF.Load()
             GF.SortGroupFrames(self)
         elseif event == "GROUP_JOINED" or event == "GROUP_LEFT" or event == "GROUP_FORMED" then
             lastNumMem = 0
+        elseif event == "PLAYER_REGEN_ENABLED" then
+            GF.UpdateAuras(self)
         elseif event == "PLAYER_REGEN_DISABLED" then
+            GF.UpdateAuras(self)
             if GetNumGroupMembers() ~= lastNumMem then
                 UpdateGroupFrames(self)
             end
@@ -820,6 +930,7 @@ function GF.Load()
     raidFrame:RegisterEvent("GROUP_LEFT")
     raidFrame:RegisterEvent("GROUP_FORMED")
     raidFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
+    raidFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
     raidFrame:SetScript("OnEvent", function(self, event)
         if not IsInRaid() then return end
 
@@ -829,7 +940,10 @@ function GF.Load()
             GF.SortGroupFrames(self)
         elseif event == "GROUP_JOINED" or event == "GROUP_LEFT" or event == "GROUP_FORMED" then
             lastNumMem = 0
+        elseif event == "PLAYER_REGEN_ENABLED" then
+            GF.UpdateAuras(self)
         elseif event == "PLAYER_REGEN_DISABLED" then
+            GF.UpdateAuras(self)
             if GetNumGroupMembers() ~= lastNumMem then
                 UpdateGroupFrames(self)
             end

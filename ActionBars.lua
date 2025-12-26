@@ -8,8 +8,6 @@ local Util = CUI.Util
 ---------------------------------------------------------------------------------------------------
 
 local function HideBlizzard()
-    Hide.HideFrame(BagsBar)
-    Hide.HideFrame(StanceBar)
     Hide.HideFrame(TalkingHeadFrame)
 end
 
@@ -30,6 +28,16 @@ local microMenuButtons = {
     MainMenuMicroButton,
 }
 
+local bagsBarButtons = {
+    BagBarExpandToggle,
+    CharacterBag0Slot,
+    CharacterBag1Slot,
+    CharacterBag2Slot,
+    CharacterBag3Slot,
+    CharacterReagentBag0Slot,
+    MainMenuBarBackpackButton,
+}
+
 AB.ActionBars = {
     [MainActionBar] = "ActionButton",
     [MultiBarBottomLeft] = "MultiBarBottomLeftButton",
@@ -40,6 +48,7 @@ AB.ActionBars = {
     [MultiBar6] = "MultiBar6Button",
     [MultiBar7] = "MultiBar7Button",
     [PetActionBar] = "PetActionButton",
+    [StanceBar] = "StanceButton",
 }
 
 ---------------------------------------------------------------------------------------------------
@@ -59,6 +68,9 @@ function AB.UpdateBar(bar)
     local scale = _G[bar:GetName().."ButtonContainer1"]:GetScale()
     local width = _G[bar:GetName().."ButtonContainer1"]:GetWidth()
     local padding = dbEntry.Padding
+
+    if bar.numButtonsShowable == 0 then bar.numButtonsShowable = 10 end
+
     if bar.isHorizontal then
         bar:SetWidth(scale * ((math.ceil(bar.numButtonsShowable / bar.numRows) * (width + padding)) - padding))
         bar:SetHeight(scale * ((width + padding) * bar.numRows - padding))
@@ -74,9 +86,11 @@ function AB.UpdateBar(bar)
         local container = _G[bar:GetName().."ButtonContainer"..i]
 
         if bar.isHorizontal then
-            Util.PositionFromIndex(i-1, container, bar, "TOPLEFT", "TOPLEFT", "RIGHT", "DOWN", container:GetWidth(), container:GetHeight(), dbEntry.Padding, 0, 0, math.ceil(bar.numButtonsShowable / bar.numRows))
+            Util.PositionFromIndex(i-1, container, bar, "TOPLEFT", "TOPLEFT", "RIGHT", "DOWN",
+                container:GetWidth(), container:GetHeight(), dbEntry.Padding, 0, 0, math.ceil(bar.numButtonsShowable / bar.numRows))
         else
-            Util.PositionFromIndex(i-1, container, bar, "TOPLEFT", "TOPLEFT", "RIGHT", "DOWN", container:GetWidth(), container:GetHeight(), dbEntry.Padding, 0, 0, bar.numRows)
+            Util.PositionFromIndex(i-1, container, bar, "TOPLEFT", "TOPLEFT", "RIGHT", "DOWN",
+                container:GetWidth(), container:GetHeight(), dbEntry.Padding, 0, 0, bar.numRows)
         end
 
         local kb = dbEntry.Keybind
@@ -200,11 +214,22 @@ local function AddHooks()
             end
         end)
     end
+
+    MicroMenu:HookScript("OnEnter", function() Util.FadeFrame(MicroMenu, "IN", 1, 0.3) end)
+    MicroMenu:HookScript("OnLeave", function() AB.UpdateAlpha(MicroMenu) end)
     for _, button in pairs(microMenuButtons) do
         button:HookScript("OnEnter", function() Util.FadeFrame(MicroMenu, "IN", 1, 0.3) end)
         button:HookScript("OnLeave", function() AB.UpdateAlpha(MicroMenu) end)
     end
     AB.UpdateAlpha(MicroMenu)
+
+    BagsBar:HookScript("OnEnter", function() Util.FadeFrame(BagsBar, "IN", 1, 0.3) end)
+    BagsBar:HookScript("OnLeave", function() AB.UpdateAlpha(BagsBar) end)
+    for _, button in pairs(bagsBarButtons) do
+        button:HookScript("OnEnter", function() Util.FadeFrame(BagsBar, "IN", 1, 0.3) end)
+        button:HookScript("OnLeave", function() AB.UpdateAlpha(BagsBar) end)
+    end
+    AB.UpdateAlpha(BagsBar)
 end
 
 local function StyleXPBar()

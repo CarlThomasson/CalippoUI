@@ -110,10 +110,8 @@ function Util.UnitPowerPercent(unit, powerType)
     return string.format("%0.0f", UnitPowerPercent(unit, 0, true, CurveConstants.ScaleTo100)).."%"
 end
 
-function Util.UnitHealthText(unit)
-    local health = UnitHealth(unit)
-    local rounded = AbbreviateLargeNumbers(health)
-    return rounded
+function Util.SetUnitHealthText(text, unit)
+    text:SetFormattedText("%s", AbbreviateNumbers(UnitHealth(unit)))
 end
 
 function Util.UnitPowerText(unit)

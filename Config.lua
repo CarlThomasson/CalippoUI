@@ -435,17 +435,17 @@ local function CreateActionBarFramePage(container, actionBar)
     scrollFrame:SetLayout("List")
     container:AddChild(scrollFrame)
 
-    if actionBar ~= "MicroMenu" then
-        local paddingGroup = CreateInlineGroup(scrollFrame, "Padding")
-
-        CreateSlider(paddingGroup, "Padding (Overrides padding from edit mode)", 0, 15, 1, dbEntry.Padding,
-            function(self, event, value)
-                dbEntry.Padding = value
-                AB.UpdateBar(frame)
-            end, 1)
-    end
-
     CreateAlphaGroup(scrollFrame, dbEntry, AB.UpdateAlpha, frame)
+
+    if actionBar == "MicroMenu" or actionBar == "BagsBar" then return end
+
+    local paddingGroup = CreateInlineGroup(scrollFrame, "Padding")
+
+    CreateSlider(paddingGroup, "Padding (Overrides padding from edit mode)", 0, 15, 1, dbEntry.Padding,
+        function(self, event, value)
+            dbEntry.Padding = value
+            AB.UpdateBar(frame)
+        end, 1)
 
     local anchorGroup = CreateInlineGroup(scrollFrame, "Anchor")
 
@@ -509,18 +509,24 @@ local function CreateActionBarTabs(container, actionBar)
         if type == "Frame" then
             CreateActionBarFramePage(container, actionBar)
         else
-            if actionBar == "MicroMenu" then return end
             CreateActionBarTextPage(container, actionBar, type)
         end
     end
 
+    local tabs
+    if actionBar == "MicroMenu" or actionBar == "BagsBar" or actionBar == "StanceBar" then
+        tabs = {{text="Frame", value="Frame"}}
+    else
+        tabs = {{text="Frame", value="Frame"},
+                {text="Cooldown", value="Cooldown"},
+                {text="Charges", value="Charges"},
+                {text="Keybind", value="Keybind"},
+                {text="Macro", value="Macro"},}
+    end
+
     local tabGroup = AceGUI:Create("TabGroup")
     tabGroup:SetLayout("Fill")
-    tabGroup:SetTabs({{text="Frame", value="Frame"}, 
-                    {text="Cooldown", value="Cooldown"},
-                    {text="Charges", value="Charges"},
-                    {text="Keybind", value="Keybind"},
-                    {text="Macro", value="Macro"},})
+    tabGroup:SetTabs(tabs)
     tabGroup:SetCallback("OnGroupSelected", SelectGroup)
     tabGroup:SelectTab("Frame")
 
@@ -544,7 +550,9 @@ local function CreateActionBarSettings(container)
                     {text="Action Bar 7", value="MultiBar6"},
                     {text="Action Bar 8", value="MultiBar7"},
                     {text="Pet Action Bar", value="PetActionBar"},
-                    {text="Micro Menu", value="MicroMenu"},})
+                    {text="Stance Bar", value="StanceBar"},
+                    {text="Micro Menu", value="MicroMenu"},
+                    {text="Bags Bar", value="BagsBar"},})
     tabGroup:SetCallback("OnGroupSelected", SelectGroup)
     tabGroup:SelectTab("MainActionBar")
 
@@ -1213,6 +1221,17 @@ end
 
 local function CreateSecondaryResourceBarPage(container)
     local dbEntry = CUI.DB.profile.ResourceBar.PersonalResourceBar
+    local frame = CUI_SecondaryPowerBar
+
+    local scrollFrame = AceGUI:Create("ScrollFrame")
+    scrollFrame:SetLayout("List")
+    container:AddChild(scrollFrame)
+
+    -- CreateAnchorGroup(scrollFrame, dbEntry, RB.UpdatePersonalBar, frame)
+end
+
+local function CreatePersonalResourceBarPage(container)
+    local dbEntry = CUI.DB.profile.ResourceBar.PersonalResourceBar
     local frame = PersonalResourceDisplayFrame
 
     local scrollFrame = AceGUI:Create("ScrollFrame")
@@ -1229,13 +1248,16 @@ local function CreateResourceBarSettings(container)
             CreatePrimaryResourceBarPage(container)
         elseif resource == "Secondary" then
             CreateSecondaryResourceBarPage(container)
+        elseif resource == "PersonalResourceBar" then
+            CreatePersonalResourceBarPage(container)
         end
     end
 
     local tabGroup = AceGUI:Create("TabGroup")
     tabGroup:SetLayout("Fill")
     tabGroup:SetTabs({{text="Primary", value="Primary"},
-                    {text="Secondary", value="Secondary"},})
+                    {text="Secondary", value="Secondary"},
+                    {text="Personal Resource Bar", value="PersonalResourceBar"},})
     tabGroup:SetCallback("OnGroupSelected", SelectGroup)
     tabGroup:SelectTab("Primary")
 

@@ -130,6 +130,12 @@ local defaults = {
             MicroMenu = {
 
             },
+            StanceBar = {
+
+            },
+            BagsBar = {
+
+            },
         },
         UnitFrames = {
             Enabled = true,
@@ -286,11 +292,11 @@ local defaults = {
                 Width = 174,
                 Height = 50,
 
-                AnchorFrame = "CUI_PowerBar",
-                AnchorPoint = "TOPRIGHT",
-                AnchorRelativePoint = "TOPLEFT",
-                PosX = -2,
-                PosY = 0,
+                AnchorFrame = "UIParent",
+                AnchorPoint = "CENTER",
+                AnchorRelativePoint = "CENTER",
+                PosX = -300,
+                PosY = -200,
 
                 LeaderIcon = {
                     Enabled = true,
@@ -318,11 +324,11 @@ local defaults = {
                 Width = 174,
                 Height = 50,
 
-                AnchorFrame = "CUI_PowerBar",
-                AnchorPoint = "TOPLEFT",
-                AnchorRelativePoint = "TOPRIGHT",
-                PosX = 2,
-                PosY = 0,
+                AnchorFrame = "UIParent",
+                AnchorPoint = "CENTER",
+                AnchorRelativePoint = "CENTER",
+                PosX = 300,
+                PosY = -200,
 
                 LeaderIcon = {
                     Enabled = true,
@@ -742,35 +748,58 @@ local defaults = {
             Width = 200,
             Height = 15,
 
+            Texture = defaultTexture,
+
             AnchorFrame = "EssentialCooldownViewer",
             AnchorPoint = "BOTTOM",
             AnchorRelativePoint = "TOP",
             PosX = 0,
             PosY = 2,
-            
+
             Text = {
                 Enabled = true,
                 Font = defaultFont,
                 Outline = "",
                 Size = 14,
-                
+
                 ShowManaPercent = true,
-                
+
                 AnchorPoint = "CENTER",
                 AnchorRelativePoint = "CENTER",
                 PosX = 0,
                 PosY = -1,
             },
 
-            Texture = defaultTexture,
-
             PersonalResourceBar = {
+                Enabled = true,
+
                 AnchorFrame = "CUI_PowerBar",
                 AnchorPoint = "BOTTOM",
                 AnchorRelativePoint = "TOP",
                 PosX = 0,
-                PosY = 3,
-            }
+                PosY = 20,
+            },
+
+            SecondaryResourceBar = {
+                Enabled = true,
+
+                Alpha = 1,
+                CombatAlpha = 1,
+
+                MatchWidth = true,
+                Width = 200,
+                Height = 15,
+
+                Padding = 2,
+
+                Texture = defaultTexture,
+
+                AnchorFrame = "CUI_PowerBar",
+                AnchorPoint = "BOTTOM",
+                AnchorRelativePoint = "TOP",
+                PosX = 0,
+                PosY = 2,
+            },
         },
         CooldownManager = {
             Enabled = true,
