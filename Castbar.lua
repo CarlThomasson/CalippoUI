@@ -41,25 +41,16 @@ end
 
 ---------------------------------------------------------------------------------------------------
 
-local function GetCastOrChannelInfo(unit)
-    local nameCast, _, _, startTimeMSCast, endTimeMSCast = UnitCastingInfo("player")
-    local nameChannel, _, _, startTimeMSChannel, endTimeMSChannel = UnitChannelInfo("player")
-
-    if startTimeMSCast then
-        return nameCast, false, startTimeMSCast, endTimeMSCast
-    elseif startTimeMSChannel then
-        return nameChannel, true, startTimeMSChannel, endTimeMSChannel
+local function UpdateCastBar(castBar, isChannel, isEmpower)
+    local duration
+    if isEmpower then
+        duration = UnitChannelDuration("player")
     else
-        return nil, nil
-    end
-end
-
-local function UpdateCastBar(castBar)
-    local name, isChannel, startTime, endTime = GetCastOrChannelInfo("player")
-
-    if not startTime then
-        castBar:Hide()
-        return
+        if isChannel then
+            duration = UnitChannelDuration("player")
+        else
+            duration = UnitCastingDuration("player")
+        end
     end
 
     local direction
@@ -69,8 +60,7 @@ local function UpdateCastBar(castBar)
         direction = 0
     end
 
-    castBar:SetTimerDuration(castBar.duration, 0, direction)
-    castBar.duration:SetTimeSpan(startTime/1000, endTime/1000)
+    castBar:SetTimerDuration(duration, 0, direction)
 
     castBar.startTime = startTime
     castBar.endTime = endTime
@@ -90,11 +80,8 @@ local function SetupCastBar()
 
     CB.UpdateFrame(castBar)
 
-    castBar.duration = C_DurationUtil.CreateDuration()
-
     castBar:RegisterUnitEvent("UNIT_SPELLCAST_START", "player")
     castBar:RegisterUnitEvent("UNIT_SPELLCAST_STOP", "player")
-    castBar:RegisterUnitEvent("UNIT_SPELLCAST_FAILED", "player")
     castBar:RegisterUnitEvent("UNIT_SPELLCAST_INTERRUPTED", "player")
     castBar:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_START", "player")
     castBar:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP", "player")
@@ -103,9 +90,17 @@ local function SetupCastBar()
     castBar:RegisterUnitEvent("UNIT_SPELLCAST_EMPOWER_UPDATE", "player")
     castBar:RegisterUnitEvent("UNIT_SPELLCAST_EMPOWER_STOP", "player")
     castBar:SetScript("OnEvent", function(self, event, ...)
-        if event == "UNIT_SPELLCAST_START"  or event == "UNIT_SPELLCAST_CHANNEL_START" or event == "UNIT_SPELLCAST_CHANNEL_UPDATE" then
-            UpdateCastBar(self)
-        elseif event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP" then
+        if event == "UNIT_SPELLCAST_START" then
+            UpdateCastBar(self, false)
+        elseif event == "UNIT_SPELLCAST_EMPOWER_START" then
+            UpdateCastBar(self, false, true)
+        elseif event == "UNIT_SPELLCAST_CHANNEL_START"
+            or event == "UNIT_SPELLCAST_CHANNEL_UPDATE" then
+            UpdateCastBar(self, true)
+        elseif event == "UNIT_SPELLCAST_STOP"
+            or event == "UNIT_SPELLCAST_CHANNEL_STOP"
+            or event == "UNIT_SPELLCAST_INTERRUPTED"
+            or event == "UNIT_SPELLCAST_EMPOWER_STOP" then
             self:Hide()
         end
     end)

@@ -142,8 +142,8 @@ local function UpdateRunes(frame)
     local color = frame.Power.Color
     local altColor = frame.Power.AltColor
 
-    for i, powerFrame in ipairs(frame.frames) do
-        if i > frame.PowerMax then return end
+    for i=1, frame.PowerMax do
+        local powerFrame = frame.frames[i]
         local start, duration, runeReady = GetRuneCooldown(runeOrder[i])
         if runeReady then
             powerFrame:SetMinMaxValues(0, 1)
@@ -169,8 +169,8 @@ local function UpdateEssence(frame)
     end
 
     frame.LastPower = power
-    for i, powerFrame in ipairs(frame.frames) do
-        if i > frame.PowerMax then return end
+    for i=1, frame.PowerMax do
+        local powerFrame = frame.frames[i]
         if i == power + 1 then
             powerFrame.duration:SetTimeFromStart(frame.LastPowerTime, 1/basePowerRegen)
             powerFrame:SetTimerDuration(powerFrame.duration)
@@ -202,8 +202,8 @@ local function UpdateSoulShards(frame)
     local color = frame.Power.Color
     local altColor = frame.Power.AltColor
 
-    for i, powerFrame in ipairs(frame.frames) do
-        if i > frame.PowerMax then return end
+    for i=1, frame.PowerMax do
+        local powerFrame = frame.frames[i]
         if i == wholeShards + 1 then
             powerFrame:SetValue(partsOfShard)
             powerFrame:SetStatusBarColor(altColor.r, altColor.g, altColor.b)
@@ -227,8 +227,8 @@ end
 local function UpdateGeneric(frame)
     if frame.Power.Type == "MultiBar" then
         local power = UnitPower("player", frame.Power.Value)
-        for i, powerFrame in ipairs(frame.frames) do
-            if i > frame.PowerMax then return end
+    for i=1, frame.PowerMax do
+            local powerFrame = frame.frames[i]
             if i <= power then
                 powerFrame:SetValue(1)
             else
@@ -329,8 +329,10 @@ local function UpdateSecondaryPowerFrame(frame)
     if not powerType then
         powerType = powerTypes[currentSpecName]
         if not powerType then
-            for _, powerFrame in ipairs(frame.frames) do
-                powerFrame:Hide()
+            frame.Power = {}
+            frame.Power.PowerType = nil
+            for i=1, #frame.frames do
+                frame.frames[i]:Hide()
             end
             return
         else
@@ -366,7 +368,8 @@ local function UpdateSecondaryPowerFrame(frame)
     if frame.Power.Type == "MultiBar" then
         local padding = dbEntry.Padding
         local frameWidth = (width/frame.PowerMax) - padding + (padding/frame.PowerMax)
-        for i, powerFrame in ipairs(frame.frames) do
+        for i=1, #frame.frames do
+            local powerFrame = frame.frames[i]
             if i > frame.PowerMax then
                 powerFrame:Hide()
             else
@@ -393,7 +396,8 @@ local function UpdateSecondaryPowerFrame(frame)
 
         end
     elseif frame.PowerType == "SingleBar" then
-        for i, powerFrame in ipairs(frame.frames) do
+        for i=1, #frame.frames do
+            local powerFrame = frame.frames[i]
             if i == 1 then
                 powerFrame:Show()
                 powerFrame:SetSize(width, height)
@@ -431,7 +435,8 @@ function RB.UpdateSecondaryPowerBar(frame)
             frame:SetSize(dbEntry.Width, dbEntry.Height)
         end
 
-        for _, powerFrame in ipairs(frame.frames) do
+        for i=1, #frame.frames do
+            local powerFrame = frame.frames[i]
             powerFrame:SetStatusBarTexture(dbEntry.Texture)
             powerFrame.Background:SetTexture(dbEntry.Texture)
         end
@@ -439,8 +444,8 @@ function RB.UpdateSecondaryPowerBar(frame)
         UpdateSecondaryPowerFrame(frame)
     else
         frame:UnregisterAllEvents()
-        for _, powerFrame in ipairs(frame.frames) do
-            powerFrame:Hide()
+        for i=1, #frame.frames do
+            frame.frames[i]:Hide()
         end
     end
 end
@@ -453,7 +458,7 @@ local function SetupPowerBar()
     powerBar:SetStatusBarTexture(CUI.DB.profile.ResourceBar.Texture)
 
     local _, powerType = UnitPowerType("player")
-    powerBar.powerType = powerType
+    powerBar.PowerType = powerType
 
     Util.AddStatusBarBackground(powerBar)
     Util.AddBorder(powerBar)
@@ -475,9 +480,11 @@ local function SetupPowerBar()
     powerBar:RegisterEvent("PLAYER_REGEN_ENABLED")
     powerBar:RegisterEvent("PLAYER_REGEN_DISABLED")
     powerBar:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
-    powerBar:SetScript("OnEvent", function(self, event, ...)
+    powerBar:SetScript("OnEvent", function(self, event, unit, powerType)
         if event == "UNIT_POWER_UPDATE" then
-            UpdatePower(self)
+            if self.PowerType == powerType then
+                UpdatePower(self)
+            end
         elseif event == "UNIT_MAXPOWER" then
             UpdateMaxPower(self)
         elseif event == "PLAYER_REGEN_ENABLED" then
@@ -485,7 +492,11 @@ local function SetupPowerBar()
         elseif event == "PLAYER_REGEN_DISABLED" then
             RB.UpdateAlpha(self, true)
         elseif event == "ACTIVE_TALENT_GROUP_CHANGED" then
-            C_Timer.After(0.5, function() UpdatePowerColor(self) end)
+            C_Timer.After(0.5, function()
+                UpdatePowerColor(self)
+                local _, powerType = UnitPowerType("player")
+                self.PowerType = powerType
+            end)
         end
     end)
 
@@ -512,10 +523,11 @@ local function SetupSecondaryPowerBar()
         table.insert(secondaryPowerContainer.frames, frame)
     end
 
-    secondaryPowerContainer:SetScript("OnEvent", function(self, event)
+    secondaryPowerContainer:SetScript("OnEvent", function(self, event, _, powerType)
         if event == "UNIT_POWER_UPDATE" then
-            if not self.Power then return end
-            self.Power.Func(self)
+            if self.Power.Name == powerType then
+                self.Power.Func(self)
+            end
         elseif event == "RUNE_POWER_UPDATE" then
             UpdateRunes(self)
         elseif event == "UNIT_MAXPOWER" then

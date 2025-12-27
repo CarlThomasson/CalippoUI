@@ -153,43 +153,51 @@ function UF.UpdateCastBarFrame(frame)
     if frame == "BossFrame" then UpdateBossFrameCastBarFrame() return end
 
     local dbEntry = CUI.DB.profile.UnitFrames[frame.name].CastBar
-    local castBar = frame.CastBar
+    local castBarContainer = frame.CastBar
+    local castBar = castBarContainer.Bar
 
     if frame.name == "BossFrame" then dbEntry.AnchorFrame = frame:GetName() end
 
-    castBar:SetSize(dbEntry.Width, dbEntry.Height)
+    castBarContainer:SetSize(dbEntry.Width, dbEntry.Height)
 
     if dbEntry.ShowIcon then
-        castBar.IconContainer:Show()
-        castBar.IconContainer:SetWidth(dbEntry.Height)
-        castBar.Bar:SetPoint("TOPLEFT", castBar.IconContainer, "TOPRIGHT")
+        castBarContainer.IconContainer:Show()
+        castBarContainer.IconContainer:SetWidth(dbEntry.Height)
+        castBar:SetPoint("TOPLEFT", castBarContainer.IconContainer, "TOPRIGHT")
     else
-        castBar.IconContainer:Hide()
-        castBar.Bar:SetPoint("TOPLEFT", castBar, "TOPLEFT")
+        castBarContainer.IconContainer:Hide()
+        castBar:SetPoint("TOPLEFT", castBarContainer, "TOPLEFT")
     end
 
-    Util.CheckAnchorFrame(frame, dbEntry)
+    castBar:SetStatusBarTexture(dbEntry.Texture)
+    castBar.Background:SetTexture(dbEntry.Texture)
 
-    castBar:ClearAllPoints()
+    Util.CheckAnchorFrame(castBarContainer, dbEntry)
+    castBarContainer:ClearAllPoints()
     if dbEntry.MatchWidth then
-        castBar:SetPoint("TOPLEFT", dbEntry.AnchorFrame, "BOTTOMLEFT", 0, dbEntry.PosY)
-        castBar:SetPoint("TOPRIGHT", dbEntry.AnchorFrame, "BOTTOMRIGHT", 0, dbEntry.PosY)
+        castBarContainer:SetPoint("TOPLEFT", dbEntry.AnchorFrame, "BOTTOMLEFT", 0, dbEntry.PosY)
+        castBarContainer:SetPoint("TOPRIGHT", dbEntry.AnchorFrame, "BOTTOMRIGHT", 0, dbEntry.PosY)
     else
-        castBar:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
+        castBarContainer:SetPoint(dbEntry.AnchorPoint, dbEntry.AnchorFrame, dbEntry.AnchorRelativePoint, dbEntry.PosX, dbEntry.PosY)
     end
 
     if dbEntry.Enabled then
         local unit = frame.unit
-        castBar:RegisterUnitEvent("UNIT_SPELLCAST_START", unit)
-        castBar:RegisterUnitEvent("UNIT_SPELLCAST_STOP", unit)
-        castBar:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_START", unit)
-        castBar:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_UPDATE", unit)
-        castBar:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP", unit)
-        castBar:RegisterEvent("PLAYER_FOCUS_CHANGED")
-        castBar:RegisterEvent("PLAYER_TARGET_CHANGED")
+        castBarContainer:RegisterUnitEvent("UNIT_SPELLCAST_START", unit)
+        castBarContainer:RegisterUnitEvent("UNIT_SPELLCAST_STOP", unit)
+        castBarContainer:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_START", unit)
+        castBarContainer:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_UPDATE", unit)
+        castBarContainer:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP", unit)
+        castBarContainer:RegisterUnitEvent("UNIT_SPELLCAST_EMPOWER_START", unit)
+        castBarContainer:RegisterUnitEvent("UNIT_SPELLCAST_EMPOWER_STOP", unit)
+        if unit == "focus" then
+            castBarContainer:RegisterEvent("PLAYER_FOCUS_CHANGED")
+        elseif unit == "target" then
+            castBarContainer:RegisterEvent("PLAYER_TARGET_CHANGED")
+        end
     else
-        castBar:Hide()
-        castBar:UnregisterAllEvents()
+        castBarContainer:Hide()
+        castBarContainer:UnregisterAllEvents()
     end
 end
 
@@ -465,25 +473,25 @@ end
 
 -------------------------------------------------------------------------------------------------
 
-local function GetCastOrChannelDuration(unit)
-    local castingDuration = UnitCastingDuration(unit)
-    if castingDuration then return false, castingDuration, UnitCastingInfo(unit) end
-
-    local channelDuration = UnitChannelDuration(unit)
-    if channelDuration then return true, channelDuration, UnitChannelInfo(unit) end
-
-    return nil
-end
-
-local function UpdateCastBar(castBarContainer)
-    local isChannel, duration, name, _, icon, _, _, _, notInterruptible = GetCastOrChannelDuration(castBarContainer.unit)
+local function UpdateCastBar(castBarContainer, isChannel, isEmpower)
+    local duration, name, icon, notInterruptible
     local castBar = castBarContainer.Bar
+    local unit = castBarContainer.unit
 
-    if not duration then
-        castBarContainer.isCasting = false
-        castBarContainer:Hide()
-        return
+    if isEmpower then
+        name, _, icon, _, _, _, notInterruptible = UnitChannelInfo(unit)
+        duration = UnitChannelDuration(unit)
+    else
+        if isChannel then
+            name, _, icon, _, _, _, notInterruptible = UnitChannelInfo(unit)
+            duration = UnitChannelDuration(unit)
+        else
+            name, _, icon, _, _, _, _, notInterruptible = UnitCastingInfo(unit)
+            duration = UnitCastingDuration(unit)
+        end
     end
+
+    if not duration then return end
 
     castBarContainer.IconContainer.Icon:SetTexture(icon)
     castBar.Name:SetText(name)
@@ -491,8 +499,6 @@ local function UpdateCastBar(castBarContainer)
     local dbEntry = CUI.DB.profile.UnitFrames[castBarContainer.name].CastBar
     local color = dbEntry.Color
     local colorNotInt = dbEntry.ColorNotInterruptiple
-
-    print(notInterruptible)
 
     castBar:GetStatusBarTexture():SetVertexColorFromBoolean(notInterruptible,
         CreateColor(colorNotInt.r, colorNotInt.g, colorNotInt.b), CreateColor(color.r, color.g, color.b))
@@ -509,9 +515,8 @@ local function UpdateCastBar(castBarContainer)
 
     castBar:SetTimerDuration(duration, 0, direction)
 
-    castBar:SetScript("OnUpdate", function(self)
-        local castTime = duration:GetRemainingDuration()
-        self.Time:SetText(string.format("%.1f", castTime))
+    castBarContainer.Ticker = C_Timer.NewTicker(0.1, function()
+        castBar.Time:SetText(string.format("%.1f", duration:GetRemainingDuration()))
     end)
 
     castBarContainer.isCasting = true
@@ -519,6 +524,7 @@ local function UpdateCastBar(castBarContainer)
 end
 
 function SetupCastBar(unitFrame)
+    local dbEntry = CUI.DB.profile.UnitFrames[unitFrame.name].CastBar
     local unit = unitFrame.unit
 
     local castBarContainer = CreateFrame("Frame", nil, unitFrame)
@@ -543,6 +549,7 @@ function SetupCastBar(unitFrame)
     local castBar = CreateFrame("Statusbar", nil, castBarContainer)
     castBar:SetParentKey("Bar")
     castBar:SetPoint("BOTTOMRIGHT", castBarContainer, "BOTTOMRIGHT")
+    castBar:SetStatusBarTexture(dbEntry.Texture)
 
     Util.AddStatusBarBackground(castBar)
     Util.AddBorder(castBar)
@@ -559,12 +566,19 @@ function SetupCastBar(unitFrame)
     UF.UpdateCastBarTexts(unitFrame)
 
     castBarContainer:SetScript("OnEvent", function(self, event)            
-        if event == "UNIT_SPELLCAST_START" or
-            event == "UNIT_SPELLCAST_CHANNEL_START" or
-            event == "UNIT_SPELLCAST_STOP" or
-            event == "UNIT_SPELLCAST_CHANNEL_STOP" or
-            event == "UNIT_SPELLCAST_CHANNEL_UPDATE" then
-            UpdateCastBar(self)
+        if event == "UNIT_SPELLCAST_START" then
+            UpdateCastBar(self, false)
+        elseif event == "UNIT_SPELLCAST_EMPOWER_START" then
+            UpdateCastBar(self, false, true)
+        elseif event == "UNIT_SPELLCAST_CHANNEL_START"
+            or event == "UNIT_SPELLCAST_CHANNEL_UPDATE" then
+            UpdateCastBar(self, true)
+        elseif event == "UNIT_SPELLCAST_STOP"
+            or event == "UNIT_SPELLCAST_CHANNEL_STOP"
+            or event == "UNIT_SPELLCAST_INTERRUPTED"
+            or event == "UNIT_SPELLCAST_EMPOWER_STOP" then
+            self:Hide()
+            self.Ticker:Cancel()
         elseif event == "PLAYER_FOCUS_CHANGED" or event == "PLAYER_TARGET_CHANGED" then
             UpdateCastBar(self)
         end

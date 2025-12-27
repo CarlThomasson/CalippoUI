@@ -190,11 +190,13 @@ local function UpdateAuras(frame, blizzFrame, type)
     end
 
     if type == "Buffs" then
-        for _, f in ipairs(blizzFrame.buffFrames) do
+        for i=1, #blizzFrame.buffFrames do
+            local f = blizzFrame.buffFrames[i]
             if f:IsShown() then HandleAura(f.auraInstanceID) end
         end
     elseif type == "Debuffs" then
-        for _, f in ipairs(blizzFrame.debuffFrames) do
+        for i=1, #blizzFrame.debuffFrames do
+            local f = blizzFrame.debuffFrames[i]
             if f:IsShown() then HandleAura(f.auraInstanceID) end
         end
     elseif type == "Defensives" then
@@ -205,40 +207,47 @@ end
 function UpdateAllAuras(frame)
     local dbEntry = CUI.DB.profile.GroupFrames[frame.name]
 
-    local blizzFrame
     if frame.name == "PartyFrame" then
-        for _, f in ipairs(CompactPartyFrame.memberUnitFrames) do
-            if f.unit == frame.unit then
-                blizzFrame = f
-                break
+        if frame.BlizzFrame and frame.BlizzFrame.unit == frame.unit then
+        else
+            for i=1, #CompactPartyFrame.memberUnitFrames do
+                local f = CompactPartyFrame.memberUnitFrames[i]
+                if f.unit == frame.unit then
+                    frame.BlizzFrame = f
+                    break
+                end
             end
         end
     elseif frame.name == "RaidFrame" then
         if true then return end
 
-        -- TODO
-        for _, f in ipairs(CompactRaidFrameContainer.memberRaidFrames) do
-            if f.unit == frame.unit then
-                blizzFrame = f
-                break
+        if frame.BlizzFrame and frame.BlizzFrame.unit == frame.unit then
+        else
+            for i=1, #CompactRaidFrameContainer.memberUnitFrames do
+                local f = CompactRaidFrameContainer.memberUnitFrames[i]
+                if f.unit == frame.unit then
+                    frame.BlizzFrame = f
+                    break
+                end
             end
         end
     end
 
     frame.pool:ReleaseAll()
     if dbEntry.Buffs.Enabled then
-        UpdateAuras(frame, blizzFrame, "Buffs")
+        UpdateAuras(frame, frame.BlizzFrame, "Buffs")
     end
     if dbEntry.Debuffs.Enabled then
-        UpdateAuras(frame, blizzFrame,  "Debuffs")
+        UpdateAuras(frame, frame.BlizzFrame,  "Debuffs")
     end
     if dbEntry.Defensives.Enabled then
-        UpdateAuras(frame, blizzFrame,  "Defensives")
+        UpdateAuras(frame, frame.BlizzFrame,  "Defensives")
     end
 end
 
 function GF.UpdateAuras(groupFramesContainer)
-    for _, frame in ipairs(groupFramesContainer.frames) do
+    for i=1, #groupFramesContainer.frames do
+        local frame = groupFramesContainer.frames[i]
         UpdateAllAuras(frame)
     end
 end
@@ -264,8 +273,11 @@ local function UpdateHealthColor(frame, dead)
     elseif dbEntry.CustomColor then
         local hc = dbEntry.HealthColor
         frame.HealthBar:SetStatusBarColor(hc.r, hc.g, hc.b, hc.a)
+
         local bc = dbEntry.BackgroundColor
         frame.Background:SetVertexColor(bc.r, bc.g, bc.b, bc.a)
+
+        -- frame.HealPrediction:SetStatusBarColor(...)
     else
         local r, g, b = Util.GetUnitColor(frame.unit, true)
         local v = 0.2
@@ -278,7 +290,6 @@ end
 
 local function UpdateHealth(frame)
     local health = UnitHealth(frame.unit)
-    local missingHealth = UnitHealthMissing(frame.unit)
 
     frame.HealthBar:SetValue(health)
 end
@@ -486,7 +497,7 @@ local function UpdateAll(frame)
     UpdateCenterIcon(frame)
 end
 
-local function ToggleEvents(frame, unit, state)
+local function ToggleEvents(frame, unit)
     if UnitExists(unit) then
         frame:RegisterUnitEvent("UNIT_AURA", unit)
         frame:RegisterUnitEvent("UNIT_HEALTH", unit)
@@ -503,24 +514,8 @@ local function ToggleEvents(frame, unit, state)
         frame:RegisterEvent("INCOMING_SUMMON_CHANGED")
         frame:RegisterEvent("PLAYER_ROLES_ASSIGNED")
         frame:RegisterUnitEvent("UNIT_IN_RANGE_UPDATE", unit)
-        --self:RegisterUnitEvent("UNIT_DISTANCE_CHECK_UPDATE", unit)
     else
-        frame:UnregisterEvent("UNIT_AURA")
-        frame:UnregisterEvent("UNIT_HEALTH")
-        frame:UnregisterEvent("UNIT_MAXHEALTH")
-        frame:UnregisterEvent("UNIT_ABSORB_AMOUNT_CHANGED")
-        frame:UnregisterEvent("UNIT_HEAL_ABSORB_AMOUNT_CHANGED")
-        frame:UnregisterEvent("UNIT_PHASE")
-        frame:UnregisterEvent("UNIT_CONNECTION")
-        frame:UnregisterEvent("UNIT_HEAL_PREDICTION")
-        frame:UnregisterEvent("READY_CHECK")
-        frame:UnregisterEvent("READY_CHECK_CONFIRM")
-        frame:UnregisterEvent("READY_CHECK_FINISHED")
-        frame:UnregisterEvent("INCOMING_RESURRECT_CHANGED")
-        frame:UnregisterEvent("INCOMING_SUMMON_CHANGED")
-        frame:UnregisterEvent("PLAYER_ROLES_ASSIGNED")
-        frame:UnregisterEvent("UNIT_IN_RANGE_UPDATE")
-        --self:UnregisterEvent("UNIT_DISTANCE_CHECK_UPDATE")
+        frame:UnregisterAllEvents()
     end
 end
 
@@ -528,9 +523,10 @@ function GF.ToggleGroupTestFrames(type, state)
     if InCombatLockdown() then return end
 
     if type == "PartyFrame" then
-        for i, frame in ipairs(CUI_PartyFrame.frames) do
+        for i=1, #CUI_PartyFrame.frames do
+            local frame = CUI_PartyFrame.frames[i]
             if state then
-                ToggleEvents(frame, "player", true)
+                ToggleEvents(frame, "player")
                 frame.unit = "player"
                 frame:SetAttribute("unit", "player")
                 UpdateAll(frame)
@@ -552,7 +548,8 @@ function GF.ToggleGroupTestFrames(type, state)
         GF.UpdateAuras(CUI_PartyFrame)
         GF.SortGroupFrames(CUI_PartyFrame)
     elseif type == "RaidFrame" then
-        for i, frame in ipairs(CUI_RaidFrame.frames) do
+        for i=1, #CUI_RaidFrame.frames do
+            local frame = CUI_RaidFrame.frames[i]
             if state then
                 ToggleEvents(frame, "player", true)
                 frame.unit = "player"
@@ -579,7 +576,8 @@ function GF.UpdateFrame(groupFramesContainer)
     if InCombatLockdown() then return end
     local dbEntry = CUI.DB.profile.GroupFrames[groupFramesContainer.name]
 
-    for _, frame in ipairs(groupFramesContainer.frames) do
+    for i=1, #groupFramesContainer.frames do
+        local frame = groupFramesContainer.frames[i]
         frame:SetSize(dbEntry.Width, dbEntry.Height)
 
         frame.HealthBar:SetStatusBarTexture(dbEntry.Texture)
@@ -684,7 +682,8 @@ function GF.SortGroupFrames(groupFramesContainer)
     local pX = dbEntry.PosX
     local pY = dbEntry.PosY
     local rL = dbEntry.RowLength
-    for i, frame in ipairs(groupFramesContainer.frames) do
+    for i=1, #groupFramesContainer.frames do
+        local frame = groupFramesContainer.frames[i]
         Util.PositionFromIndex(i-1, frame, aF, aP, aRP, dirH, dirV, width, height, padding, pX, pY, rL)
     end
 end
@@ -699,8 +698,6 @@ local function UpdateGroupFrames(groupFramesContainer)
     if groupType == "raid" and not IsInRaid() then return end
     if groupType == "party" and (not IsInGroup() or IsInRaid()) then return end
 
-    GF.UpdateFrame(groupFramesContainer)
-
     for i=1, numMem do
         local unit = groupType..i
         if groupType == "party" and i == numMem then unit = "player" end
@@ -711,7 +708,7 @@ local function UpdateGroupFrames(groupFramesContainer)
         UpdateAllAuras(frame)
     end
 
-    --if lastNumMem == numMem then return end
+    if lastNumMem == numMem then return end
 
     lastNumMem = numMem
 
@@ -813,8 +810,12 @@ local function SetupGroupFrame(unit, groupType, frameName, parent)
     unitDispel:SetSize(12, 12)
     unitDispel:Hide()
 
+    local dbEntryRole = dbEntry.RoleIcon
     local unitRole = overlayFrame:CreateTexture(nil, "OVERLAY")
     unitRole:SetParentKey("RoleIcon")
+    unitRole:ClearAllPoints()
+    unitRole:SetPoint(dbEntryRole.AnchorPoint, frame.Overlay, dbEntryRole.AnchorRelativePoint, dbEntryRole.PosX, dbEntryRole.PosY)
+    unitRole:SetSize(dbEntryRole.Size, dbEntryRole.Size)
 
     frame:SetScript("OnEvent", function(self, event)
         if event == "UNIT_AURA" then
@@ -834,8 +835,6 @@ local function SetupGroupFrame(unit, groupType, frameName, parent)
             UpdateHealPrediction(self)
         elseif event == "UNIT_IN_RANGE_UPDATE" then
             UpdateInRange(self)
-        elseif event == "UNIT_DISTANCE_CHECK_UPDATE" then
-            -- TODO ?
         elseif event == "UNIT_PHASE" then
             UpdateInPhase(self)
             UpdateCenterIcon(self)
