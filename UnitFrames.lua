@@ -491,7 +491,7 @@ local function UpdateCastBar(castBarContainer, isChannel, isEmpower)
         end
     end
 
-    if not duration then return end
+    if not duration then castBarContainer:Hide() return end
 
     castBarContainer.IconContainer.Icon:SetTexture(icon)
     castBar.Name:SetText(name)
