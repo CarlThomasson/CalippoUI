@@ -22,6 +22,7 @@ CUI.SharedMedia:Register("statusbar", "Cell", "Interface/AddOns/CalippoUI/Media/
 
 local defaultFont = "Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf"
 local defaultTexture = "Interface/AddOns/CalippoUI/Media/Statusbar.tga"
+local stripedTexture = "Interface/AddOns/CalippoUI/Media/Striped.tga"
 
 local defaults = {
     global = {
@@ -229,7 +230,6 @@ local defaults = {
 
                 HealthBar = {
                     Texture = defaultTexture,
-                    TextureBane = defaultTextureName
                 },
                 PowerBar = {
                     Enabled = true,
@@ -468,20 +468,53 @@ local defaults = {
 
                 Padding = 2,
 
-                Texture = defaultTexture,
+                HealthBar = {
+                    Texture = defaultTexture,
 
-                CustomColor = false,
-                HealthColor = {
-                    ["r"] = 0,
-                    ["g"] = 0,
-                    ["b"] = 0,
-                    ["a"] = 1,
+                    CustomColor = false,
+                    Color = {
+                        ["r"] = 0,
+                        ["g"] = 0,
+                        ["b"] = 0,
+                        ["a"] = 1,
+                    },
+                    BackgroundColor = {
+                        ["r"] = 0.9,
+                        ["g"] = 0.9,
+                        ["b"] = 0.9,
+                        ["a"] = 1,
+                    },
                 },
-                BackgroundColor = {
-                    ["r"] = 0.9,
-                    ["g"] = 0.9,
-                    ["b"] = 0.9,
-                    ["a"] = 1,
+                HealAbsorbBar = {
+                    Texture = stripedTexture,
+
+                    CustomColor = false,
+                    Color = {
+                        ["r"] = 1,
+                        ["g"] = 0,
+                        ["b"] = 0,
+                        ["a"] = 1,
+                    },
+                },
+                 DamageAbsorbBar = {
+                    Texture = stripedTexture,
+
+                    CustomColor = false,
+                    Color = {
+                        ["r"] = 0,
+                        ["g"] = 0,
+                        ["b"] = 0,
+                        ["a"] = 1,
+                    },
+                },
+                HealingPredictionBar = {
+                    CustomColor = false,
+                    Color = {
+                        ["r"] = 0,
+                        ["g"] = 0,
+                        ["b"] = 0,
+                        ["a"] = 1,
+                    },
                 },
 
                 Name = {

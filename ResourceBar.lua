@@ -217,7 +217,8 @@ local function UpdateSoulShards(frame)
 end
 
 local function UpdateMalestromWeapon(frame)
-    -- TODO
+    -- local msw = C_UnitAuras.GetPlayerAuraBySpellID(344179)
+    -- print(msw)
 end
 
 local function UpdateDevourer(frame)
@@ -255,6 +256,14 @@ local powerTypes = {
         Color = {r = 0, g = 1, b = 0.6},
         Type = "SingleBar",
         Func = UpdateStagger,
+    },
+
+    Enhancement = {
+        Value = nil,
+        Name = "MAELSTROM_WEAPON",
+        Color = {r = 0, g = 1, b = 0.6},
+        Type = "SingleBar",
+        Func = UpdateMalestromWeapon,
     },
 
     Windwalker = {
@@ -392,10 +401,8 @@ local function UpdateSecondaryPowerFrame(frame)
         elseif frame.Power.Name == "ESSENCE" then
             frame.LastPower = UnitPower("player", frame.Power.Value)
             frame.LastPowerTime = GetTime()
-        elseif frame.Power.Name == "SOUL_SHARDS" then
-
         end
-    elseif frame.PowerType == "SingleBar" then
+    elseif frame.Power.Type == "SingleBar" then
         for i=1, #frame.frames do
             local powerFrame = frame.frames[i]
             if i == 1 then
@@ -409,6 +416,11 @@ local function UpdateSecondaryPowerFrame(frame)
             else
                 powerFrame:Hide()
             end
+        end
+
+        if frame.Power.Name == "MAELSTROM_WEAPON" then
+            frame:RegisterUnitEvent("UNIT_AURA", "player")
+            frame:UnregisterEvent("UNIT_POWER_UPDATE")
         end
     end
 
@@ -528,6 +540,9 @@ local function SetupSecondaryPowerBar()
             if self.Power.Name == powerType then
                 self.Power.Func(self)
             end
+        elseif event == "UNIT_AURA" then
+            print("FUNC", self.Power.Func)
+            self.Power.Func()
         elseif event == "RUNE_POWER_UPDATE" then
             UpdateRunes(self)
         elseif event == "UNIT_MAXPOWER" then

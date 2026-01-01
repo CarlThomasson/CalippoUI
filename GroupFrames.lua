@@ -192,12 +192,20 @@ local function UpdateAuras(frame, blizzFrame, type)
     if type == "Buffs" then
         for i=1, #blizzFrame.buffFrames do
             local f = blizzFrame.buffFrames[i]
-            if f:IsShown() then HandleAura(f.auraInstanceID) end
+            if f:IsShown() then
+                HandleAura(f.auraInstanceID)
+            else
+                return
+            end
         end
     elseif type == "Debuffs" then
         for i=1, #blizzFrame.debuffFrames do
             local f = blizzFrame.debuffFrames[i]
-            if f:IsShown() then HandleAura(f.auraInstanceID) end
+            if f:IsShown() then
+                HandleAura(f.auraInstanceID)
+            else
+                return
+            end
         end
     elseif type == "Defensives" then
         HandleAura(blizzFrame.CenterDefensiveBuff.auraInstanceID)
@@ -221,6 +229,7 @@ function UpdateAllAuras(frame)
     elseif frame.name == "RaidFrame" then
         if true then return end
 
+        -- TODO
         if frame.BlizzFrame and frame.BlizzFrame.unit == frame.unit then
         else
             for i=1, #CompactRaidFrameContainer.memberUnitFrames do
@@ -303,6 +312,12 @@ local function UpdateHealAbsorb(frame)
     UnitGetDetailedHealPrediction(frame.unit, "player", frame.calc)
     local healAbsorb = frame.calc:GetHealAbsorbs()
     frame.AbsorbBar:SetValue(healAbsorb)
+end
+
+local function UpdateHealPrediction(frame)
+    UnitGetDetailedHealPrediction(frame.unit, "player", frame.calc)
+    local incoming = frame.calc:GetIncomingHeals()
+    frame.HealPrediction:SetValue(incoming)
 end
 
 local function UpdateInRange(frame)
@@ -401,28 +416,7 @@ local function UpdateSummon(frame)
 end
 
 local function UpdateDispel(frame)
-    local foundDispel = false
-
-    AuraUtil.ForEachAura(frame.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Harmful), nil, function(aura)
-        local dispelName = aura.dispelName
-        if dispelName then
-            frame.Overlay.Dispel:SetTexture("Interface/AddOns/CalippoUI/Media/"..dispelName..".tga")
-            foundDispel = true
-            return true
-        end
-    end, true)
-
-    if not foundDispel then
-        frame.Overlay.Dispel:Hide()
-    else
-        frame.Overlay.Dispel:Show()
-    end
-end
-
-local function UpdateHealPrediction(frame)
-    UnitGetDetailedHealPrediction(frame.unit, "player", frame.calc)
-    local incoming = frame.calc:GetIncomingHeals()
-    frame.HealPrediction:SetValue(incoming)
+    -- TODO
 end
 
 local function UpdateMaxHealth(frame)
@@ -432,6 +426,7 @@ local function UpdateMaxHealth(frame)
     frame.HealthBar:SetMinMaxValues(0, maxHealth)
     frame.HealthBar:SetValue(health)
 
+    -- TODO : Använd missing health istället för maxhealth när det går.
     frame.HealPrediction:SetMinMaxValues(0, maxHealth)
     UpdateHealPrediction(frame)
     frame.AbsorbBar:SetMinMaxValues(0, maxHealth)
@@ -478,6 +473,10 @@ local function UpdateCenterIcon(frame)
     centerTexture:Show()
 end
 
+local function UpdateAggro(frame)
+    -- TODO
+end
+
 local function UpdateAll(frame)
     UpdateMaxHealth(frame)
     UpdateInRange(frame)
@@ -504,16 +503,16 @@ local function ToggleEvents(frame, unit)
         frame:RegisterUnitEvent("UNIT_MAXHEALTH", unit)
         frame:RegisterUnitEvent("UNIT_ABSORB_AMOUNT_CHANGED", unit)
         frame:RegisterUnitEvent("UNIT_HEAL_ABSORB_AMOUNT_CHANGED", unit)
+        frame:RegisterUnitEvent("UNIT_HEAL_PREDICTION", unit)
         frame:RegisterUnitEvent("UNIT_PHASE", unit)
         frame:RegisterUnitEvent("UNIT_CONNECTION", unit)
-        frame:RegisterUnitEvent("UNIT_HEAL_PREDICTION", unit)
+        frame:RegisterUnitEvent("UNIT_IN_RANGE_UPDATE", unit)
         frame:RegisterEvent("READY_CHECK")
         frame:RegisterEvent("READY_CHECK_CONFIRM")
         frame:RegisterEvent("READY_CHECK_FINISHED")
         frame:RegisterEvent("INCOMING_RESURRECT_CHANGED")
         frame:RegisterEvent("INCOMING_SUMMON_CHANGED")
         frame:RegisterEvent("PLAYER_ROLES_ASSIGNED")
-        frame:RegisterUnitEvent("UNIT_IN_RANGE_UPDATE", unit)
     else
         frame:UnregisterAllEvents()
     end
@@ -538,7 +537,7 @@ function GF.ToggleGroupTestFrames(type, state)
                 else
                     unit = "party"..i
                 end
-                ToggleEvents(frame, unit, true)
+                ToggleEvents(frame, unit)
                 frame.unit = unit
                 frame:SetAttribute("unit", unit)
                 UpdateAll(frame)
@@ -551,14 +550,14 @@ function GF.ToggleGroupTestFrames(type, state)
         for i=1, #CUI_RaidFrame.frames do
             local frame = CUI_RaidFrame.frames[i]
             if state then
-                ToggleEvents(frame, "player", true)
+                ToggleEvents(frame, "player")
                 frame.unit = "player"
                 frame:SetAttribute("unit", "player")
                 UpdateAll(frame)
                 RegisterAttributeDriver(frame, "state-visibility", "show")
             else
                 local unit = "raid"..i
-                ToggleEvents(frame, unit, true)
+                ToggleEvents(frame, unit)
                 frame.unit = unit
                 frame:SetAttribute("unit", unit)
                 UpdateAll(frame)
@@ -580,8 +579,8 @@ function GF.UpdateFrame(groupFramesContainer)
         local frame = groupFramesContainer.frames[i]
         frame:SetSize(dbEntry.Width, dbEntry.Height)
 
-        frame.HealthBar:SetStatusBarTexture(dbEntry.Texture)
-        frame.Background:SetTexture(dbEntry.Texture)
+        frame.HealthBar:SetStatusBarTexture(dbEntry.HealthBar.Texture)
+        frame.Background:SetTexture(dbEntry.HealthBar.Texture)
 
         local dbEntryName = dbEntry.Name
         local unitName = frame.Overlay.UnitName
@@ -664,7 +663,6 @@ local function RoleComp(a, b)
     end
 end
 
--- TODO : Istället för SetPoint använd SetAttribute("Unit", ...)?
 function GF.SortGroupFrames(groupFramesContainer)
     if InCombatLockdown() then return end
     local dbEntry = CUI.DB.profile.GroupFrames[groupFramesContainer.name]
@@ -684,6 +682,7 @@ function GF.SortGroupFrames(groupFramesContainer)
     local rL = dbEntry.RowLength
     for i=1, #groupFramesContainer.frames do
         local frame = groupFramesContainer.frames[i]
+        -- TODO : Istället för SetPoint använd SetAttribute("Unit", ...)?
         Util.PositionFromIndex(i-1, frame, aF, aP, aRP, dirH, dirV, width, height, padding, pX, pY, rL)
     end
 end
@@ -746,11 +745,11 @@ local function SetupGroupFrame(unit, groupType, frameName, parent)
     local healthBar = CreateFrame("StatusBar", nil, frame)
     healthBar:SetParentKey("HealthBar")
     healthBar:SetAllPoints(frame)
-    healthBar:SetStatusBarTexture(dbEntry.Texture)
+    healthBar:SetStatusBarTexture(dbEntry.HealthBar.Texture)
 
     local background = frame:CreateTexture(nil, "BACKGROUND")
     background:SetParentKey("Background")
-    background:SetTexture(dbEntry.Texture)
+    background:SetTexture(dbEntry.HealthBar.Texture)
     background:SetPoint("TOPLEFT", healthBar:GetStatusBarTexture(), "TOPRIGHT")
     background:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT")
 
@@ -771,6 +770,7 @@ local function SetupGroupFrame(unit, groupType, frameName, parent)
     local absorbTexture = absorbBar:GetStatusBarTexture()
     absorbTexture:SetTexture("Interface/AddOns/CalippoUI/Media/Striped.tga", "REPEAT", "REPEAT")
     absorbTexture:SetHorizTile(true)
+    absorbTexture:SetVertTile(true)
 
     local shieldBar = CreateFrame("StatusBar", nil, frame)
     shieldBar:SetParentKey("ShieldBar")
@@ -781,6 +781,7 @@ local function SetupGroupFrame(unit, groupType, frameName, parent)
     local shieldTexture = shieldBar:GetStatusBarTexture()
     shieldTexture:SetTexture("Interface/AddOns/CalippoUI/Media/Striped.tga", "REPEAT", "REPEAT")
     shieldTexture:SetHorizTile(true)
+    shieldTexture:SetVertTile(true)
 
     local overlayFrame = CreateFrame("Frame", nil, frame)
     overlayFrame:SetParentKey("Overlay")
@@ -856,11 +857,11 @@ local function SetupGroupFrame(unit, groupType, frameName, parent)
     end)
 
     frame:HookScript("OnShow", function(self)
-        ToggleEvents(self, self.unit, true)
+        ToggleEvents(self, self.unit)
     end)
 
     frame:HookScript("OnHide", function(self)
-        ToggleEvents(self, self.unit, false)
+        ToggleEvents(self, self.unit)
     end)
 
     if groupType == "party" then

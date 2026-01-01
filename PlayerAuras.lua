@@ -64,6 +64,7 @@ end
 
 local function StyleDebuffs()
     for _, frame in pairs({DebuffFrame.AuraContainer:GetChildren()}) do
+        if not frame:IsShown() then return end
         StyleFrame(frame)
     end
 end
@@ -78,11 +79,7 @@ function PA.Load()
 
     StyleBuffsAndDebuffs()
 
-    local frame = CreateFrame("Frame", "CUI_PlayerAuraUpdate")
-    frame:RegisterUnitEvent("UNIT_AURA", "player")
-    frame:SetScript("OnEvent", function(self, event)
-        if event == "UNIT_AURA" then
-            StyleDebuffs()
-        end
+    hooksecurefunc(DebuffFrame, "Update", function()
+        StyleDebuffs()
     end)
 end

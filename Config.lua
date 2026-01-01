@@ -220,7 +220,6 @@ local function CreateColorGroup(container, dbEntry, func, frame)
     local colorGroup = CreateInlineGroup(container, "Color")
 
     local colorPicker = AceGUI:Create("ColorPicker")
-    colorPicker:SetHasAlpha(true)
     colorPicker:SetColor(dbEntry.Color.r, dbEntry.Color.g, dbEntry.Color.b, dbEntry.Color.a)
     colorPicker:SetCallback("OnValueChanged",
         function(self, event, r, g, b, a)
@@ -443,7 +442,7 @@ local function CreateActionBarFramePage(container, actionBar)
 
     local paddingGroup = CreateInlineGroup(scrollFrame, "Padding")
 
-    CreateSlider(paddingGroup, "Padding (Overrides padding from edit mode)", 0, 15, 1, dbEntry.Padding,
+    CreateSlider(paddingGroup, "Padding (Overrides padding from edit mode)", 0, 15, 0.1, dbEntry.Padding,
         function(self, event, value)
             dbEntry.Padding = value
             AB.UpdateBar(frame)

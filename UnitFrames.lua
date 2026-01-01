@@ -339,10 +339,11 @@ end
 
 local function UpdateHealthColor(frame)
     local r, g, b = Util.GetUnitColor(frame.unit)
-    frame.HealthBar:SetStatusBarColor(r, g, b)
-
     local v = 0.2
-    frame.HealthBar.Background:SetVertexColor(r*v, g*v, b*v, 1)
+    local v2 = 0.5
+    frame.HealthBar:SetStatusBarColor(r, g, b)
+    frame.Background:SetVertexColor(r*v, g*v, b*v)
+    frame.HealPrediction:SetStatusBarColor(r*v2, g*v2, b*v2)
 end
 
 local function UpdatePowerColor(frame)
@@ -351,6 +352,23 @@ local function UpdatePowerColor(frame)
 
     local v = 0.2
     frame.PowerBar.Background:SetVertexColor(r*v, g*v, b*v)
+end
+
+local function UpdateShieldAbsorb(frame)
+    local shieldAbsorb = UnitGetTotalAbsorbs(frame.unit)
+    frame.ShieldBar:SetValue(shieldAbsorb)
+end
+
+local function UpdateHealAbsorb(frame)
+    UnitGetDetailedHealPrediction(frame.unit, "player", frame.calc)
+    local healAbsorb = frame.calc:GetHealAbsorbs()
+    frame.AbsorbBar:SetValue(healAbsorb)
+end
+
+local function UpdateHealPrediction(frame)
+    UnitGetDetailedHealPrediction(frame.unit, "player", frame.calc)
+    local incoming = frame.calc:GetIncomingHeals()
+    frame.HealPrediction:SetValue(incoming)
 end
 
 local function UpdateHealth(frame)
@@ -362,10 +380,20 @@ end
 
 local function UpdateMaxHealth(frame)
     local unit = frame.unit
+    local maxHealth = UnitHealthMax(frame.unit)
+    local health = UnitHealth(frame.unit)
 
     Util.SetUnitHealthText(frame.Overlay.UnitHealth, unit)
-    frame.HealthBar:SetMinMaxValues(0, UnitHealthMax(unit))
-    frame.HealthBar:SetValue(UnitHealth(unit))
+    frame.HealthBar:SetMinMaxValues(0, maxHealth)
+    frame.HealthBar:SetValue(health)
+
+    -- TODO : Använd missing health istället för maxhealth när det går.
+    frame.HealPrediction:SetMinMaxValues(0, maxHealth)
+    UpdateHealPrediction(frame)
+    frame.AbsorbBar:SetMinMaxValues(0, maxHealth)
+    UpdateHealAbsorb(frame)
+    frame.ShieldBar:SetMinMaxValues(0, maxHealth)
+    UpdateShieldAbsorb(frame)
 end
 
 local function UpdateHealthFull(frame)
@@ -445,16 +473,20 @@ function UF.UpdateFrame(frame)
     frame:SetSize(dbEntry.Width, dbEntry.Height)
 
     frame.HealthBar:SetStatusBarTexture(dbEntry.HealthBar.Texture)
-    frame.HealthBar.Background:SetTexture(dbEntry.HealthBar.Texture)
+    frame.Background:SetTexture(dbEntry.HealthBar.Texture)
 
     if dbEntry.PowerBar.Enabled then
         frame.PowerBar:Show()
         frame.PowerBar:SetHeight(dbEntry.PowerBar.Height)
         frame.PowerBar:SetStatusBarTexture(dbEntry.PowerBar.Texture)
         frame.HealthBar:SetPoint("BOTTOMRIGHT", frame.PowerBar, "TOPRIGHT")
+        frame:RegisterUnitEvent("UNIT_POWER_UPDATE", unit)
+        frame:RegisterUnitEvent("UNIT_MAXPOWER", unit)
     else
         frame.PowerBar:Hide()
         frame.HealthBar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT")
+        frame:UnregisterEvent("UNIT_POWER_UPDATE")
+        frame:UnregisterEvent("UNIT_MAXPOWER")
     end
 
     local leaderIcon = frame.Overlay.LeaderIcon
@@ -632,6 +664,9 @@ function SetupUnitFrame(frameName, unit, number)
     frame.buffs = {}
     frame.debuffs = {}
     frame.pool = CreateFramePool("Frame", frame, "CUI_AuraFrameTemplate")
+    frame.calc = CreateUnitHealPredictionCalculator()
+    frame.calc:SetHealAbsorbClampMode(0)
+    frame.calc:SetIncomingHealClampMode(1)
 
     if unit == "target" then
         frame:RegisterEvent("PLAYER_TARGET_CHANGED")
@@ -648,14 +683,51 @@ function SetupUnitFrame(frameName, unit, number)
     powerBar:SetParentKey("PowerBar")
     powerBar:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT")
     powerBar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT")
+    powerBar:SetFrameLevel(frame:GetFrameLevel()+5)
     Util.AddStatusBarBackground(powerBar)
     Util.AddBorder(powerBar)
 
     local healthBar = CreateFrame("StatusBar", nil, frame)
     healthBar:SetParentKey("HealthBar")
+    healthBar:SetStatusBarTexture("")
     healthBar:SetPoint("TOPLEFT", frame, "TOPLEFT")
     healthBar:SetPoint("BOTTOMRIGHT", powerBar, "TOPRIGHT")
-    Util.AddStatusBarBackground(healthBar)
+
+    local background = frame:CreateTexture(nil, "BACKGROUND")
+    background:SetParentKey("Background")
+    background:SetTexture(dbEntry.HealthBar.Texture)
+    background:SetPoint("TOPLEFT", healthBar:GetStatusBarTexture(), "TOPRIGHT")
+    background:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT")
+
+    local healPrediction = CreateFrame("StatusBar", nil, frame)
+    healPrediction:SetParentKey("HealPrediction")
+    healPrediction:SetPoint("TOPLEFT", healthBar:GetStatusBarTexture(), "TOPRIGHT")
+    healPrediction:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT")
+    healPrediction:SetFrameLevel(healthBar:GetFrameLevel()+1)
+    healPrediction:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Statusbar.tga")
+
+    local absorbBar = CreateFrame("StatusBar", nil, frame)
+    absorbBar:SetParentKey("AbsorbBar")
+    absorbBar:SetFrameLevel(healPrediction:GetFrameLevel()+1)
+    absorbBar:SetAllPoints(healthBar)
+    absorbBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Striped.tga")
+    absorbBar:SetStatusBarColor(1, 0, 0, 1)
+    absorbBar:SetReverseFill(false)
+    local absorbTexture = absorbBar:GetStatusBarTexture()
+    absorbTexture:SetTexture("Interface/AddOns/CalippoUI/Media/Striped.tga", "REPEAT", "REPEAT")
+    absorbTexture:SetHorizTile(true)
+    absorbTexture:SetVertTile(true)
+
+    local shieldBar = CreateFrame("StatusBar", nil, frame)
+    shieldBar:SetParentKey("ShieldBar")
+    shieldBar:SetAllPoints(healthBar)
+    shieldBar:SetFrameLevel(absorbBar:GetFrameLevel()+1)
+    shieldBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Striped.tga")
+    shieldBar:SetStatusBarColor(0, 1, 1, 0.8)
+    local shieldTexture = shieldBar:GetStatusBarTexture()
+    shieldTexture:SetTexture("Interface/AddOns/CalippoUI/Media/Striped.tga", "REPEAT", "REPEAT")
+    shieldTexture:SetHorizTile(true)
+    shieldTexture:SetVertTile(true)
 
     local overlayFrame = CreateFrame("Frame", nil, frame)
     overlayFrame:SetParentKey("Overlay")
@@ -684,8 +756,9 @@ function SetupUnitFrame(frameName, unit, number)
     frame:RegisterUnitEvent("UNIT_AURA", unit)
     frame:RegisterUnitEvent("UNIT_HEALTH", unit)
     frame:RegisterUnitEvent("UNIT_MAXHEALTH", unit)
-    frame:RegisterUnitEvent("UNIT_POWER_UPDATE", unit)
-    frame:RegisterUnitEvent("UNIT_MAXPOWER", unit)
+    frame:RegisterUnitEvent("UNIT_ABSORB_AMOUNT_CHANGED", unit)
+    frame:RegisterUnitEvent("UNIT_HEAL_ABSORB_AMOUNT_CHANGED", unit)
+    frame:RegisterUnitEvent("UNIT_HEAL_PREDICTION", unit)
     frame:RegisterEvent("PLAYER_REGEN_ENABLED")
     frame:RegisterEvent("PLAYER_REGEN_DISABLED")
     frame:RegisterEvent("PARTY_LEADER_CHANGED")
@@ -703,6 +776,12 @@ function SetupUnitFrame(frameName, unit, number)
             UpdatePower(self)
         elseif event == "UNIT_MAXPOWER" then
             UpdateMaxPower(self)
+        elseif event == "UNIT_ABSORB_AMOUNT_CHANGED" then
+            UpdateShieldAbsorb(self)
+        elseif event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED" then
+            UpdateHealAbsorb(self)
+        elseif event == "UNIT_HEAL_PREDICTION" then
+            UpdateHealPrediction(self)
         elseif event == "PLAYER_TARGET_CHANGED" or event == "PLAYER_FOCUS_CHANGED" then
             if not UnitExists(self.unit) then return end
             UpdateAll(self)
