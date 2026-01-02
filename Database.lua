@@ -19,6 +19,7 @@ CUI.SharedMedia = LibStub("LibSharedMedia-3.0")
 CUI.SharedMedia:Register("font", "Fira Sans Medium", "Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf")
 CUI.SharedMedia:Register("font", "Fira Sans Black", "Interface/AddOns/CalippoUI/Fonts/FiraSans-Black.ttf")
 CUI.SharedMedia:Register("statusbar", "Cell", "Interface/AddOns/CalippoUI/Media/Statusbar.tga")
+CUI.SharedMedia:Register("statusbar", "Striped", "Interface/AddOns/CalippoUI/Media/Striped.tga")
 
 local defaultFont = "Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf"
 local defaultTexture = "Interface/AddOns/CalippoUI/Media/Statusbar.tga"
@@ -140,6 +141,82 @@ local defaults = {
         },
         UnitFrames = {
             Enabled = true,
+
+            HealthBar = {
+                Texture = defaultTexture,
+
+                CustomColor = false,
+                Color = {
+                    ["r"] = 0,
+                    ["g"] = 0,
+                    ["b"] = 0,
+                    ["a"] = 1,
+                },
+                BackgroundColor = {
+                    ["r"] = 1,
+                    ["g"] = 1,
+                    ["b"] = 1,
+                    ["a"] = 1,
+                },
+                HealPredictionColor = {
+                    ["r"] = 0.5,
+                    ["g"] = 0.5,
+                    ["b"] = 0.5,
+                    ["a"] = 1,
+                },
+                DeadColor = {
+                    ["r"] = 0.3,
+                    ["g"] = 0,
+                    ["b"] = 0,
+                    ["a"] = 1,
+                },
+            },
+            HealAbsorbBar = {
+                Texture = stripedTexture,
+
+                Color = {
+                    ["r"] = 1,
+                    ["g"] = 0,
+                    ["b"] = 0,
+                    ["a"] = 1,
+                },
+            },
+            DamageAbsorbBar = {
+                Texture = stripedTexture,
+
+                Color = {
+                    ["r"] = 0,
+                    ["g"] = 1,
+                    ["b"] = 1,
+                    ["a"] = 1,
+                },
+            },
+
+            Name = {
+                CustomColor = true,
+                Color = {
+                    ["r"] = 1,
+                    ["g"] = 1,
+                    ["b"] = 1,
+                    ["a"] = 1,
+                },
+            },
+
+            CastBar = {
+                Color = {
+                    ["r"] = 1,
+                    ["g"] = 1,
+                    ["b"] = 0,
+                    ["a"] = 1
+                },
+
+                ColorNotInterruptiple = {
+                    ["r"] = 0.5,
+                    ["g"] = 0.5,
+                    ["b"] = 0.5,
+                    ["a"] = 1
+                }
+            },
 
             ["**"] = {
                 Alpha = 1,
@@ -278,20 +355,6 @@ local defaults = {
                         PosX = -3,
                         PosY = 0,
                     },
-
-                    Color = {
-                        ["r"] = 0,
-                        ["g"] = 0.8,
-                        ["b"] = 0,
-                        ["a"] = 1
-                    },
-
-                    ColorNotInterruptiple = {
-                        ["r"] = 0.5,
-                        ["g"] = 0.5,
-                        ["b"] = 0.5,
-                        ["a"] = 1
-                    }
                 },
             },
 
@@ -452,6 +515,66 @@ local defaults = {
         GroupFrames = {
             Enabled = true,
 
+            HealthBar = {
+                Texture = defaultTexture,
+
+                CustomColor = false,
+                Color = {
+                    ["r"] = 0,
+                    ["g"] = 0,
+                    ["b"] = 0,
+                    ["a"] = 1,
+                },
+                BackgroundColor = {
+                    ["r"] = 1,
+                    ["g"] = 1,
+                    ["b"] = 1,
+                    ["a"] = 1,
+                },
+                HealPredictionColor = {
+                    ["r"] = 0.5,
+                    ["g"] = 0.5,
+                    ["b"] = 0.5,
+                    ["a"] = 1,
+                },
+                DeadColor = {
+                    ["r"] = 0.3,
+                    ["g"] = 0,
+                    ["b"] = 0,
+                    ["a"] = 1,
+                },
+            },
+            HealAbsorbBar = {
+                Texture = stripedTexture,
+
+                Color = {
+                    ["r"] = 1,
+                    ["g"] = 0,
+                    ["b"] = 0,
+                    ["a"] = 1,
+                },
+            },
+            DamageAbsorbBar = {
+                Texture = stripedTexture,
+
+                Color = {
+                    ["r"] = 0,
+                    ["g"] = 1,
+                    ["b"] = 1,
+                    ["a"] = 1,
+                },
+            },
+
+            Name = {
+                CustomColor = true,
+                Color = {
+                    ["r"] = 1,
+                    ["g"] = 1,
+                    ["b"] = 1,
+                    ["a"] = 1,
+                },
+            },
+
             ["**"] = {
                 AnchorFrame = "UIParent",
                 AnchorPoint = "TOPLEFT",
@@ -468,55 +591,6 @@ local defaults = {
 
                 Padding = 2,
 
-                HealthBar = {
-                    Texture = defaultTexture,
-
-                    CustomColor = false,
-                    Color = {
-                        ["r"] = 0,
-                        ["g"] = 0,
-                        ["b"] = 0,
-                        ["a"] = 1,
-                    },
-                    BackgroundColor = {
-                        ["r"] = 0.9,
-                        ["g"] = 0.9,
-                        ["b"] = 0.9,
-                        ["a"] = 1,
-                    },
-                },
-                HealAbsorbBar = {
-                    Texture = stripedTexture,
-
-                    CustomColor = false,
-                    Color = {
-                        ["r"] = 1,
-                        ["g"] = 0,
-                        ["b"] = 0,
-                        ["a"] = 1,
-                    },
-                },
-                 DamageAbsorbBar = {
-                    Texture = stripedTexture,
-
-                    CustomColor = false,
-                    Color = {
-                        ["r"] = 0,
-                        ["g"] = 0,
-                        ["b"] = 0,
-                        ["a"] = 1,
-                    },
-                },
-                HealingPredictionBar = {
-                    CustomColor = false,
-                    Color = {
-                        ["r"] = 0,
-                        ["g"] = 0,
-                        ["b"] = 0,
-                        ["a"] = 1,
-                    },
-                },
-
                 Name = {
                     Enabled = true,
                     Font = defaultFont,
@@ -528,14 +602,6 @@ local defaults = {
                     AnchorRelativePoint = "TOPLEFT",
                     PosX = 3,
                     PosY = -3,
-
-                    CustomColor = true,
-                    Color = {
-                        ["r"] = 1,
-                        ["g"] = 1,
-                        ["b"] = 1,
-                        ["a"] = 1,
-                    },
                 },
 
                 RoleIcon = {

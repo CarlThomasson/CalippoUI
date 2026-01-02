@@ -43,14 +43,11 @@ end
 
 local function UpdateCastBar(castBar, isChannel, isEmpower)
     local duration
-    if isEmpower then
+
+    if isChannel or isEmpower then
         duration = UnitChannelDuration("player")
     else
-        if isChannel then
-            duration = UnitChannelDuration("player")
-        else
-            duration = UnitCastingDuration("player")
-        end
+        duration = UnitCastingDuration("player")
     end
 
     local direction

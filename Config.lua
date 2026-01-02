@@ -106,6 +106,16 @@ local function CreateDropDown(container, label, value, list, func, width)
     container:AddChild(dropDown)
 end
 
+local function CreateColorPicker(container, label, value, func, width, alpha)
+    local colorPicker = AceGUI:Create("ColorPicker")
+    colorPicker:SetHasAlpha(alpha)
+    colorPicker:SetLabel(label)
+    colorPicker:SetColor(value.r, value.g, value.b, value.a)
+    colorPicker:SetCallback("OnValueChanged", func)
+    if width then colorPicker:SetRelativeWidth(width) end
+    container:AddChild(colorPicker)
+end
+
 ---------------------------------------------------------------------------------------------------------------------------------------
 
 local function CreateAnchorGroup(container, dbEntry, func, frame)
@@ -568,6 +578,120 @@ end
 
 local bossTestFrames = false
 
+local function CreateUnitFrameGeneralPage(container)
+    local dbEntry = CUI.DB.profile.UnitFrames
+
+    local scrollFrame = AceGUI:Create("ScrollFrame")
+    scrollFrame:SetLayout("List")
+    container:AddChild(scrollFrame)
+
+    local healthColorGroup = CreateInlineGroup(scrollFrame, "Health bar colors")
+
+    CreateCheckBox(healthColorGroup, "Toggle custom colors", dbEntry.HealthBar.CustomColor,
+        function(self, event, value)
+            dbEntry.HealthBar.CustomColor = value
+            UF.UpdateAllColors()
+        end, 0.5)
+
+    CreateColorPicker(healthColorGroup, "Health Bar", dbEntry.HealthBar.Color,
+        function(self, event, r, g, b, a)
+            dbEntry.HealthBar.Color.r = r
+            dbEntry.HealthBar.Color.g = g
+            dbEntry.HealthBar.Color.b = b
+            dbEntry.HealthBar.Color.a = a
+
+            UF.UpdateAllColors()
+        end, 0.5)
+
+    CreateColorPicker(healthColorGroup, "Background", dbEntry.HealthBar.BackgroundColor,
+        function(self, event, r, g, b, a)
+            dbEntry.HealthBar.BackgroundColor.r = r
+            dbEntry.HealthBar.BackgroundColor.g = g
+            dbEntry.HealthBar.BackgroundColor.b = b
+            dbEntry.HealthBar.BackgroundColor.a = a
+
+            UF.UpdateAllColors()
+        end, 0.5)
+
+    CreateColorPicker(healthColorGroup, "Healing Prediction", dbEntry.HealthBar.HealPredictionColor,
+        function(self, event, r, g, b, a)
+            dbEntry.HealthBar.HealPredictionColor.r = r
+            dbEntry.HealthBar.HealPredictionColor.g = g
+            dbEntry.HealthBar.HealPredictionColor.b = b
+            dbEntry.HealthBar.HealPredictionColor.a = a
+
+            UF.UpdateAllColors()
+        end, 0.5)
+
+    local absorbColorGroup = CreateInlineGroup(scrollFrame, "Shield / Heal Absorb / Dead colors")
+
+    CreateColorPicker(absorbColorGroup, "Shield color", dbEntry.DamageAbsorbBar.Color,
+        function(self, event, r, g, b, a)
+            dbEntry.DamageAbsorbBar.Color.r = r
+            dbEntry.DamageAbsorbBar.Color.g = g
+            dbEntry.DamageAbsorbBar.Color.b = b
+            dbEntry.DamageAbsorbBar.Color.a = a
+
+            UF.UpdateAllColors()
+        end, 0.5, true)
+
+    CreateColorPicker(absorbColorGroup, "Heal absorb color", dbEntry.HealAbsorbBar.Color,
+        function(self, event, r, g, b, a)
+            dbEntry.HealAbsorbBar.Color.r = r
+            dbEntry.HealAbsorbBar.Color.g = g
+            dbEntry.HealAbsorbBar.Color.b = b
+            dbEntry.HealAbsorbBar.Color.a = a
+
+            UF.UpdateAllColors()
+        end, 0.5, true)
+
+    CreateColorPicker(absorbColorGroup, "Dead color", dbEntry.HealthBar.DeadColor,
+        function(self, event, r, g, b, a)
+            dbEntry.HealthBar.DeadColor.r = r
+            dbEntry.HealthBar.DeadColor.g = g
+            dbEntry.HealthBar.DeadColor.b = b
+            dbEntry.HealthBar.DeadColor.a = a
+
+            UF.UpdateAllColors()
+        end, 0.5)
+
+    local nameColorGroup = CreateInlineGroup(scrollFrame, "Name color")
+
+    CreateCheckBox(nameColorGroup, "Toggle custom color", dbEntry.Name.CustomColor,
+        function(self, event, value)
+            dbEntry.Name.CustomColor = value
+            UF.UpdateAllColors()
+        end, 0.5)
+
+    CreateColorPicker(nameColorGroup, "Name Color", dbEntry.Name.Color,
+        function(self, event, r, g, b, a)
+            dbEntry.Name.Color.r = r
+            dbEntry.Name.Color.g = g
+            dbEntry.Name.Color.b = b
+            dbEntry.Name.Color.a = a
+
+            UF.UpdateAllColors()
+        end, 0.5)
+
+    local castBarColorGroup = CreateInlineGroup(scrollFrame, "Cast bar colors")
+
+    CreateColorPicker(castBarColorGroup, "Interruptible", dbEntry.CastBar.Color,
+        function(self, event, r, g, b, a)
+            dbEntry.CastBar.Color.r = r
+            dbEntry.CastBar.Color.g = g
+            dbEntry.CastBar.Color.b = b
+            dbEntry.CastBar.Color.a = a
+        end, 0.5)
+
+    CreateColorPicker(castBarColorGroup, "Not interruptible", dbEntry.CastBar.ColorNotInterruptiple,
+        function(self, event, r, g, b, a)
+            dbEntry.CastBar.ColorNotInterruptiple.r = r
+            dbEntry.CastBar.ColorNotInterruptiple.g = g
+            dbEntry.CastBar.ColorNotInterruptiple.b = b
+            dbEntry.CastBar.ColorNotInterruptiple.a = a
+        end, 0.5)
+end
+
 local function CreateUnitFrameFramePage(container, unitFrame)
     local dbEntry = CUI.DB.profile.UnitFrames[unitFrame]
     local frame = _G["CUI_"..unitFrame]
@@ -910,18 +1034,23 @@ end
 local function CreateUnitFrameSettings(container)
     local function SelectGroup(container, event, unitFrame)
         container:ReleaseChildren()
-        CreateUnitFrameTabs(container, unitFrame)
+        if unitFrame == "General" then
+            CreateUnitFrameGeneralPage(container)
+        else
+            CreateUnitFrameTabs(container, unitFrame)
+        end
     end
 
     local tabGroup = AceGUI:Create("TabGroup")
     tabGroup:SetLayout("Fill")
-    tabGroup:SetTabs({{text="Player Frame", value="PlayerFrame"}, 
+    tabGroup:SetTabs({{text="General", value="General"},
+                    {text="Player Frame", value="PlayerFrame"},
                     {text="Target Frame", value="TargetFrame"},
                     {text="Focus Frame", value="FocusFrame"},
                     {text="Pet Frame", value="PetFrame"},
                     {text="Boss Frame", value="BossFrame"},})
     tabGroup:SetCallback("OnGroupSelected", SelectGroup)
-    tabGroup:SelectTab("PlayerFrame")
+    tabGroup:SelectTab("General")
 
     container:AddChild(tabGroup)
 end
@@ -930,6 +1059,113 @@ end
 
 local partyTestFrame = false
 local raidTestFrame = false
+
+local function CreateGroupFrameGeneralPage(container)
+    local dbEntry = CUI.DB.profile.GroupFrames
+    local raidFrame =  _G["CUI_RaidFrame"]
+    local partyFrame =  _G["CUI_PartyFrame"]
+
+    local scrollFrame = AceGUI:Create("ScrollFrame")
+    scrollFrame:SetLayout("List")
+    container:AddChild(scrollFrame)
+
+    local healthColorGroup = CreateInlineGroup(scrollFrame, "Health bar colors")
+
+    CreateCheckBox(healthColorGroup, "Toggle custom colors", dbEntry.HealthBar.CustomColor,
+        function(self, event, value)
+            dbEntry.HealthBar.CustomColor = value
+            GF.UpdateFrame(raidFrame)
+            GF.UpdateFrame(partyFrame)
+        end, 0.5)
+
+    CreateColorPicker(healthColorGroup, "Health Bar", dbEntry.HealthBar.Color,
+        function(self, event, r, g, b, a)
+            dbEntry.HealthBar.Color.r = r
+            dbEntry.HealthBar.Color.g = g
+            dbEntry.HealthBar.Color.b = b
+            dbEntry.HealthBar.Color.a = a
+
+            GF.UpdateFrame(raidFrame)
+            GF.UpdateFrame(partyFrame)
+        end, 0.5)
+
+    CreateColorPicker(healthColorGroup, "Background", dbEntry.HealthBar.BackgroundColor,
+        function(self, event, r, g, b, a)
+            dbEntry.HealthBar.BackgroundColor.r = r
+            dbEntry.HealthBar.BackgroundColor.g = g
+            dbEntry.HealthBar.BackgroundColor.b = b
+            dbEntry.HealthBar.BackgroundColor.a = a
+
+            GF.UpdateFrame(raidFrame)
+            GF.UpdateFrame(partyFrame)
+        end, 0.5)
+
+    CreateColorPicker(healthColorGroup, "Healing Prediction", dbEntry.HealthBar.HealPredictionColor,
+        function(self, event, r, g, b, a)
+            dbEntry.HealthBar.HealPredictionColor.r = r
+            dbEntry.HealthBar.HealPredictionColor.g = g
+            dbEntry.HealthBar.HealPredictionColor.b = b
+            dbEntry.HealthBar.HealPredictionColor.a = a
+
+            GF.UpdateFrame(raidFrame)
+            GF.UpdateFrame(partyFrame)
+        end, 0.5)
+
+    local absorbColorGroup = CreateInlineGroup(scrollFrame, "Shield / Heal Absorb / Dead colors")
+
+    CreateColorPicker(absorbColorGroup, "Shield color", dbEntry.DamageAbsorbBar.Color,
+        function(self, event, r, g, b, a)
+            dbEntry.DamageAbsorbBar.Color.r = r
+            dbEntry.DamageAbsorbBar.Color.g = g
+            dbEntry.DamageAbsorbBar.Color.b = b
+            dbEntry.DamageAbsorbBar.Color.a = a
+
+            GF.UpdateFrame(raidFrame)
+            GF.UpdateFrame(partyFrame)
+        end, 0.5, true)
+
+    CreateColorPicker(absorbColorGroup, "Heal absorb color", dbEntry.HealAbsorbBar.Color,
+        function(self, event, r, g, b, a)
+            dbEntry.HealAbsorbBar.Color.r = r
+            dbEntry.HealAbsorbBar.Color.g = g
+            dbEntry.HealAbsorbBar.Color.b = b
+            dbEntry.HealAbsorbBar.Color.a = a
+
+            GF.UpdateFrame(raidFrame)
+            GF.UpdateFrame(partyFrame)
+        end, 0.5, true)
+
+    CreateColorPicker(absorbColorGroup, "Dead color", dbEntry.HealthBar.DeadColor,
+        function(self, event, r, g, b, a)
+            dbEntry.HealthBar.DeadColor.r = r
+            dbEntry.HealthBar.DeadColor.g = g
+            dbEntry.HealthBar.DeadColor.b = b
+            dbEntry.HealthBar.DeadColor.a = a
+
+            GF.UpdateFrame(raidFrame)
+            GF.UpdateFrame(partyFrame)
+        end, 0.5)
+
+    local nameColorGroup = CreateInlineGroup(scrollFrame, "Name color")
+
+    CreateCheckBox(nameColorGroup, "Toggle custom color", dbEntry.Name.CustomColor,
+        function(self, event, value)
+            dbEntry.Name.CustomColor = value
+            GF.UpdateFrame(raidFrame)
+            GF.UpdateFrame(partyFrame)
+        end, 0.5)
+
+    CreateColorPicker(nameColorGroup, "Name Color", dbEntry.Name.Color,
+        function(self, event, r, g, b, a)
+            dbEntry.Name.Color.r = r
+            dbEntry.Name.Color.g = g
+            dbEntry.Name.Color.b = b
+            dbEntry.Name.Color.a = a
+
+            GF.UpdateFrame(raidFrame)
+            GF.UpdateFrame(partyFrame)
+        end, 0.5)
+end
 
 local function CreateGroupFrameFramePage(container, groupFrame)
     local dbEntry = CUI.DB.profile.GroupFrames[groupFrame]
@@ -1164,15 +1400,20 @@ end
 local function CreateGroupFrameSettings(container)
     local function SelectGroup(container, event, groupFrame)
         container:ReleaseChildren()
-        CreateGroupFrameTabs(container, groupFrame)
+        if groupFrame == "General" then
+            CreateGroupFrameGeneralPage(container)
+        else
+            CreateGroupFrameTabs(container, groupFrame)
+        end
     end
 
     local tabGroup = AceGUI:Create("TabGroup")
     tabGroup:SetLayout("Fill")
-    tabGroup:SetTabs({{text="Party", value="PartyFrame"}, 
+    tabGroup:SetTabs({{text="General", value="General"},
+                    {text="Party", value="PartyFrame"},
                     {text="Raid", value="RaidFrame"},})
     tabGroup:SetCallback("OnGroupSelected", SelectGroup)
-    tabGroup:SelectTab("PartyFrame")
+    tabGroup:SelectTab("General")
 
     container:AddChild(tabGroup)
 end

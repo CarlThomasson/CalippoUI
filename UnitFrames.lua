@@ -337,13 +337,66 @@ end
 
 ---------------------------------------------------------------------------------------------------
 
+local function UpdateTextColor(frame)
+    local dbEntry = CUI.DB.profile.UnitFrames.Name
+
+    if dbEntry.CustomColor then
+        local c = dbEntry.Color
+        frame.Overlay.UnitName:SetTextColor(c.r, c.g, c.b, c.a)
+        frame.Overlay.UnitHealth:SetTextColor(c.r, c.g, c.b, c.a)
+    else
+        frame.Overlay.UnitName:SetTextColor(Util.GetUnitColor(frame.unit))
+        frame.Overlay.UnitHealth:SetTextColor(Util.GetUnitColor(frame.unit))
+    end
+end
+
 local function UpdateHealthColor(frame)
-    local r, g, b = Util.GetUnitColor(frame.unit)
-    local v = 0.2
-    local v2 = 0.5
-    frame.HealthBar:SetStatusBarColor(r, g, b)
-    frame.Background:SetVertexColor(r*v, g*v, b*v)
-    frame.HealPrediction:SetStatusBarColor(r*v2, g*v2, b*v2)
+    local dbEntry = CUI.DB.profile.UnitFrames
+
+    if frame.dead then
+        local dc = dbEntry.HealthBar.DeadColor
+        frame.HealthBar:SetStatusBarColor(dc.r, dc.g, dc.b, dc.a)
+    elseif dbEntry.HealthBar.CustomColor then
+        local hc = dbEntry.HealthBar.Color
+        frame.HealthBar:SetStatusBarColor(hc.r, hc.g, hc.b, hc.a)
+
+        local bc = dbEntry.HealthBar.BackgroundColor
+        frame.Background:SetVertexColor(bc.r, bc.g, bc.b, bc.a)
+
+        local hpc = dbEntry.HealthBar.HealPredictionColor
+        frame.HealPrediction:SetStatusBarColor(hpc.r, hpc.g, hpc.b, hpc.a)
+    else
+        local r, g, b = Util.GetUnitColor(frame.unit, true)
+        frame.HealthBar:SetStatusBarColor(r, g, b)
+
+        local v = 0.2
+        frame.Background:SetVertexColor(r*v, g*v, b*v)
+
+        local v2 = 0.5
+        frame.HealPrediction:SetStatusBarColor(r*v2, g*v2, b*v2)
+    end
+end
+
+local function UpdateAbsorbColor(frame)
+    local dbEntry = CUI.DB.profile.UnitFrames
+
+    local hac = dbEntry.HealAbsorbBar.Color
+    frame.AbsorbBar:SetStatusBarColor(hac.r, hac.g, hac.b, hac.a)
+
+    local dac = dbEntry.DamageAbsorbBar.Color
+    frame.ShieldBar:SetStatusBarColor(dac.r, dac.g, dac.b, dac.a)
+end
+
+local function UpdateIsDead(frame)
+    if UnitIsDeadOrGhost(frame.unit) then
+        local min, max = frame.HealthBar:GetMinMaxValues()
+        frame.HealthBar:SetValue(max)
+        frame.dead = true
+        UpdateHealthColor(frame)
+    elseif frame.dead == true then
+        frame.dead = false
+        UpdateHealthColor(frame)
+    end
 end
 
 local function UpdatePowerColor(frame)
@@ -419,8 +472,9 @@ local function UpdatePowerFull(frame)
     UpdatePowerColor(frame)
 end
 
-local function UpdateNameText(frame)
+local function UpdateName(frame)
     frame.Overlay.UnitName:SetText(UnitName(frame.unit))
+    UpdateTextColor(frame)
 end
 
 local function UpdateLeaderAssist(frame)
@@ -446,12 +500,28 @@ end
 local function UpdateAll(frame)
     UpdateHealthFull(frame)
     UpdatePowerFull(frame)
-    UpdateNameText(frame)
+    UpdateName(frame)
     UpdateLeaderAssist(frame)
+    UpdateShieldAbsorb(frame)
+    UpdateHealAbsorb(frame)
+    UpdateHealPrediction(frame)
+    UpdateIsDead(frame)
+    UpdateAbsorbColor(frame)
     UF.UpdateAlpha(frame)
 end
 
 -------------------------------------------------------------------------------------------------
+
+local frames = {}
+
+function UF.UpdateAllColors()
+    for i=1, #frames do
+        local frame = frames[i]
+        UpdateTextColor(frame)
+        UpdateHealthColor(frame)
+        UpdateAbsorbColor(frame)
+    end
+end
 
 function UF.UpdateFrame(frame)
     if frame == "BossFrame" then UpdateBossFrames() return end
@@ -505,22 +575,32 @@ end
 
 -------------------------------------------------------------------------------------------------
 
+local function GetCastingOrChannelInfo(unit)
+    local name
+
+    name = UnitCastingInfo(unit)
+    if name then return false, false end
+
+    local isEmpower
+    name, _, _, _, _, _, _, _, _, isEmpower = UnitChannelInfo(unit)
+    if name then return true, isEmpower end
+end
+
 local function UpdateCastBar(castBarContainer, isChannel, isEmpower)
     local duration, name, icon, notInterruptible
     local castBar = castBarContainer.Bar
     local unit = castBarContainer.unit
 
-    if isEmpower then
+    if isChannel == nil then
+        isChannel, isEmpower = GetCastingOrChannelInfo(unit)
+    end
+
+    if isChannel or isEmpower then
         name, _, icon, _, _, _, notInterruptible = UnitChannelInfo(unit)
         duration = UnitChannelDuration(unit)
     else
-        if isChannel then
-            name, _, icon, _, _, _, notInterruptible = UnitChannelInfo(unit)
-            duration = UnitChannelDuration(unit)
-        else
-            name, _, icon, _, _, _, _, notInterruptible = UnitCastingInfo(unit)
-            duration = UnitCastingDuration(unit)
-        end
+        name, _, icon, _, _, _, _, notInterruptible = UnitCastingInfo(unit)
+        duration = UnitCastingDuration(unit)
     end
 
     if not duration then castBarContainer:Hide() return end
@@ -528,7 +608,7 @@ local function UpdateCastBar(castBarContainer, isChannel, isEmpower)
     castBarContainer.IconContainer.Icon:SetTexture(icon)
     castBar.Name:SetText(name)
 
-    local dbEntry = CUI.DB.profile.UnitFrames[castBarContainer.name].CastBar
+    local dbEntry = CUI.DB.profile.UnitFrames.CastBar
     local color = dbEntry.Color
     local colorNotInt = dbEntry.ColorNotInterruptiple
 
@@ -611,23 +691,26 @@ function SetupCastBar(unitFrame)
             or event == "UNIT_SPELLCAST_EMPOWER_STOP" then
             self:Hide()
             self.Ticker:Cancel()
+            self.Ticker = nil
         elseif event == "PLAYER_FOCUS_CHANGED" or event == "PLAYER_TARGET_CHANGED" then
-            UpdateCastBar(self)
+            if self.Ticker then self.Ticker:Cancel() end
+            self.Ticker = nil
+            UpdateCastBar(self, nil, nil)
         end
     end)
 end
 
 -------------------------------------------------------------------------------------------------
 
-CreateFrame("Button", "CUI_PlayerFrame", UIParent, "CUI_UnitFrameTemplate")
-CreateFrame("Button", "CUI_TargetFrame", UIParent, "CUI_UnitFrameTemplate")
-CreateFrame("Button", "CUI_FocusFrame", UIParent, "CUI_UnitFrameTemplate")
-CreateFrame("Button", "CUI_PetFrame", UIParent, "CUI_UnitFrameTemplate")
-CreateFrame("Button", "CUI_BossFrame1", UIParent, "CUI_UnitFrameTemplate")
-CreateFrame("Button", "CUI_BossFrame2", UIParent, "CUI_UnitFrameTemplate")
-CreateFrame("Button", "CUI_BossFrame3", UIParent, "CUI_UnitFrameTemplate")
-CreateFrame("Button", "CUI_BossFrame4", UIParent, "CUI_UnitFrameTemplate")
-CreateFrame("Button", "CUI_BossFrame5", UIParent, "CUI_UnitFrameTemplate")
+table.insert(frames, CreateFrame("Button", "CUI_PlayerFrame", UIParent, "CUI_UnitFrameTemplate"))
+table.insert(frames, CreateFrame("Button", "CUI_TargetFrame", UIParent, "CUI_UnitFrameTemplate"))
+table.insert(frames, CreateFrame("Button", "CUI_FocusFrame", UIParent, "CUI_UnitFrameTemplate"))
+table.insert(frames, CreateFrame("Button", "CUI_PetFrame", UIParent, "CUI_UnitFrameTemplate"))
+table.insert(frames, CreateFrame("Button", "CUI_BossFrame1", UIParent, "CUI_UnitFrameTemplate"))
+table.insert(frames, CreateFrame("Button", "CUI_BossFrame2", UIParent, "CUI_UnitFrameTemplate"))
+table.insert(frames, CreateFrame("Button", "CUI_BossFrame3", UIParent, "CUI_UnitFrameTemplate"))
+table.insert(frames, CreateFrame("Button", "CUI_BossFrame4", UIParent, "CUI_UnitFrameTemplate"))
+table.insert(frames, CreateFrame("Button", "CUI_BossFrame5", UIParent, "CUI_UnitFrameTemplate"))
 
 function SetupUnitFrame(frameName, unit, number)
     local dbEntry = CUI.DB.profile.UnitFrames[frameName]
@@ -711,7 +794,6 @@ function SetupUnitFrame(frameName, unit, number)
     absorbBar:SetFrameLevel(healPrediction:GetFrameLevel()+1)
     absorbBar:SetAllPoints(healthBar)
     absorbBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Striped.tga")
-    absorbBar:SetStatusBarColor(1, 0, 0, 1)
     absorbBar:SetReverseFill(false)
     local absorbTexture = absorbBar:GetStatusBarTexture()
     absorbTexture:SetTexture("Interface/AddOns/CalippoUI/Media/Striped.tga", "REPEAT", "REPEAT")
@@ -723,7 +805,6 @@ function SetupUnitFrame(frameName, unit, number)
     shieldBar:SetAllPoints(healthBar)
     shieldBar:SetFrameLevel(absorbBar:GetFrameLevel()+1)
     shieldBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Striped.tga")
-    shieldBar:SetStatusBarColor(0, 1, 1, 0.8)
     local shieldTexture = shieldBar:GetStatusBarTexture()
     shieldTexture:SetTexture("Interface/AddOns/CalippoUI/Media/Striped.tga", "REPEAT", "REPEAT")
     shieldTexture:SetHorizTile(true)
@@ -770,6 +851,7 @@ function SetupUnitFrame(frameName, unit, number)
             UF.UpdateAuras(self)
         elseif event == "UNIT_HEALTH" then
             UpdateHealth(self)
+            UpdateIsDead(self)
         elseif event == "UNIT_MAXHEALTH" then
             UpdateMaxHealth(self)
         elseif event == "UNIT_POWER_UPDATE" then

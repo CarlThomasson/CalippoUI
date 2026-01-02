@@ -264,7 +264,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------
 
 local function UpdateNameColor(frame)
-    local dbEntry = CUI.DB.profile.GroupFrames[frame.name].Name
+    local dbEntry = CUI.DB.profile.GroupFrames.Name
 
     if dbEntry.CustomColor then
         local c = dbEntry.Color
@@ -274,27 +274,41 @@ local function UpdateNameColor(frame)
     end
 end
 
-local function UpdateHealthColor(frame, dead)
-    local dbEntry = CUI.DB.profile.GroupFrames[frame.name]
+local function UpdateHealthColor(frame)
+    local dbEntry = CUI.DB.profile.GroupFrames
 
-    if dead then
-        frame.HealthBar:SetStatusBarColor(0.3, 0, 0)
-    elseif dbEntry.CustomColor then
-        local hc = dbEntry.HealthColor
+    if frame.dead then
+        local dc = dbEntry.HealthBar.DeadColor
+        frame.HealthBar:SetStatusBarColor(dc.r, dc.g, dc.b, dc.a)
+    elseif dbEntry.HealthBar.CustomColor then
+        local hc = dbEntry.HealthBar.Color
         frame.HealthBar:SetStatusBarColor(hc.r, hc.g, hc.b, hc.a)
 
-        local bc = dbEntry.BackgroundColor
+        local bc = dbEntry.HealthBar.BackgroundColor
         frame.Background:SetVertexColor(bc.r, bc.g, bc.b, bc.a)
 
-        -- frame.HealPrediction:SetStatusBarColor(...)
+        local hpc = dbEntry.HealthBar.HealPredictionColor
+        frame.HealPrediction:SetStatusBarColor(hpc.r, hpc.g, hpc.b, hpc.a)
     else
         local r, g, b = Util.GetUnitColor(frame.unit, true)
-        local v = 0.2
-        local v2 = 0.5
         frame.HealthBar:SetStatusBarColor(r, g, b)
+
+        local v = 0.2
         frame.Background:SetVertexColor(r*v, g*v, b*v)
+
+        local v2 = 0.5
         frame.HealPrediction:SetStatusBarColor(r*v2, g*v2, b*v2)
     end
+end
+
+local function UpdateAbsorbColor(frame)
+    local dbEntry = CUI.DB.profile.GroupFrames
+
+    local hac = dbEntry.HealAbsorbBar.Color
+    frame.AbsorbBar:SetStatusBarColor(hac.r, hac.g, hac.b, hac.a)
+
+    local dac = dbEntry.DamageAbsorbBar.Color
+    frame.ShieldBar:SetStatusBarColor(dac.r, dac.g, dac.b, dac.a)
 end
 
 local function UpdateHealth(frame)
@@ -338,11 +352,11 @@ local function UpdateIsDead(frame)
     if UnitIsDeadOrGhost(frame.unit) then
         local min, max = frame.HealthBar:GetMinMaxValues()
         frame.HealthBar:SetValue(max)
-        UpdateHealthColor(frame, true)
         frame.dead = true
-    elseif frame.dead == true then
         UpdateHealthColor(frame)
+    elseif frame.dead == true then
         frame.dead = false
+        UpdateHealthColor(frame)
     end
 end
 
@@ -492,6 +506,7 @@ local function UpdateAll(frame)
 
     UpdateNameColor(frame)
     UpdateHealthColor(frame)
+    UpdateAbsorbColor(frame)
 
     UpdateCenterIcon(frame)
 end
@@ -573,14 +588,15 @@ end
 
 function GF.UpdateFrame(groupFramesContainer)
     if InCombatLockdown() then return end
-    local dbEntry = CUI.DB.profile.GroupFrames[groupFramesContainer.name]
+    local dbEntryGF = CUI.DB.profile.GroupFrames
+    local dbEntry = dbEntryGF[groupFramesContainer.name]
 
     for i=1, #groupFramesContainer.frames do
         local frame = groupFramesContainer.frames[i]
         frame:SetSize(dbEntry.Width, dbEntry.Height)
 
-        frame.HealthBar:SetStatusBarTexture(dbEntry.HealthBar.Texture)
-        frame.Background:SetTexture(dbEntry.HealthBar.Texture)
+        frame.HealthBar:SetStatusBarTexture(dbEntryGF.HealthBar.Texture)
+        frame.Background:SetTexture(dbEntryGF.HealthBar.Texture)
 
         local dbEntryName = dbEntry.Name
         local unitName = frame.Overlay.UnitName
@@ -604,6 +620,10 @@ function GF.UpdateFrame(groupFramesContainer)
         else
             roleIcon:Hide()
         end
+
+        UpdateNameColor(frame)
+        UpdateHealthColor(frame)
+        UpdateAbsorbColor(frame)
     end
 
     Util.CheckAnchorFrame(groupFramesContainer, dbEntry)
@@ -717,7 +737,8 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------
 
 local function SetupGroupFrame(unit, groupType, frameName, parent)
-    local dbEntry = CUI.DB.profile.GroupFrames[frameName]
+    local dbEntryGF = CUI.DB.profile.GroupFrames
+    local dbEntry = dbEntryGF[frameName]
 
     local frame = CreateFrame("Button", nil, parent, "CUI_UnitFrameTemplate")
     frame:SetParentKey(unit)
@@ -745,11 +766,11 @@ local function SetupGroupFrame(unit, groupType, frameName, parent)
     local healthBar = CreateFrame("StatusBar", nil, frame)
     healthBar:SetParentKey("HealthBar")
     healthBar:SetAllPoints(frame)
-    healthBar:SetStatusBarTexture(dbEntry.HealthBar.Texture)
+    healthBar:SetStatusBarTexture(dbEntryGF.HealthBar.Texture)
 
     local background = frame:CreateTexture(nil, "BACKGROUND")
     background:SetParentKey("Background")
-    background:SetTexture(dbEntry.HealthBar.Texture)
+    background:SetTexture(dbEntryGF.HealthBar.Texture)
     background:SetPoint("TOPLEFT", healthBar:GetStatusBarTexture(), "TOPRIGHT")
     background:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT")
 
@@ -765,7 +786,6 @@ local function SetupGroupFrame(unit, groupType, frameName, parent)
     absorbBar:SetFrameLevel(healPrediction:GetFrameLevel()+1)
     absorbBar:SetAllPoints(frame)
     absorbBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Striped.tga")
-    absorbBar:SetStatusBarColor(1, 0, 0, 1)
     absorbBar:SetReverseFill(false)
     local absorbTexture = absorbBar:GetStatusBarTexture()
     absorbTexture:SetTexture("Interface/AddOns/CalippoUI/Media/Striped.tga", "REPEAT", "REPEAT")
@@ -777,7 +797,6 @@ local function SetupGroupFrame(unit, groupType, frameName, parent)
     shieldBar:SetAllPoints(frame)
     shieldBar:SetFrameLevel(absorbBar:GetFrameLevel()+1)
     shieldBar:SetStatusBarTexture("Interface/AddOns/CalippoUI/Media/Striped.tga")
-    shieldBar:SetStatusBarColor(0, 1, 1, 0.8)
     local shieldTexture = shieldBar:GetStatusBarTexture()
     shieldTexture:SetTexture("Interface/AddOns/CalippoUI/Media/Striped.tga", "REPEAT", "REPEAT")
     shieldTexture:SetHorizTile(true)
