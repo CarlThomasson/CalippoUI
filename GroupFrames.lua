@@ -135,6 +135,7 @@ local function UpdateAuras(frame, blizzFrame, type)
     local stacksOutline = dbEntry.Stacks.Outline
     local stacksSize = dbEntry.Stacks.Size
 
+    local dispelColor = nil
     local index = 0
     local function HandleAura(id)
         if id then
@@ -154,6 +155,7 @@ local function UpdateAuras(frame, blizzFrame, type)
                 local color = C_UnitAuras.GetAuraDispelTypeColor(frame.unit, aura.auraInstanceID, dispelColorCurve)
                 if type == "Debuffs" and color then
                     if aura.dispelName then
+                        dispelColor = color
                         auraFrame.Overlay.Backdrop:Hide()
                         auraFrame.Overlay.DispelBackdrop:Show()
                         auraFrame.Overlay.DispelBackdrop:SetBackdropBorderColor(color.r, color.g, color.b, color.a)
@@ -204,8 +206,14 @@ local function UpdateAuras(frame, blizzFrame, type)
             if f:IsShown() then
                 HandleAura(f.auraInstanceID)
             else
-                return
+                break
             end
+        end
+
+        if dispelColor then
+            frame.Overlay.DispelGradient:SetColorTexture(dispelColor.r, dispelColor.g, dispelColor.b, dispelColor.a)
+        else
+            frame.Overlay.DispelGradient:SetColorTexture(0, 0, 0, 0)
         end
     elseif type == "Defensives" then
         HandleAura(blizzFrame.CenterDefensiveBuff.auraInstanceID)
@@ -334,6 +342,22 @@ local function UpdateHealPrediction(frame)
     frame.HealPrediction:SetValue(incoming)
 end
 
+local function UpdateMaxHealth(frame)
+    local maxHealth = UnitHealthMax(frame.unit)
+    local health = UnitHealth(frame.unit)
+
+    frame.HealthBar:SetMinMaxValues(0, maxHealth)
+    frame.HealthBar:SetValue(health)
+
+    -- TODO : Använd missing health istället för maxhealth när det går.
+    frame.HealPrediction:SetMinMaxValues(0, maxHealth)
+    UpdateHealPrediction(frame)
+    frame.AbsorbBar:SetMinMaxValues(0, maxHealth)
+    UpdateHealAbsorb(frame)
+    frame.ShieldBar:SetMinMaxValues(0, maxHealth)
+    UpdateShieldAbsorb(frame)
+end
+
 local function UpdateInRange(frame)
     frame:SetAlphaFromBoolean(UnitInRange(frame.unit), 1, 0.5)
 end
@@ -433,22 +457,6 @@ local function UpdateDispel(frame)
     -- TODO
 end
 
-local function UpdateMaxHealth(frame)
-    local maxHealth = UnitHealthMax(frame.unit)
-    local health = UnitHealth(frame.unit)
-
-    frame.HealthBar:SetMinMaxValues(0, maxHealth)
-    frame.HealthBar:SetValue(health)
-
-    -- TODO : Använd missing health istället för maxhealth när det går.
-    frame.HealPrediction:SetMinMaxValues(0, maxHealth)
-    UpdateHealPrediction(frame)
-    frame.AbsorbBar:SetMinMaxValues(0, maxHealth)
-    UpdateHealAbsorb(frame)
-    frame.ShieldBar:SetMinMaxValues(0, maxHealth)
-    UpdateShieldAbsorb(frame)
-end
-
 local function UpdateCenterIcon(frame)
     local centerTexture = frame.Overlay.CenterTexture
 
@@ -488,7 +496,12 @@ local function UpdateCenterIcon(frame)
 end
 
 local function UpdateAggro(frame)
-    -- TODO
+    local status = UnitThreatSituation(frame.unit)
+    if status == 2 or status == 3 then
+        frame.Overlay.Aggro:Show()
+    else
+        frame.Overlay.Aggro:Hide()
+    end
 end
 
 local function UpdateAll(frame)
@@ -503,6 +516,7 @@ local function UpdateAll(frame)
     UpdateSummon(frame)
     UpdateRess(frame)
     UpdateHealPrediction(frame)
+    UpdateAggro(frame)
 
     UpdateNameColor(frame)
     UpdateHealthColor(frame)
@@ -522,6 +536,8 @@ local function ToggleEvents(frame, unit)
         frame:RegisterUnitEvent("UNIT_PHASE", unit)
         frame:RegisterUnitEvent("UNIT_CONNECTION", unit)
         frame:RegisterUnitEvent("UNIT_IN_RANGE_UPDATE", unit)
+        frame:RegisterUnitEvent("UNIT_THREAT_SITUATION_UPDATE", unit)
+        frame:RegisterUnitEvent("UNIT_THREAT_LIST_UPDATE", unit)
         frame:RegisterEvent("READY_CHECK")
         frame:RegisterEvent("READY_CHECK_CONFIRM")
         frame:RegisterEvent("READY_CHECK_FINISHED")
@@ -810,6 +826,18 @@ local function SetupGroupFrame(unit, groupType, frameName, parent)
 
     frame.pool = CreateFramePool("Frame", overlayFrame, "CUI_AuraFrameTemplate")
 
+    local dispelTexture = overlayFrame:CreateTexture(nil, "OVERLAY")
+    dispelTexture:SetParentKey("DispelGradient")
+    dispelTexture:SetPoint("BOTTOMLEFT", overlayFrame, "BOTTOMLEFT")
+    dispelTexture:SetPoint("BOTTOMRIGHT", overlayFrame, "BOTTOMRIGHT")
+    dispelTexture:SetHeight(25)
+    dispelTexture:SetColorTexture(0, 0, 0, 0)
+    local dispelMask = overlayFrame:CreateMaskTexture()
+    dispelMask:SetTexture("Interface/AddOns/CalippoUI/Media/gradient.blp")
+    dispelMask:SetRotation(math.pi)
+    dispelMask:SetAllPoints(dispelTexture)
+    dispelTexture:AddMaskTexture(dispelMask)
+
     local dbEntryUN = dbEntry.Name
     local unitName = overlayFrame:CreateFontString(nil, "OVERLAY")
     unitName:SetParentKey("UnitName")
@@ -824,18 +852,22 @@ local function SetupGroupFrame(unit, groupType, frameName, parent)
     centerTexture:SetPoint("CENTER")
     centerTexture:Hide()
 
-    local unitDispel = overlayFrame:CreateTexture(nil, "OVERLAY")
-    unitDispel:SetParentKey("Dispel")
-    unitDispel:SetPoint("BOTTOMRIGHT", overlayFrame, "BOTTOMRIGHT", -3, 3)
-    unitDispel:SetSize(12, 12)
-    unitDispel:Hide()
-
     local dbEntryRole = dbEntry.RoleIcon
     local unitRole = overlayFrame:CreateTexture(nil, "OVERLAY")
     unitRole:SetParentKey("RoleIcon")
     unitRole:ClearAllPoints()
     unitRole:SetPoint(dbEntryRole.AnchorPoint, frame.Overlay, dbEntryRole.AnchorRelativePoint, dbEntryRole.PosX, dbEntryRole.PosY)
     unitRole:SetSize(dbEntryRole.Size, dbEntryRole.Size)
+
+    local aggroContainer = CreateFrame("Frame", nil, overlayFrame)
+    aggroContainer:SetParentKey("Aggro")
+    aggroContainer:SetPoint("LEFT", overlayFrame, "LEFT", 2, 0)
+    aggroContainer:SetSize(15, 15)
+    -- Util.AddBorder(aggroContainer)
+
+    local aggroTexture = aggroContainer:CreateTexture(nil, "OVERLAY")
+    aggroTexture:SetColorTexture(0.8, 0, 0, 0.7)
+    aggroTexture:SetAllPoints(aggroContainer)
 
     frame:SetScript("OnEvent", function(self, event)
         if event == "UNIT_AURA" then
@@ -855,6 +887,8 @@ local function SetupGroupFrame(unit, groupType, frameName, parent)
             UpdateHealPrediction(self)
         elseif event == "UNIT_IN_RANGE_UPDATE" then
             UpdateInRange(self)
+        elseif event == "UNIT_THREAT_SITUATION_UPDATE" or event == "UNIT_THREAT_LIST_UPDATE" then
+            UpdateAggro(self)
         elseif event == "UNIT_PHASE" then
             UpdateInPhase(self)
             UpdateCenterIcon(self)

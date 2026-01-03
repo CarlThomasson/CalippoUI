@@ -15,12 +15,6 @@ CUI_BACKDROP_WHITE = {
     bgFile = nil
 }
 
-CUI.SharedMedia = LibStub("LibSharedMedia-3.0")
-CUI.SharedMedia:Register("font", "Fira Sans Medium", "Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf")
-CUI.SharedMedia:Register("font", "Fira Sans Black", "Interface/AddOns/CalippoUI/Fonts/FiraSans-Black.ttf")
-CUI.SharedMedia:Register("statusbar", "Cell", "Interface/AddOns/CalippoUI/Media/Statusbar.tga")
-CUI.SharedMedia:Register("statusbar", "Striped", "Interface/AddOns/CalippoUI/Media/Striped.tga")
-
 local defaultFont = "Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf"
 local defaultTexture = "Interface/AddOns/CalippoUI/Media/Statusbar.tga"
 local stripedTexture = "Interface/AddOns/CalippoUI/Media/Striped.tga"
@@ -972,5 +966,11 @@ local defaults = {
 }
 
 function Database.Load()
+    CUI.SharedMedia = LibStub("LibSharedMedia-3.0")
+    CUI.SharedMedia:Register("font", "Fira Sans Medium", "Interface/AddOns/CalippoUI/Fonts/FiraSans-Medium.ttf")
+    CUI.SharedMedia:Register("font", "Fira Sans Black", "Interface/AddOns/CalippoUI/Fonts/FiraSans-Black.ttf")
+    CUI.SharedMedia:Register("statusbar", "Cell", "Interface/AddOns/CalippoUI/Media/Statusbar.tga")
+    CUI.SharedMedia:Register("statusbar", "Striped", "Interface/AddOns/CalippoUI/Media/Striped.tga")
+
     CUI.DB = LibStub("AceDB-3.0"):New("CalippoDB", defaults, "Default")
 end

@@ -541,7 +541,6 @@ local function SetupSecondaryPowerBar()
                 self.Power.Func(self)
             end
         elseif event == "UNIT_AURA" then
-            print("FUNC", self.Power.Func)
             self.Power.Func()
         elseif event == "RUNE_POWER_UPDATE" then
             UpdateRunes(self)

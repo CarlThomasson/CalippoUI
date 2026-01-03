@@ -54,8 +54,8 @@ local function ReverseHashTable(table)
     return newTable
 end
 
-local fonts = ReverseHashTable(CUI.SharedMedia:HashTable("font"))
-local textures = ReverseHashTable(CUI.SharedMedia:HashTable("statusbar"))
+local fonts
+local textures
 
 local function CreateInlineGroup(container, title)
     local inlineGroup = AceGUI:Create("InlineGroup")
@@ -1714,6 +1714,9 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------
 
 function Conf.Load()
+    fonts = ReverseHashTable(CUI.SharedMedia:HashTable("font"))
+    textures = ReverseHashTable(CUI.SharedMedia:HashTable("statusbar"))
+
     local dbEntry = CUI.DB.global.Config
     local frame = AceGUI:Create("Frame")
     frame:SetTitle("CalippoUI")

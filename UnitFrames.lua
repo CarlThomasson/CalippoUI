@@ -366,7 +366,7 @@ local function UpdateHealthColor(frame)
         local hpc = dbEntry.HealthBar.HealPredictionColor
         frame.HealPrediction:SetStatusBarColor(hpc.r, hpc.g, hpc.b, hpc.a)
     else
-        local r, g, b = Util.GetUnitColor(frame.unit, true)
+        local r, g, b = Util.GetUnitColor(frame.unit)
         frame.HealthBar:SetStatusBarColor(r, g, b)
 
         local v = 0.2
